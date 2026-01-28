@@ -1,13 +1,19 @@
 # Repository Guidelines
 
 ## プロジェクト構成とモジュール整理
-現時点ではリポジトリ直下にソースコードやテスト用ディレクトリが存在しません。追加する場合は、`src/`（実装）、`tests/`（テスト）、`scripts/`（開発補助）、`assets/`（静的素材）のように役割ごとに分離してください。新規モジュールは機能単位でサブディレクトリを切り、依存関係が分かる命名にします（例: `src/telemetry/`, `src/control/`）。
+Flutterアプリ本体は `app/` にあります。
+- `app/lib/`: アプリ実装（`core/` と `features/` を中心に整理）
+- `app/test/`: Widget/Unitテスト
+- `app/android/`, `app/ios/`: 各プラットフォームのビルド設定（自動生成を含む）
+設計ドキュメントはリポジトリ直下の `SYSTEM_*.md` / `SOFTWARE_*.md` に置きます。
 
 ## ビルド・テスト・開発コマンド
-現在、ビルドやテストに関する設定ファイル（例: `package.json`, `Makefile`）は見当たりません。導入後は以下のようなコマンドを明記してください。
-- `make build`: 本番用のビルドを生成
-- `make test`: すべてのテストを実行
-- `make lint`: コーディング規約の検査
+主要コマンド（`app/` 配下で実行）:
+- `flutter pub get`: 依存関係の取得
+- `flutter analyze`: 静的解析
+- `flutter test`: テスト実行
+- `dart run build_runner build --delete-conflicting-outputs`: drift等のコード生成
+- `flutter run`: 実機/エミュレータで起動（Android）
 
 ## コーディングスタイルと命名規則
 言語未確定のため共通方針のみ定義します。インデントはスペース2または4で統一し、タブは使用しません。ファイル名は小文字スネークケース（例: `control_loop.py`）か小文字ケバブケース（例: `control-loop.ts`）で統一してください。フォーマッタやリンタ（例: `black`, `eslint`, `clang-format`）を導入した場合は、その設定ファイルと実行コマンドを必ず記載します。
