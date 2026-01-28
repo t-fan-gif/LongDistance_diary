@@ -2,23 +2,60 @@
 
 本書はシステム設計の内部工程である「ソフトウェア詳細設計」を扱う。方式設計は `SOFTWARE_ARCHITECTURE.md`、要件は `SOFTWARE_REQUIREMENTS.md` を参照。
 
+## 目的（この工程でやること）
+- ソフトウェア方式設計で定めた構造を「コーディング可能な単位」まで分割する。
+- 主要な動作ロジックを定義し、フローチャート（処理手順）として残す。
+
+## プログラム単位（コーディング単位）の分割
+### ドメイン/サービス（純粋ロジック）
+- `LoadCalculator`
+  - `computePaceLoad(session)`（rTSS風）
+  - `computeSrpeLoad(session)`（sRPE）
+  - `computeZoneLoad(session)`（暫定）
+  - `computeSessionRepresentativeLoad(session)`（優先順位で代表負荷を選択）
+- `CapacityEstimator`
+  - `computeEwma(dayLoads, tauDays=42)`（能力推定）
+  - `computeLoadRatio(dayLoad, capacity)`（相対化）
+- `HeatmapScaler`
+  - `bucketize(ratio)`（比率→濃淡段階への変換。閾値は設定で調整可能に）
+
+### リポジトリ（DBアクセス）
+- `PlanRepository`
+  - `createPlan(...)`, `updatePlan(...)`, `deletePlan(id)`
+  - `listPlansByDate(date)`
+- `SessionRepository`
+  - `createSession(...)`, `updateSession(...)`, `deleteSession(id)`
+  - `listSessionsByDate(date)`（dateTimeから日付で抽出）
+- `PersonalBestRepository`
+  - `upsertPersonalBest(...)`, `listPersonalBests()`
+- `ExportRepository`
+  - `exportJson(...)`（対象: Session/Plan/PB/最低限設定）
+  - `importJson(...)`（将来。MVPは実装順を後回しでもよい）
+
+### ユースケース（UIから呼ぶ処理の塊）
+- `CreatePlanUseCase`
+- `RecordSessionUseCase`（予定あり/なし両対応）
+- `GetCalendarMonthUseCase`（月表示に必要な日負荷・濃淡・ラベルを生成）
+- `GetDayDetailUseCase`（その日の一覧・合計・内訳）
+- `ExportDataUseCase`
+
 ## DB設計（drift / SQLite）
 ### テーブル（案）
 - `personal_bests`
-  - `id`（PK）
+  - `id`（PK, UUID TEXT）
   - `event`（enum）
   - `time_ms`（int）
   - `date`（date, nullable）
   - `note`（text, nullable）
 - `plans`
-  - `id`（PK）
+  - `id`（PK, UUID TEXT）
   - `date`（date）
   - `template_text`（text）
   - `note`（text, nullable）
 - `sessions`
-  - `id`（PK）
-  - `date_time`（datetime）
-  - `plan_id`（FK, nullable）
+  - `id`（PK, UUID TEXT）
+  - `date_time`（datetime; driftは内部的にUnix msで保存する想定）
+  - `plan_id`（FK, plans.id, nullable）
   - `template_text`（text）
   - `distance_main_m`（int, nullable）
   - `duration_main_sec`（int, nullable）
@@ -34,14 +71,35 @@
   - `cd_duration_sec`（int, nullable）
   - `status`（enum）
   - `note`（text, nullable）
+  - `rep_load`（int, nullable）※代表負荷のキャッシュ（MVPでは後回しでも可）
 
 ### 制約（案）
 - `sessions` は `distance_main_m` と `duration_main_sec` のどちらか（または両方）を許容するが、MVPの入力導線では「距離または時間」の片方を基本とする。
+- `sessions` は `distance_main_m` と `duration_main_sec` の少なくとも片方が入力されることを推奨する（DBレベルでCHECKするかは実装時に判断）。
 - `rest_type` が `jog` の場合のみ `rest_distance_m` を任意入力として表示する（値はnullable）。
 
 ### インデックス（案）
 - `sessions(date_time)`（月表示/日集計の高速化）
 - `sessions(plan_id)`（テンプレ比較/予定→実績の追跡）
+
+## 列挙（enum）定義（内部表現）
+### 種目（PB）
+- `PbEvent`: `m800` / `m1500` / `m3000` / `m3000sc` / `m5000` / `m10000` / `half` / `full`
+
+### ゾーン
+- `Zone`: `E` / `M` / `T` / `I` / `R`
+
+### レスト種別
+- `RestType`: `stop` / `jog`
+
+### 実績ステータス（Session.status）
+- `SessionStatus`: `done` / `partial` / `aborted` / `skipped`
+
+## 「負荷不明」の扱い
+- 代表負荷が算出できないSessionは保存可能とする（要件どおり）。
+- 代表負荷が算出できない場合の扱い:
+  - `rep_load` を `NULL` とする（キャッシュを持つ場合）
+  - 画面表示は「負荷不明」（ニュートラル表示）とし、追加入力を促す
 
 ## 入力仕様（UI→内部表現）
 ### ペース入力（単一）
@@ -81,13 +139,70 @@
 - 相対値: `ratio = day_load / max(capacity, epsilon)`
 - 段階化（例）: 閾値は運用で調整（固定/分位のどちらも検討余地）
 
+## フローチャート（処理手順）
+以下はMVPで必須となる処理の流れ。実装時はユースケース単位で責務を分ける。
+
+### 予定作成（Plan）
+```mermaid
+flowchart TD
+  A[日付選択] --> B[テンプレ入力: 距離or時間 + 強度]
+  B --> C{入力妥当?}
+  C -- No --> B
+  C -- Yes --> D[PlanRepository.createPlan]
+  D --> E[カレンダー再描画]
+```
+
+### 実績入力（Session）: 予定あり/なし共通
+```mermaid
+flowchart TD
+  A[日付(と時刻)選択] --> B{予定から作成?}
+  B -- Yes --> C[Planを選択/複製]
+  B -- No --> D[テンプレ入力]
+  C --> E[Session入力: 距離/時間, 強度(ペース/ゾーン/RPE), レスト, WU/CD]
+  D --> E
+  E --> F{代表負荷を算出できる?}
+  F -- Yes --> G[rep_load算出(優先順位)]
+  F -- No --> H[rep_load=NULL]
+  G --> I[SessionRepository.createSession]
+  H --> I
+  I --> J[日負荷/濃淡再計算]
+  J --> K[カレンダー/日詳細更新]
+```
+
+### カレンダー月表示（濃淡 + ラベル）
+```mermaid
+flowchart TD
+  A[表示月] --> B[月内のSessionを取得]
+  B --> C[日ごとに代表負荷を合計]
+  C --> D[能力(EWMA)を計算]
+  D --> E[相対化(ratio)]
+  E --> F[濃淡に段階化]
+  C --> G[日セルのラベル: 最大負荷1件/件数]
+  F --> H[月カレンダー描画]
+  G --> H
+```
+
 ## エクスポート（設計方針）
 - DBスキーマバージョンを持ち、JSONに `schema_version` を含める。
 - MVPは「読み出し（エクスポート）」から着手できるようにする。
 
+### JSONスキーマ（案）
+```json
+{
+  "schema_version": 1,
+  "exported_at": "2026-01-27T00:00:00Z",
+  "plans": [],
+  "sessions": [],
+  "personal_bests": [],
+  "settings": {}
+}
+```
+
 ## 完了条件チェックリスト
-- [ ] テーブル/カラム/型が実装可能な粒度で定義されている
-- [ ] 主要制約（nullable条件、入力条件）が明記されている
-- [ ] インデックス方針が記載されている
-- [ ] 主要入力（ペース/RPE/レスト/WUCD）の内部表現が確定している
-- [ ] 代表負荷/日負荷/濃淡の計算が関数単位で分解されている
+- [x] テーブル/カラム/型が実装可能な粒度で定義されている
+- [x] 主要制約（nullable条件、入力条件）が明記されている
+- [x] インデックス方針が記載されている
+- [x] 主要入力（ペース/RPE/レスト/WUCD）の内部表現が確定している
+- [x] 代表負荷/日負荷/濃淡の計算が関数単位で分解されている
+- [x] コーディング単位（クラス/関数/ユースケース）が分割されている
+- [x] 主要フロー（予定作成/実績入力/カレンダー表示）のフローチャートがある
