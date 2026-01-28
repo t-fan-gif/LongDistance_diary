@@ -16,7 +16,16 @@ class PersonalBests extends Table {
 class Plans extends Table {
   TextColumn get id => text()();
   DateTimeColumn get date => dateTime()();
-  TextColumn get templateText => text()();
+  
+  // メニュー名（旧 templateText）
+  TextColumn get menuName => text()();
+  
+  // 構造化データ
+  IntColumn get distance => integer().nullable()(); // m単位
+  IntColumn get pace => integer().nullable()();     // 秒/km
+  TextColumn get zone => textEnum<Zone>().nullable()();
+  IntColumn get reps => integer().withDefault(const Constant(1))();
+  
   TextColumn get note => text().nullable()();
 
   @override

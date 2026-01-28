@@ -12,48 +12,28 @@ class $PersonalBestsTable extends PersonalBests
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   late final GeneratedColumnWithTypeConverter<PbEvent, String> event =
-      GeneratedColumn<String>(
-        'event',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<PbEvent>($PersonalBestsTable.$converterevent);
+      GeneratedColumn<String>('event', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<PbEvent>($PersonalBestsTable.$converterevent);
   static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
   @override
   late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
-    'time_ms',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'time_ms', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
-    'date',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
+      'date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
-    'note',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [id, event, timeMs, date, note];
   @override
@@ -62,10 +42,8 @@ class $PersonalBestsTable extends PersonalBests
   String get actualTableName => $name;
   static const String $name = 'personal_bests';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<PersonalBest> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<PersonalBest> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -74,24 +52,18 @@ class $PersonalBestsTable extends PersonalBests
       context.missing(_idMeta);
     }
     if (data.containsKey('time_ms')) {
-      context.handle(
-        _timeMsMeta,
-        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
-      );
+      context.handle(_timeMsMeta,
+          timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta));
     } else if (isInserting) {
       context.missing(_timeMsMeta);
     }
     if (data.containsKey('date')) {
       context.handle(
-        _dateMeta,
-        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
-      );
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
     }
     if (data.containsKey('note')) {
       context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     return context;
   }
@@ -102,28 +74,17 @@ class $PersonalBestsTable extends PersonalBests
   PersonalBest map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PersonalBest(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      event: $PersonalBestsTable.$converterevent.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}event'],
-        )!,
-      ),
-      timeMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}time_ms'],
-      )!,
-      date: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}date'],
-      ),
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      event: $PersonalBestsTable.$converterevent.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}event'])!),
+      timeMs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}time_ms'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date']),
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
     );
   }
 
@@ -142,21 +103,19 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
   final int timeMs;
   final DateTime? date;
   final String? note;
-  const PersonalBest({
-    required this.id,
-    required this.event,
-    required this.timeMs,
-    this.date,
-    this.note,
-  });
+  const PersonalBest(
+      {required this.id,
+      required this.event,
+      required this.timeMs,
+      this.date,
+      this.note});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     {
-      map['event'] = Variable<String>(
-        $PersonalBestsTable.$converterevent.toSql(event),
-      );
+      map['event'] =
+          Variable<String>($PersonalBestsTable.$converterevent.toSql(event));
     }
     map['time_ms'] = Variable<int>(timeMs);
     if (!nullToAbsent || date != null) {
@@ -178,16 +137,13 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
     );
   }
 
-  factory PersonalBest.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory PersonalBest.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PersonalBest(
       id: serializer.fromJson<String>(json['id']),
-      event: $PersonalBestsTable.$converterevent.fromJson(
-        serializer.fromJson<String>(json['event']),
-      ),
+      event: $PersonalBestsTable.$converterevent
+          .fromJson(serializer.fromJson<String>(json['event'])),
       timeMs: serializer.fromJson<int>(json['timeMs']),
       date: serializer.fromJson<DateTime?>(json['date']),
       note: serializer.fromJson<String?>(json['note']),
@@ -198,28 +154,27 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'event': serializer.toJson<String>(
-        $PersonalBestsTable.$converterevent.toJson(event),
-      ),
+      'event': serializer
+          .toJson<String>($PersonalBestsTable.$converterevent.toJson(event)),
       'timeMs': serializer.toJson<int>(timeMs),
       'date': serializer.toJson<DateTime?>(date),
       'note': serializer.toJson<String?>(note),
     };
   }
 
-  PersonalBest copyWith({
-    String? id,
-    PbEvent? event,
-    int? timeMs,
-    Value<DateTime?> date = const Value.absent(),
-    Value<String?> note = const Value.absent(),
-  }) => PersonalBest(
-    id: id ?? this.id,
-    event: event ?? this.event,
-    timeMs: timeMs ?? this.timeMs,
-    date: date.present ? date.value : this.date,
-    note: note.present ? note.value : this.note,
-  );
+  PersonalBest copyWith(
+          {String? id,
+          PbEvent? event,
+          int? timeMs,
+          Value<DateTime?> date = const Value.absent(),
+          Value<String?> note = const Value.absent()}) =>
+      PersonalBest(
+        id: id ?? this.id,
+        event: event ?? this.event,
+        timeMs: timeMs ?? this.timeMs,
+        date: date.present ? date.value : this.date,
+        note: note.present ? note.value : this.note,
+      );
   PersonalBest copyWithCompanion(PersonalBestsCompanion data) {
     return PersonalBest(
       id: data.id.present ? data.id.value : this.id,
@@ -277,9 +232,9 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     this.date = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       event = Value(event),
-       timeMs = Value(timeMs);
+  })  : id = Value(id),
+        event = Value(event),
+        timeMs = Value(timeMs);
   static Insertable<PersonalBest> custom({
     Expression<String>? id,
     Expression<String>? event,
@@ -298,14 +253,13 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     });
   }
 
-  PersonalBestsCompanion copyWith({
-    Value<String>? id,
-    Value<PbEvent>? event,
-    Value<int>? timeMs,
-    Value<DateTime?>? date,
-    Value<String?>? note,
-    Value<int>? rowid,
-  }) {
+  PersonalBestsCompanion copyWith(
+      {Value<String>? id,
+      Value<PbEvent>? event,
+      Value<int>? timeMs,
+      Value<DateTime?>? date,
+      Value<String?>? note,
+      Value<int>? rowid}) {
     return PersonalBestsCompanion(
       id: id ?? this.id,
       event: event ?? this.event,
@@ -324,8 +278,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     }
     if (event.present) {
       map['event'] = Variable<String>(
-        $PersonalBestsTable.$converterevent.toSql(event.value),
-      );
+          $PersonalBestsTable.$converterevent.toSql(event.value));
     }
     if (timeMs.present) {
       map['time_ms'] = Variable<int>(timeMs.value);
@@ -364,53 +317,58 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
-    'date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _templateTextMeta = const VerificationMeta(
-    'templateText',
-  );
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _menuNameMeta =
+      const VerificationMeta('menuName');
   @override
-  late final GeneratedColumn<String> templateText = GeneratedColumn<String>(
-    'template_text',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumn<String> menuName = GeneratedColumn<String>(
+      'menu_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _distanceMeta =
+      const VerificationMeta('distance');
+  @override
+  late final GeneratedColumn<int> distance = GeneratedColumn<int>(
+      'distance', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _paceMeta = const VerificationMeta('pace');
+  @override
+  late final GeneratedColumn<int> pace = GeneratedColumn<int>(
+      'pace', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  @override
+  late final GeneratedColumnWithTypeConverter<Zone?, String> zone =
+      GeneratedColumn<String>('zone', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<Zone?>($PlansTable.$converterzonen);
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
+  @override
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+      'reps', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
-    'note',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [id, date, templateText, note];
+  List<GeneratedColumn> get $columns =>
+      [id, date, menuName, distance, pace, zone, reps, note];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'plans';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<Plan> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<Plan> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -420,28 +378,31 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
     }
     if (data.containsKey('date')) {
       context.handle(
-        _dateMeta,
-        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
-      );
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
-    if (data.containsKey('template_text')) {
-      context.handle(
-        _templateTextMeta,
-        templateText.isAcceptableOrUnknown(
-          data['template_text']!,
-          _templateTextMeta,
-        ),
-      );
+    if (data.containsKey('menu_name')) {
+      context.handle(_menuNameMeta,
+          menuName.isAcceptableOrUnknown(data['menu_name']!, _menuNameMeta));
     } else if (isInserting) {
-      context.missing(_templateTextMeta);
+      context.missing(_menuNameMeta);
+    }
+    if (data.containsKey('distance')) {
+      context.handle(_distanceMeta,
+          distance.isAcceptableOrUnknown(data['distance']!, _distanceMeta));
+    }
+    if (data.containsKey('pace')) {
+      context.handle(
+          _paceMeta, pace.isAcceptableOrUnknown(data['pace']!, _paceMeta));
+    }
+    if (data.containsKey('reps')) {
+      context.handle(
+          _repsMeta, reps.isAcceptableOrUnknown(data['reps']!, _repsMeta));
     }
     if (data.containsKey('note')) {
       context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     return context;
   }
@@ -452,22 +413,22 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
   Plan map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Plan(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      date: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}date'],
-      )!,
-      templateText: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}template_text'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      menuName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}menu_name'])!,
+      distance: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}distance']),
+      pace: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}pace']),
+      zone: $PlansTable.$converterzonen.fromSql(attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}zone'])),
+      reps: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reps'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
     );
   }
 
@@ -475,25 +436,47 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
   $PlansTable createAlias(String alias) {
     return $PlansTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<Zone, String, String> $converterzone =
+      const EnumNameConverter<Zone>(Zone.values);
+  static JsonTypeConverter2<Zone?, String?, String?> $converterzonen =
+      JsonTypeConverter2.asNullable($converterzone);
 }
 
 class Plan extends DataClass implements Insertable<Plan> {
   final String id;
   final DateTime date;
-  final String templateText;
+  final String menuName;
+  final int? distance;
+  final int? pace;
+  final Zone? zone;
+  final int reps;
   final String? note;
-  const Plan({
-    required this.id,
-    required this.date,
-    required this.templateText,
-    this.note,
-  });
+  const Plan(
+      {required this.id,
+      required this.date,
+      required this.menuName,
+      this.distance,
+      this.pace,
+      this.zone,
+      required this.reps,
+      this.note});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['date'] = Variable<DateTime>(date);
-    map['template_text'] = Variable<String>(templateText);
+    map['menu_name'] = Variable<String>(menuName);
+    if (!nullToAbsent || distance != null) {
+      map['distance'] = Variable<int>(distance);
+    }
+    if (!nullToAbsent || pace != null) {
+      map['pace'] = Variable<int>(pace);
+    }
+    if (!nullToAbsent || zone != null) {
+      map['zone'] = Variable<String>($PlansTable.$converterzonen.toSql(zone));
+    }
+    map['reps'] = Variable<int>(reps);
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
@@ -504,20 +487,29 @@ class Plan extends DataClass implements Insertable<Plan> {
     return PlansCompanion(
       id: Value(id),
       date: Value(date),
-      templateText: Value(templateText),
+      menuName: Value(menuName),
+      distance: distance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(distance),
+      pace: pace == null && nullToAbsent ? const Value.absent() : Value(pace),
+      zone: zone == null && nullToAbsent ? const Value.absent() : Value(zone),
+      reps: Value(reps),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
     );
   }
 
-  factory Plan.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory Plan.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Plan(
       id: serializer.fromJson<String>(json['id']),
       date: serializer.fromJson<DateTime>(json['date']),
-      templateText: serializer.fromJson<String>(json['templateText']),
+      menuName: serializer.fromJson<String>(json['menuName']),
+      distance: serializer.fromJson<int?>(json['distance']),
+      pace: serializer.fromJson<int?>(json['pace']),
+      zone: $PlansTable.$converterzonen
+          .fromJson(serializer.fromJson<String?>(json['zone'])),
+      reps: serializer.fromJson<int>(json['reps']),
       note: serializer.fromJson<String?>(json['note']),
     );
   }
@@ -527,29 +519,44 @@ class Plan extends DataClass implements Insertable<Plan> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'date': serializer.toJson<DateTime>(date),
-      'templateText': serializer.toJson<String>(templateText),
+      'menuName': serializer.toJson<String>(menuName),
+      'distance': serializer.toJson<int?>(distance),
+      'pace': serializer.toJson<int?>(pace),
+      'zone':
+          serializer.toJson<String?>($PlansTable.$converterzonen.toJson(zone)),
+      'reps': serializer.toJson<int>(reps),
       'note': serializer.toJson<String?>(note),
     };
   }
 
-  Plan copyWith({
-    String? id,
-    DateTime? date,
-    String? templateText,
-    Value<String?> note = const Value.absent(),
-  }) => Plan(
-    id: id ?? this.id,
-    date: date ?? this.date,
-    templateText: templateText ?? this.templateText,
-    note: note.present ? note.value : this.note,
-  );
+  Plan copyWith(
+          {String? id,
+          DateTime? date,
+          String? menuName,
+          Value<int?> distance = const Value.absent(),
+          Value<int?> pace = const Value.absent(),
+          Value<Zone?> zone = const Value.absent(),
+          int? reps,
+          Value<String?> note = const Value.absent()}) =>
+      Plan(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        menuName: menuName ?? this.menuName,
+        distance: distance.present ? distance.value : this.distance,
+        pace: pace.present ? pace.value : this.pace,
+        zone: zone.present ? zone.value : this.zone,
+        reps: reps ?? this.reps,
+        note: note.present ? note.value : this.note,
+      );
   Plan copyWithCompanion(PlansCompanion data) {
     return Plan(
       id: data.id.present ? data.id.value : this.id,
       date: data.date.present ? data.date.value : this.date,
-      templateText: data.templateText.present
-          ? data.templateText.value
-          : this.templateText,
+      menuName: data.menuName.present ? data.menuName.value : this.menuName,
+      distance: data.distance.present ? data.distance.value : this.distance,
+      pace: data.pace.present ? data.pace.value : this.pace,
+      zone: data.zone.present ? data.zone.value : this.zone,
+      reps: data.reps.present ? data.reps.value : this.reps,
       note: data.note.present ? data.note.value : this.note,
     );
   }
@@ -559,73 +566,109 @@ class Plan extends DataClass implements Insertable<Plan> {
     return (StringBuffer('Plan(')
           ..write('id: $id, ')
           ..write('date: $date, ')
-          ..write('templateText: $templateText, ')
+          ..write('menuName: $menuName, ')
+          ..write('distance: $distance, ')
+          ..write('pace: $pace, ')
+          ..write('zone: $zone, ')
+          ..write('reps: $reps, ')
           ..write('note: $note')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, date, templateText, note);
+  int get hashCode =>
+      Object.hash(id, date, menuName, distance, pace, zone, reps, note);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Plan &&
           other.id == this.id &&
           other.date == this.date &&
-          other.templateText == this.templateText &&
+          other.menuName == this.menuName &&
+          other.distance == this.distance &&
+          other.pace == this.pace &&
+          other.zone == this.zone &&
+          other.reps == this.reps &&
           other.note == this.note);
 }
 
 class PlansCompanion extends UpdateCompanion<Plan> {
   final Value<String> id;
   final Value<DateTime> date;
-  final Value<String> templateText;
+  final Value<String> menuName;
+  final Value<int?> distance;
+  final Value<int?> pace;
+  final Value<Zone?> zone;
+  final Value<int> reps;
   final Value<String?> note;
   final Value<int> rowid;
   const PlansCompanion({
     this.id = const Value.absent(),
     this.date = const Value.absent(),
-    this.templateText = const Value.absent(),
+    this.menuName = const Value.absent(),
+    this.distance = const Value.absent(),
+    this.pace = const Value.absent(),
+    this.zone = const Value.absent(),
+    this.reps = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlansCompanion.insert({
     required String id,
     required DateTime date,
-    required String templateText,
+    required String menuName,
+    this.distance = const Value.absent(),
+    this.pace = const Value.absent(),
+    this.zone = const Value.absent(),
+    this.reps = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       date = Value(date),
-       templateText = Value(templateText);
+  })  : id = Value(id),
+        date = Value(date),
+        menuName = Value(menuName);
   static Insertable<Plan> custom({
     Expression<String>? id,
     Expression<DateTime>? date,
-    Expression<String>? templateText,
+    Expression<String>? menuName,
+    Expression<int>? distance,
+    Expression<int>? pace,
+    Expression<String>? zone,
+    Expression<int>? reps,
     Expression<String>? note,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (date != null) 'date': date,
-      if (templateText != null) 'template_text': templateText,
+      if (menuName != null) 'menu_name': menuName,
+      if (distance != null) 'distance': distance,
+      if (pace != null) 'pace': pace,
+      if (zone != null) 'zone': zone,
+      if (reps != null) 'reps': reps,
       if (note != null) 'note': note,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  PlansCompanion copyWith({
-    Value<String>? id,
-    Value<DateTime>? date,
-    Value<String>? templateText,
-    Value<String?>? note,
-    Value<int>? rowid,
-  }) {
+  PlansCompanion copyWith(
+      {Value<String>? id,
+      Value<DateTime>? date,
+      Value<String>? menuName,
+      Value<int?>? distance,
+      Value<int?>? pace,
+      Value<Zone?>? zone,
+      Value<int>? reps,
+      Value<String?>? note,
+      Value<int>? rowid}) {
     return PlansCompanion(
       id: id ?? this.id,
       date: date ?? this.date,
-      templateText: templateText ?? this.templateText,
+      menuName: menuName ?? this.menuName,
+      distance: distance ?? this.distance,
+      pace: pace ?? this.pace,
+      zone: zone ?? this.zone,
+      reps: reps ?? this.reps,
       note: note ?? this.note,
       rowid: rowid ?? this.rowid,
     );
@@ -640,8 +683,21 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
-    if (templateText.present) {
-      map['template_text'] = Variable<String>(templateText.value);
+    if (menuName.present) {
+      map['menu_name'] = Variable<String>(menuName.value);
+    }
+    if (distance.present) {
+      map['distance'] = Variable<int>(distance.value);
+    }
+    if (pace.present) {
+      map['pace'] = Variable<int>(pace.value);
+    }
+    if (zone.present) {
+      map['zone'] =
+          Variable<String>($PlansTable.$converterzonen.toSql(zone.value));
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
     }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
@@ -657,7 +713,11 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     return (StringBuffer('PlansCompanion(')
           ..write('id: $id, ')
           ..write('date: $date, ')
-          ..write('templateText: $templateText, ')
+          ..write('menuName: $menuName, ')
+          ..write('distance: $distance, ')
+          ..write('pace: $pace, ')
+          ..write('zone: $zone, ')
+          ..write('reps: $reps, ')
           ..write('note: $note, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -673,235 +733,144 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _startedAtMeta = const VerificationMeta(
-    'startedAt',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startedAtMeta =
+      const VerificationMeta('startedAt');
   @override
   late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
-    'date_time',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+      'date_time', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
   static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
   @override
   late final GeneratedColumn<String> planId = GeneratedColumn<String>(
-    'plan_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES plans (id)',
-    ),
-  );
-  static const VerificationMeta _templateTextMeta = const VerificationMeta(
-    'templateText',
-  );
+      'plan_id', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES plans (id)'));
+  static const VerificationMeta _templateTextMeta =
+      const VerificationMeta('templateText');
   @override
   late final GeneratedColumn<String> templateText = GeneratedColumn<String>(
-    'template_text',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _distanceMainMMeta = const VerificationMeta(
-    'distanceMainM',
-  );
+      'template_text', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _distanceMainMMeta =
+      const VerificationMeta('distanceMainM');
   @override
   late final GeneratedColumn<int> distanceMainM = GeneratedColumn<int>(
-    'distance_main_m',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _durationMainSecMeta = const VerificationMeta(
-    'durationMainSec',
-  );
+      'distance_main_m', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _durationMainSecMeta =
+      const VerificationMeta('durationMainSec');
   @override
   late final GeneratedColumn<int> durationMainSec = GeneratedColumn<int>(
-    'duration_main_sec',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _paceSecPerKmMeta = const VerificationMeta(
-    'paceSecPerKm',
-  );
+      'duration_main_sec', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _paceSecPerKmMeta =
+      const VerificationMeta('paceSecPerKm');
   @override
   late final GeneratedColumn<int> paceSecPerKm = GeneratedColumn<int>(
-    'pace_sec_per_km',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'pace_sec_per_km', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   late final GeneratedColumnWithTypeConverter<Zone?, String> zone =
-      GeneratedColumn<String>(
-        'zone',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      ).withConverter<Zone?>($SessionsTable.$converterzonen);
-  static const VerificationMeta _rpeValueMeta = const VerificationMeta(
-    'rpeValue',
-  );
+      GeneratedColumn<String>('zone', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<Zone?>($SessionsTable.$converterzonen);
+  static const VerificationMeta _rpeValueMeta =
+      const VerificationMeta('rpeValue');
   @override
   late final GeneratedColumn<int> rpeValue = GeneratedColumn<int>(
-    'rpe_value',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'rpe_value', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   late final GeneratedColumnWithTypeConverter<RestType?, String> restType =
-      GeneratedColumn<String>(
-        'rest_type',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      ).withConverter<RestType?>($SessionsTable.$converterrestTypen);
-  static const VerificationMeta _restDurationSecMeta = const VerificationMeta(
-    'restDurationSec',
-  );
+      GeneratedColumn<String>('rest_type', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<RestType?>($SessionsTable.$converterrestTypen);
+  static const VerificationMeta _restDurationSecMeta =
+      const VerificationMeta('restDurationSec');
   @override
   late final GeneratedColumn<int> restDurationSec = GeneratedColumn<int>(
-    'rest_duration_sec',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _restDistanceMMeta = const VerificationMeta(
-    'restDistanceM',
-  );
+      'rest_duration_sec', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _restDistanceMMeta =
+      const VerificationMeta('restDistanceM');
   @override
   late final GeneratedColumn<int> restDistanceM = GeneratedColumn<int>(
-    'rest_distance_m',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _wuDistanceMMeta = const VerificationMeta(
-    'wuDistanceM',
-  );
+      'rest_distance_m', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _wuDistanceMMeta =
+      const VerificationMeta('wuDistanceM');
   @override
   late final GeneratedColumn<int> wuDistanceM = GeneratedColumn<int>(
-    'wu_distance_m',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _wuDurationSecMeta = const VerificationMeta(
-    'wuDurationSec',
-  );
+      'wu_distance_m', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _wuDurationSecMeta =
+      const VerificationMeta('wuDurationSec');
   @override
   late final GeneratedColumn<int> wuDurationSec = GeneratedColumn<int>(
-    'wu_duration_sec',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _cdDistanceMMeta = const VerificationMeta(
-    'cdDistanceM',
-  );
+      'wu_duration_sec', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _cdDistanceMMeta =
+      const VerificationMeta('cdDistanceM');
   @override
   late final GeneratedColumn<int> cdDistanceM = GeneratedColumn<int>(
-    'cd_distance_m',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _cdDurationSecMeta = const VerificationMeta(
-    'cdDurationSec',
-  );
+      'cd_distance_m', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _cdDurationSecMeta =
+      const VerificationMeta('cdDurationSec');
   @override
   late final GeneratedColumn<int> cdDurationSec = GeneratedColumn<int>(
-    'cd_duration_sec',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'cd_duration_sec', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   late final GeneratedColumnWithTypeConverter<SessionStatus, String> status =
-      GeneratedColumn<String>(
-        'status',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SessionStatus>($SessionsTable.$converterstatus);
+      GeneratedColumn<String>('status', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<SessionStatus>($SessionsTable.$converterstatus);
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
-    'note',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _repLoadMeta = const VerificationMeta(
-    'repLoad',
-  );
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _repLoadMeta =
+      const VerificationMeta('repLoad');
   @override
   late final GeneratedColumn<int> repLoad = GeneratedColumn<int>(
-    'rep_load',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+      'rep_load', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    startedAt,
-    planId,
-    templateText,
-    distanceMainM,
-    durationMainSec,
-    paceSecPerKm,
-    zone,
-    rpeValue,
-    restType,
-    restDurationSec,
-    restDistanceM,
-    wuDistanceM,
-    wuDurationSec,
-    cdDistanceM,
-    cdDurationSec,
-    status,
-    note,
-    repLoad,
-  ];
+        id,
+        startedAt,
+        planId,
+        templateText,
+        distanceMainM,
+        durationMainSec,
+        paceSecPerKm,
+        zone,
+        rpeValue,
+        restType,
+        restDurationSec,
+        restDistanceM,
+        wuDistanceM,
+        wuDurationSec,
+        cdDistanceM,
+        cdDurationSec,
+        status,
+        note,
+        repLoad
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sessions';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<Session> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<Session> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -910,128 +879,88 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       context.missing(_idMeta);
     }
     if (data.containsKey('date_time')) {
-      context.handle(
-        _startedAtMeta,
-        startedAt.isAcceptableOrUnknown(data['date_time']!, _startedAtMeta),
-      );
+      context.handle(_startedAtMeta,
+          startedAt.isAcceptableOrUnknown(data['date_time']!, _startedAtMeta));
     } else if (isInserting) {
       context.missing(_startedAtMeta);
     }
     if (data.containsKey('plan_id')) {
-      context.handle(
-        _planIdMeta,
-        planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta),
-      );
+      context.handle(_planIdMeta,
+          planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta));
     }
     if (data.containsKey('template_text')) {
       context.handle(
-        _templateTextMeta,
-        templateText.isAcceptableOrUnknown(
-          data['template_text']!,
           _templateTextMeta,
-        ),
-      );
+          templateText.isAcceptableOrUnknown(
+              data['template_text']!, _templateTextMeta));
     } else if (isInserting) {
       context.missing(_templateTextMeta);
     }
     if (data.containsKey('distance_main_m')) {
       context.handle(
-        _distanceMainMMeta,
-        distanceMainM.isAcceptableOrUnknown(
-          data['distance_main_m']!,
           _distanceMainMMeta,
-        ),
-      );
+          distanceMainM.isAcceptableOrUnknown(
+              data['distance_main_m']!, _distanceMainMMeta));
     }
     if (data.containsKey('duration_main_sec')) {
       context.handle(
-        _durationMainSecMeta,
-        durationMainSec.isAcceptableOrUnknown(
-          data['duration_main_sec']!,
           _durationMainSecMeta,
-        ),
-      );
+          durationMainSec.isAcceptableOrUnknown(
+              data['duration_main_sec']!, _durationMainSecMeta));
     }
     if (data.containsKey('pace_sec_per_km')) {
       context.handle(
-        _paceSecPerKmMeta,
-        paceSecPerKm.isAcceptableOrUnknown(
-          data['pace_sec_per_km']!,
           _paceSecPerKmMeta,
-        ),
-      );
+          paceSecPerKm.isAcceptableOrUnknown(
+              data['pace_sec_per_km']!, _paceSecPerKmMeta));
     }
     if (data.containsKey('rpe_value')) {
-      context.handle(
-        _rpeValueMeta,
-        rpeValue.isAcceptableOrUnknown(data['rpe_value']!, _rpeValueMeta),
-      );
+      context.handle(_rpeValueMeta,
+          rpeValue.isAcceptableOrUnknown(data['rpe_value']!, _rpeValueMeta));
     }
     if (data.containsKey('rest_duration_sec')) {
       context.handle(
-        _restDurationSecMeta,
-        restDurationSec.isAcceptableOrUnknown(
-          data['rest_duration_sec']!,
           _restDurationSecMeta,
-        ),
-      );
+          restDurationSec.isAcceptableOrUnknown(
+              data['rest_duration_sec']!, _restDurationSecMeta));
     }
     if (data.containsKey('rest_distance_m')) {
       context.handle(
-        _restDistanceMMeta,
-        restDistanceM.isAcceptableOrUnknown(
-          data['rest_distance_m']!,
           _restDistanceMMeta,
-        ),
-      );
+          restDistanceM.isAcceptableOrUnknown(
+              data['rest_distance_m']!, _restDistanceMMeta));
     }
     if (data.containsKey('wu_distance_m')) {
       context.handle(
-        _wuDistanceMMeta,
-        wuDistanceM.isAcceptableOrUnknown(
-          data['wu_distance_m']!,
           _wuDistanceMMeta,
-        ),
-      );
+          wuDistanceM.isAcceptableOrUnknown(
+              data['wu_distance_m']!, _wuDistanceMMeta));
     }
     if (data.containsKey('wu_duration_sec')) {
       context.handle(
-        _wuDurationSecMeta,
-        wuDurationSec.isAcceptableOrUnknown(
-          data['wu_duration_sec']!,
           _wuDurationSecMeta,
-        ),
-      );
+          wuDurationSec.isAcceptableOrUnknown(
+              data['wu_duration_sec']!, _wuDurationSecMeta));
     }
     if (data.containsKey('cd_distance_m')) {
       context.handle(
-        _cdDistanceMMeta,
-        cdDistanceM.isAcceptableOrUnknown(
-          data['cd_distance_m']!,
           _cdDistanceMMeta,
-        ),
-      );
+          cdDistanceM.isAcceptableOrUnknown(
+              data['cd_distance_m']!, _cdDistanceMMeta));
     }
     if (data.containsKey('cd_duration_sec')) {
       context.handle(
-        _cdDurationSecMeta,
-        cdDurationSec.isAcceptableOrUnknown(
-          data['cd_duration_sec']!,
           _cdDurationSecMeta,
-        ),
-      );
+          cdDurationSec.isAcceptableOrUnknown(
+              data['cd_duration_sec']!, _cdDurationSecMeta));
     }
     if (data.containsKey('note')) {
       context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     if (data.containsKey('rep_load')) {
-      context.handle(
-        _repLoadMeta,
-        repLoad.isAcceptableOrUnknown(data['rep_load']!, _repLoadMeta),
-      );
+      context.handle(_repLoadMeta,
+          repLoad.isAcceptableOrUnknown(data['rep_load']!, _repLoadMeta));
     }
     return context;
   }
@@ -1042,88 +971,46 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   Session map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Session(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      startedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}date_time'],
-      )!,
-      planId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}plan_id'],
-      ),
-      templateText: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}template_text'],
-      )!,
-      distanceMainM: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}distance_main_m'],
-      ),
-      durationMainSec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_main_sec'],
-      ),
-      paceSecPerKm: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}pace_sec_per_km'],
-      ),
-      zone: $SessionsTable.$converterzonen.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}zone'],
-        ),
-      ),
-      rpeValue: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}rpe_value'],
-      ),
-      restType: $SessionsTable.$converterrestTypen.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}rest_type'],
-        ),
-      ),
-      restDurationSec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}rest_duration_sec'],
-      ),
-      restDistanceM: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}rest_distance_m'],
-      ),
-      wuDistanceM: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}wu_distance_m'],
-      ),
-      wuDurationSec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}wu_duration_sec'],
-      ),
-      cdDistanceM: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}cd_distance_m'],
-      ),
-      cdDurationSec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}cd_duration_sec'],
-      ),
-      status: $SessionsTable.$converterstatus.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}status'],
-        )!,
-      ),
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      repLoad: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}rep_load'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      startedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_time'])!,
+      planId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}plan_id']),
+      templateText: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}template_text'])!,
+      distanceMainM: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}distance_main_m']),
+      durationMainSec: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration_main_sec']),
+      paceSecPerKm: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}pace_sec_per_km']),
+      zone: $SessionsTable.$converterzonen.fromSql(attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}zone'])),
+      rpeValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}rpe_value']),
+      restType: $SessionsTable.$converterrestTypen.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rest_type'])),
+      restDurationSec: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}rest_duration_sec']),
+      restDistanceM: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}rest_distance_m']),
+      wuDistanceM: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}wu_distance_m']),
+      wuDurationSec: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}wu_duration_sec']),
+      cdDistanceM: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cd_distance_m']),
+      cdDurationSec: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cd_duration_sec']),
+      status: $SessionsTable.$converterstatus.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!),
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      repLoad: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}rep_load']),
     );
   }
 
@@ -1164,27 +1051,26 @@ class Session extends DataClass implements Insertable<Session> {
   final SessionStatus status;
   final String? note;
   final int? repLoad;
-  const Session({
-    required this.id,
-    required this.startedAt,
-    this.planId,
-    required this.templateText,
-    this.distanceMainM,
-    this.durationMainSec,
-    this.paceSecPerKm,
-    this.zone,
-    this.rpeValue,
-    this.restType,
-    this.restDurationSec,
-    this.restDistanceM,
-    this.wuDistanceM,
-    this.wuDurationSec,
-    this.cdDistanceM,
-    this.cdDurationSec,
-    required this.status,
-    this.note,
-    this.repLoad,
-  });
+  const Session(
+      {required this.id,
+      required this.startedAt,
+      this.planId,
+      required this.templateText,
+      this.distanceMainM,
+      this.durationMainSec,
+      this.paceSecPerKm,
+      this.zone,
+      this.rpeValue,
+      this.restType,
+      this.restDurationSec,
+      this.restDistanceM,
+      this.wuDistanceM,
+      this.wuDurationSec,
+      this.cdDistanceM,
+      this.cdDurationSec,
+      required this.status,
+      this.note,
+      this.repLoad});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1204,17 +1090,15 @@ class Session extends DataClass implements Insertable<Session> {
       map['pace_sec_per_km'] = Variable<int>(paceSecPerKm);
     }
     if (!nullToAbsent || zone != null) {
-      map['zone'] = Variable<String>(
-        $SessionsTable.$converterzonen.toSql(zone),
-      );
+      map['zone'] =
+          Variable<String>($SessionsTable.$converterzonen.toSql(zone));
     }
     if (!nullToAbsent || rpeValue != null) {
       map['rpe_value'] = Variable<int>(rpeValue);
     }
     if (!nullToAbsent || restType != null) {
-      map['rest_type'] = Variable<String>(
-        $SessionsTable.$converterrestTypen.toSql(restType),
-      );
+      map['rest_type'] =
+          Variable<String>($SessionsTable.$converterrestTypen.toSql(restType));
     }
     if (!nullToAbsent || restDurationSec != null) {
       map['rest_duration_sec'] = Variable<int>(restDurationSec);
@@ -1235,9 +1119,8 @@ class Session extends DataClass implements Insertable<Session> {
       map['cd_duration_sec'] = Variable<int>(cdDurationSec);
     }
     {
-      map['status'] = Variable<String>(
-        $SessionsTable.$converterstatus.toSql(status),
-      );
+      map['status'] =
+          Variable<String>($SessionsTable.$converterstatus.toSql(status));
     }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
@@ -1252,9 +1135,8 @@ class Session extends DataClass implements Insertable<Session> {
     return SessionsCompanion(
       id: Value(id),
       startedAt: Value(startedAt),
-      planId: planId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(planId),
+      planId:
+          planId == null && nullToAbsent ? const Value.absent() : Value(planId),
       templateText: Value(templateText),
       distanceMainM: distanceMainM == null && nullToAbsent
           ? const Value.absent()
@@ -1298,10 +1180,8 @@ class Session extends DataClass implements Insertable<Session> {
     );
   }
 
-  factory Session.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory Session.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Session(
       id: serializer.fromJson<String>(json['id']),
@@ -1311,22 +1191,19 @@ class Session extends DataClass implements Insertable<Session> {
       distanceMainM: serializer.fromJson<int?>(json['distanceMainM']),
       durationMainSec: serializer.fromJson<int?>(json['durationMainSec']),
       paceSecPerKm: serializer.fromJson<int?>(json['paceSecPerKm']),
-      zone: $SessionsTable.$converterzonen.fromJson(
-        serializer.fromJson<String?>(json['zone']),
-      ),
+      zone: $SessionsTable.$converterzonen
+          .fromJson(serializer.fromJson<String?>(json['zone'])),
       rpeValue: serializer.fromJson<int?>(json['rpeValue']),
-      restType: $SessionsTable.$converterrestTypen.fromJson(
-        serializer.fromJson<String?>(json['restType']),
-      ),
+      restType: $SessionsTable.$converterrestTypen
+          .fromJson(serializer.fromJson<String?>(json['restType'])),
       restDurationSec: serializer.fromJson<int?>(json['restDurationSec']),
       restDistanceM: serializer.fromJson<int?>(json['restDistanceM']),
       wuDistanceM: serializer.fromJson<int?>(json['wuDistanceM']),
       wuDurationSec: serializer.fromJson<int?>(json['wuDurationSec']),
       cdDistanceM: serializer.fromJson<int?>(json['cdDistanceM']),
       cdDurationSec: serializer.fromJson<int?>(json['cdDurationSec']),
-      status: $SessionsTable.$converterstatus.fromJson(
-        serializer.fromJson<String>(json['status']),
-      ),
+      status: $SessionsTable.$converterstatus
+          .fromJson(serializer.fromJson<String>(json['status'])),
       note: serializer.fromJson<String?>(json['note']),
       repLoad: serializer.fromJson<int?>(json['repLoad']),
     );
@@ -1342,80 +1219,74 @@ class Session extends DataClass implements Insertable<Session> {
       'distanceMainM': serializer.toJson<int?>(distanceMainM),
       'durationMainSec': serializer.toJson<int?>(durationMainSec),
       'paceSecPerKm': serializer.toJson<int?>(paceSecPerKm),
-      'zone': serializer.toJson<String?>(
-        $SessionsTable.$converterzonen.toJson(zone),
-      ),
+      'zone': serializer
+          .toJson<String?>($SessionsTable.$converterzonen.toJson(zone)),
       'rpeValue': serializer.toJson<int?>(rpeValue),
-      'restType': serializer.toJson<String?>(
-        $SessionsTable.$converterrestTypen.toJson(restType),
-      ),
+      'restType': serializer
+          .toJson<String?>($SessionsTable.$converterrestTypen.toJson(restType)),
       'restDurationSec': serializer.toJson<int?>(restDurationSec),
       'restDistanceM': serializer.toJson<int?>(restDistanceM),
       'wuDistanceM': serializer.toJson<int?>(wuDistanceM),
       'wuDurationSec': serializer.toJson<int?>(wuDurationSec),
       'cdDistanceM': serializer.toJson<int?>(cdDistanceM),
       'cdDurationSec': serializer.toJson<int?>(cdDurationSec),
-      'status': serializer.toJson<String>(
-        $SessionsTable.$converterstatus.toJson(status),
-      ),
+      'status': serializer
+          .toJson<String>($SessionsTable.$converterstatus.toJson(status)),
       'note': serializer.toJson<String?>(note),
       'repLoad': serializer.toJson<int?>(repLoad),
     };
   }
 
-  Session copyWith({
-    String? id,
-    DateTime? startedAt,
-    Value<String?> planId = const Value.absent(),
-    String? templateText,
-    Value<int?> distanceMainM = const Value.absent(),
-    Value<int?> durationMainSec = const Value.absent(),
-    Value<int?> paceSecPerKm = const Value.absent(),
-    Value<Zone?> zone = const Value.absent(),
-    Value<int?> rpeValue = const Value.absent(),
-    Value<RestType?> restType = const Value.absent(),
-    Value<int?> restDurationSec = const Value.absent(),
-    Value<int?> restDistanceM = const Value.absent(),
-    Value<int?> wuDistanceM = const Value.absent(),
-    Value<int?> wuDurationSec = const Value.absent(),
-    Value<int?> cdDistanceM = const Value.absent(),
-    Value<int?> cdDurationSec = const Value.absent(),
-    SessionStatus? status,
-    Value<String?> note = const Value.absent(),
-    Value<int?> repLoad = const Value.absent(),
-  }) => Session(
-    id: id ?? this.id,
-    startedAt: startedAt ?? this.startedAt,
-    planId: planId.present ? planId.value : this.planId,
-    templateText: templateText ?? this.templateText,
-    distanceMainM: distanceMainM.present
-        ? distanceMainM.value
-        : this.distanceMainM,
-    durationMainSec: durationMainSec.present
-        ? durationMainSec.value
-        : this.durationMainSec,
-    paceSecPerKm: paceSecPerKm.present ? paceSecPerKm.value : this.paceSecPerKm,
-    zone: zone.present ? zone.value : this.zone,
-    rpeValue: rpeValue.present ? rpeValue.value : this.rpeValue,
-    restType: restType.present ? restType.value : this.restType,
-    restDurationSec: restDurationSec.present
-        ? restDurationSec.value
-        : this.restDurationSec,
-    restDistanceM: restDistanceM.present
-        ? restDistanceM.value
-        : this.restDistanceM,
-    wuDistanceM: wuDistanceM.present ? wuDistanceM.value : this.wuDistanceM,
-    wuDurationSec: wuDurationSec.present
-        ? wuDurationSec.value
-        : this.wuDurationSec,
-    cdDistanceM: cdDistanceM.present ? cdDistanceM.value : this.cdDistanceM,
-    cdDurationSec: cdDurationSec.present
-        ? cdDurationSec.value
-        : this.cdDurationSec,
-    status: status ?? this.status,
-    note: note.present ? note.value : this.note,
-    repLoad: repLoad.present ? repLoad.value : this.repLoad,
-  );
+  Session copyWith(
+          {String? id,
+          DateTime? startedAt,
+          Value<String?> planId = const Value.absent(),
+          String? templateText,
+          Value<int?> distanceMainM = const Value.absent(),
+          Value<int?> durationMainSec = const Value.absent(),
+          Value<int?> paceSecPerKm = const Value.absent(),
+          Value<Zone?> zone = const Value.absent(),
+          Value<int?> rpeValue = const Value.absent(),
+          Value<RestType?> restType = const Value.absent(),
+          Value<int?> restDurationSec = const Value.absent(),
+          Value<int?> restDistanceM = const Value.absent(),
+          Value<int?> wuDistanceM = const Value.absent(),
+          Value<int?> wuDurationSec = const Value.absent(),
+          Value<int?> cdDistanceM = const Value.absent(),
+          Value<int?> cdDurationSec = const Value.absent(),
+          SessionStatus? status,
+          Value<String?> note = const Value.absent(),
+          Value<int?> repLoad = const Value.absent()}) =>
+      Session(
+        id: id ?? this.id,
+        startedAt: startedAt ?? this.startedAt,
+        planId: planId.present ? planId.value : this.planId,
+        templateText: templateText ?? this.templateText,
+        distanceMainM:
+            distanceMainM.present ? distanceMainM.value : this.distanceMainM,
+        durationMainSec: durationMainSec.present
+            ? durationMainSec.value
+            : this.durationMainSec,
+        paceSecPerKm:
+            paceSecPerKm.present ? paceSecPerKm.value : this.paceSecPerKm,
+        zone: zone.present ? zone.value : this.zone,
+        rpeValue: rpeValue.present ? rpeValue.value : this.rpeValue,
+        restType: restType.present ? restType.value : this.restType,
+        restDurationSec: restDurationSec.present
+            ? restDurationSec.value
+            : this.restDurationSec,
+        restDistanceM:
+            restDistanceM.present ? restDistanceM.value : this.restDistanceM,
+        wuDistanceM: wuDistanceM.present ? wuDistanceM.value : this.wuDistanceM,
+        wuDurationSec:
+            wuDurationSec.present ? wuDurationSec.value : this.wuDurationSec,
+        cdDistanceM: cdDistanceM.present ? cdDistanceM.value : this.cdDistanceM,
+        cdDurationSec:
+            cdDurationSec.present ? cdDurationSec.value : this.cdDurationSec,
+        status: status ?? this.status,
+        note: note.present ? note.value : this.note,
+        repLoad: repLoad.present ? repLoad.value : this.repLoad,
+      );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
       id: data.id.present ? data.id.value : this.id,
@@ -1442,15 +1313,13 @@ class Session extends DataClass implements Insertable<Session> {
       restDistanceM: data.restDistanceM.present
           ? data.restDistanceM.value
           : this.restDistanceM,
-      wuDistanceM: data.wuDistanceM.present
-          ? data.wuDistanceM.value
-          : this.wuDistanceM,
+      wuDistanceM:
+          data.wuDistanceM.present ? data.wuDistanceM.value : this.wuDistanceM,
       wuDurationSec: data.wuDurationSec.present
           ? data.wuDurationSec.value
           : this.wuDurationSec,
-      cdDistanceM: data.cdDistanceM.present
-          ? data.cdDistanceM.value
-          : this.cdDistanceM,
+      cdDistanceM:
+          data.cdDistanceM.present ? data.cdDistanceM.value : this.cdDistanceM,
       cdDurationSec: data.cdDurationSec.present
           ? data.cdDurationSec.value
           : this.cdDurationSec,
@@ -1488,26 +1357,25 @@ class Session extends DataClass implements Insertable<Session> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    startedAt,
-    planId,
-    templateText,
-    distanceMainM,
-    durationMainSec,
-    paceSecPerKm,
-    zone,
-    rpeValue,
-    restType,
-    restDurationSec,
-    restDistanceM,
-    wuDistanceM,
-    wuDurationSec,
-    cdDistanceM,
-    cdDurationSec,
-    status,
-    note,
-    repLoad,
-  );
+      id,
+      startedAt,
+      planId,
+      templateText,
+      distanceMainM,
+      durationMainSec,
+      paceSecPerKm,
+      zone,
+      rpeValue,
+      restType,
+      restDurationSec,
+      restDistanceM,
+      wuDistanceM,
+      wuDurationSec,
+      cdDistanceM,
+      cdDurationSec,
+      status,
+      note,
+      repLoad);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1597,10 +1465,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.note = const Value.absent(),
     this.repLoad = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       startedAt = Value(startedAt),
-       templateText = Value(templateText),
-       status = Value(status);
+  })  : id = Value(id),
+        startedAt = Value(startedAt),
+        templateText = Value(templateText),
+        status = Value(status);
   static Insertable<Session> custom({
     Expression<String>? id,
     Expression<DateTime>? startedAt,
@@ -1647,28 +1515,27 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     });
   }
 
-  SessionsCompanion copyWith({
-    Value<String>? id,
-    Value<DateTime>? startedAt,
-    Value<String?>? planId,
-    Value<String>? templateText,
-    Value<int?>? distanceMainM,
-    Value<int?>? durationMainSec,
-    Value<int?>? paceSecPerKm,
-    Value<Zone?>? zone,
-    Value<int?>? rpeValue,
-    Value<RestType?>? restType,
-    Value<int?>? restDurationSec,
-    Value<int?>? restDistanceM,
-    Value<int?>? wuDistanceM,
-    Value<int?>? wuDurationSec,
-    Value<int?>? cdDistanceM,
-    Value<int?>? cdDurationSec,
-    Value<SessionStatus>? status,
-    Value<String?>? note,
-    Value<int?>? repLoad,
-    Value<int>? rowid,
-  }) {
+  SessionsCompanion copyWith(
+      {Value<String>? id,
+      Value<DateTime>? startedAt,
+      Value<String?>? planId,
+      Value<String>? templateText,
+      Value<int?>? distanceMainM,
+      Value<int?>? durationMainSec,
+      Value<int?>? paceSecPerKm,
+      Value<Zone?>? zone,
+      Value<int?>? rpeValue,
+      Value<RestType?>? restType,
+      Value<int?>? restDurationSec,
+      Value<int?>? restDistanceM,
+      Value<int?>? wuDistanceM,
+      Value<int?>? wuDurationSec,
+      Value<int?>? cdDistanceM,
+      Value<int?>? cdDurationSec,
+      Value<SessionStatus>? status,
+      Value<String?>? note,
+      Value<int?>? repLoad,
+      Value<int>? rowid}) {
     return SessionsCompanion(
       id: id ?? this.id,
       startedAt: startedAt ?? this.startedAt,
@@ -1718,17 +1585,15 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       map['pace_sec_per_km'] = Variable<int>(paceSecPerKm.value);
     }
     if (zone.present) {
-      map['zone'] = Variable<String>(
-        $SessionsTable.$converterzonen.toSql(zone.value),
-      );
+      map['zone'] =
+          Variable<String>($SessionsTable.$converterzonen.toSql(zone.value));
     }
     if (rpeValue.present) {
       map['rpe_value'] = Variable<int>(rpeValue.value);
     }
     if (restType.present) {
       map['rest_type'] = Variable<String>(
-        $SessionsTable.$converterrestTypen.toSql(restType.value),
-      );
+          $SessionsTable.$converterrestTypen.toSql(restType.value));
     }
     if (restDurationSec.present) {
       map['rest_duration_sec'] = Variable<int>(restDurationSec.value);
@@ -1749,9 +1614,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       map['cd_duration_sec'] = Variable<int>(cdDurationSec.value);
     }
     if (status.present) {
-      map['status'] = Variable<String>(
-        $SessionsTable.$converterstatus.toSql(status.value),
-      );
+      map['status'] =
+          Variable<String>($SessionsTable.$converterstatus.toSql(status.value));
     }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
@@ -1803,31 +1667,28 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [
-    personalBests,
-    plans,
-    sessions,
-  ];
+  List<DatabaseSchemaEntity> get allSchemaEntities =>
+      [personalBests, plans, sessions];
 }
 
-typedef $$PersonalBestsTableCreateCompanionBuilder =
-    PersonalBestsCompanion Function({
-      required String id,
-      required PbEvent event,
-      required int timeMs,
-      Value<DateTime?> date,
-      Value<String?> note,
-      Value<int> rowid,
-    });
-typedef $$PersonalBestsTableUpdateCompanionBuilder =
-    PersonalBestsCompanion Function({
-      Value<String> id,
-      Value<PbEvent> event,
-      Value<int> timeMs,
-      Value<DateTime?> date,
-      Value<String?> note,
-      Value<int> rowid,
-    });
+typedef $$PersonalBestsTableCreateCompanionBuilder = PersonalBestsCompanion
+    Function({
+  required String id,
+  required PbEvent event,
+  required int timeMs,
+  Value<DateTime?> date,
+  Value<String?> note,
+  Value<int> rowid,
+});
+typedef $$PersonalBestsTableUpdateCompanionBuilder = PersonalBestsCompanion
+    Function({
+  Value<String> id,
+  Value<PbEvent> event,
+  Value<int> timeMs,
+  Value<DateTime?> date,
+  Value<String?> note,
+  Value<int> rowid,
+});
 
 class $$PersonalBestsTableFilterComposer
     extends Composer<_$AppDatabase, $PersonalBestsTable> {
@@ -1839,30 +1700,21 @@ class $$PersonalBestsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<PbEvent, PbEvent, String> get event =>
       $composableBuilder(
-        column: $table.event,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+          column: $table.event,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<int> get timeMs => $composableBuilder(
-    column: $table.timeMs,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.timeMs, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.date, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.note, builder: (column) => ColumnFilters(column));
 }
 
 class $$PersonalBestsTableOrderingComposer
@@ -1875,29 +1727,19 @@ class $$PersonalBestsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get event => $composableBuilder(
-    column: $table.event,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.event, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get timeMs => $composableBuilder(
-    column: $table.timeMs,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.timeMs, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.date, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.note, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PersonalBestsTableAnnotationComposer
@@ -1925,27 +1767,23 @@ class $$PersonalBestsTableAnnotationComposer
       $composableBuilder(column: $table.note, builder: (column) => column);
 }
 
-class $$PersonalBestsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $PersonalBestsTable,
-          PersonalBest,
-          $$PersonalBestsTableFilterComposer,
-          $$PersonalBestsTableOrderingComposer,
-          $$PersonalBestsTableAnnotationComposer,
-          $$PersonalBestsTableCreateCompanionBuilder,
-          $$PersonalBestsTableUpdateCompanionBuilder,
-          (
-            PersonalBest,
-            BaseReferences<_$AppDatabase, $PersonalBestsTable, PersonalBest>,
-          ),
-          PersonalBest,
-          PrefetchHooks Function()
-        > {
+class $$PersonalBestsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PersonalBestsTable,
+    PersonalBest,
+    $$PersonalBestsTableFilterComposer,
+    $$PersonalBestsTableOrderingComposer,
+    $$PersonalBestsTableAnnotationComposer,
+    $$PersonalBestsTableCreateCompanionBuilder,
+    $$PersonalBestsTableUpdateCompanionBuilder,
+    (
+      PersonalBest,
+      BaseReferences<_$AppDatabase, $PersonalBestsTable, PersonalBest>
+    ),
+    PersonalBest,
+    PrefetchHooks Function()> {
   $$PersonalBestsTableTableManager(_$AppDatabase db, $PersonalBestsTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -1954,101 +1792,99 @@ class $$PersonalBestsTableTableManager
               $$PersonalBestsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$PersonalBestsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<PbEvent> event = const Value.absent(),
-                Value<int> timeMs = const Value.absent(),
-                Value<DateTime?> date = const Value.absent(),
-                Value<String?> note = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => PersonalBestsCompanion(
-                id: id,
-                event: event,
-                timeMs: timeMs,
-                date: date,
-                note: note,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required PbEvent event,
-                required int timeMs,
-                Value<DateTime?> date = const Value.absent(),
-                Value<String?> note = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => PersonalBestsCompanion.insert(
-                id: id,
-                event: event,
-                timeMs: timeMs,
-                date: date,
-                note: note,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<PbEvent> event = const Value.absent(),
+            Value<int> timeMs = const Value.absent(),
+            Value<DateTime?> date = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PersonalBestsCompanion(
+            id: id,
+            event: event,
+            timeMs: timeMs,
+            date: date,
+            note: note,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required PbEvent event,
+            required int timeMs,
+            Value<DateTime?> date = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PersonalBestsCompanion.insert(
+            id: id,
+            event: event,
+            timeMs: timeMs,
+            date: date,
+            note: note,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$PersonalBestsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $PersonalBestsTable,
+typedef $$PersonalBestsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PersonalBestsTable,
+    PersonalBest,
+    $$PersonalBestsTableFilterComposer,
+    $$PersonalBestsTableOrderingComposer,
+    $$PersonalBestsTableAnnotationComposer,
+    $$PersonalBestsTableCreateCompanionBuilder,
+    $$PersonalBestsTableUpdateCompanionBuilder,
+    (
       PersonalBest,
-      $$PersonalBestsTableFilterComposer,
-      $$PersonalBestsTableOrderingComposer,
-      $$PersonalBestsTableAnnotationComposer,
-      $$PersonalBestsTableCreateCompanionBuilder,
-      $$PersonalBestsTableUpdateCompanionBuilder,
-      (
-        PersonalBest,
-        BaseReferences<_$AppDatabase, $PersonalBestsTable, PersonalBest>,
-      ),
-      PersonalBest,
-      PrefetchHooks Function()
-    >;
-typedef $$PlansTableCreateCompanionBuilder =
-    PlansCompanion Function({
-      required String id,
-      required DateTime date,
-      required String templateText,
-      Value<String?> note,
-      Value<int> rowid,
-    });
-typedef $$PlansTableUpdateCompanionBuilder =
-    PlansCompanion Function({
-      Value<String> id,
-      Value<DateTime> date,
-      Value<String> templateText,
-      Value<String?> note,
-      Value<int> rowid,
-    });
+      BaseReferences<_$AppDatabase, $PersonalBestsTable, PersonalBest>
+    ),
+    PersonalBest,
+    PrefetchHooks Function()>;
+typedef $$PlansTableCreateCompanionBuilder = PlansCompanion Function({
+  required String id,
+  required DateTime date,
+  required String menuName,
+  Value<int?> distance,
+  Value<int?> pace,
+  Value<Zone?> zone,
+  Value<int> reps,
+  Value<String?> note,
+  Value<int> rowid,
+});
+typedef $$PlansTableUpdateCompanionBuilder = PlansCompanion Function({
+  Value<String> id,
+  Value<DateTime> date,
+  Value<String> menuName,
+  Value<int?> distance,
+  Value<int?> pace,
+  Value<Zone?> zone,
+  Value<int> reps,
+  Value<String?> note,
+  Value<int> rowid,
+});
 
 final class $$PlansTableReferences
     extends BaseReferences<_$AppDatabase, $PlansTable, Plan> {
   $$PlansTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$SessionsTable, List<Session>> _sessionsRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.sessions,
-    aliasName: $_aliasNameGenerator(db.plans.id, db.sessions.planId),
-  );
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.sessions,
+          aliasName: $_aliasNameGenerator(db.plans.id, db.sessions.planId));
 
   $$SessionsTableProcessedTableManager get sessionsRefs {
-    final manager = $$SessionsTableTableManager(
-      $_db,
-      $_db.sessions,
-    ).filter((f) => f.planId.id.sqlEquals($_itemColumn<String>('id')!));
+    final manager = $$SessionsTableTableManager($_db, $_db.sessions)
+        .filter((f) => f.planId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_sessionsRefsTable($_db));
     return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+        manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -2061,47 +1897,49 @@ class $$PlansTableFilterComposer extends Composer<_$AppDatabase, $PlansTable> {
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.date, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get templateText => $composableBuilder(
-    column: $table.templateText,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get menuName => $composableBuilder(
+      column: $table.menuName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get distance => $composableBuilder(
+      column: $table.distance, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get pace => $composableBuilder(
+      column: $table.pace, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<Zone?, Zone, String> get zone =>
+      $composableBuilder(
+          column: $table.zone,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<int> get reps => $composableBuilder(
+      column: $table.reps, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.note, builder: (column) => ColumnFilters(column));
 
   Expression<bool> sessionsRefs(
-    Expression<bool> Function($$SessionsTableFilterComposer f) f,
-  ) {
+      Expression<bool> Function($$SessionsTableFilterComposer f) f) {
     final $$SessionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.planId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableFilterComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.sessions,
+        getReferencedColumn: (t) => t.planId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SessionsTableFilterComposer(
+              $db: $db,
+              $table: $db.sessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -2116,24 +1954,28 @@ class $$PlansTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.date, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get templateText => $composableBuilder(
-    column: $table.templateText,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get menuName => $composableBuilder(
+      column: $table.menuName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get distance => $composableBuilder(
+      column: $table.distance, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get pace => $composableBuilder(
+      column: $table.pace, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get zone => $composableBuilder(
+      column: $table.zone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get reps => $composableBuilder(
+      column: $table.reps, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.note, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlansTableAnnotationComposer
@@ -2151,58 +1993,60 @@ class $$PlansTableAnnotationComposer
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
-  GeneratedColumn<String> get templateText => $composableBuilder(
-    column: $table.templateText,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get menuName =>
+      $composableBuilder(column: $table.menuName, builder: (column) => column);
+
+  GeneratedColumn<int> get distance =>
+      $composableBuilder(column: $table.distance, builder: (column) => column);
+
+  GeneratedColumn<int> get pace =>
+      $composableBuilder(column: $table.pace, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Zone?, String> get zone =>
+      $composableBuilder(column: $table.zone, builder: (column) => column);
+
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
 
   Expression<T> sessionsRefs<T extends Object>(
-    Expression<T> Function($$SessionsTableAnnotationComposer a) f,
-  ) {
+      Expression<T> Function($$SessionsTableAnnotationComposer a) f) {
     final $$SessionsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.planId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.sessions,
+        getReferencedColumn: (t) => t.planId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SessionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
 
-class $$PlansTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $PlansTable,
-          Plan,
-          $$PlansTableFilterComposer,
-          $$PlansTableOrderingComposer,
-          $$PlansTableAnnotationComposer,
-          $$PlansTableCreateCompanionBuilder,
-          $$PlansTableUpdateCompanionBuilder,
-          (Plan, $$PlansTableReferences),
-          Plan,
-          PrefetchHooks Function({bool sessionsRefs})
-        > {
+class $$PlansTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlansTable,
+    Plan,
+    $$PlansTableFilterComposer,
+    $$PlansTableOrderingComposer,
+    $$PlansTableAnnotationComposer,
+    $$PlansTableCreateCompanionBuilder,
+    $$PlansTableUpdateCompanionBuilder,
+    (Plan, $$PlansTableReferences),
+    Plan,
+    PrefetchHooks Function({bool sessionsRefs})> {
   $$PlansTableTableManager(_$AppDatabase db, $PlansTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2211,39 +2055,53 @@ class $$PlansTableTableManager
               $$PlansTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$PlansTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<DateTime> date = const Value.absent(),
-                Value<String> templateText = const Value.absent(),
-                Value<String?> note = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => PlansCompanion(
-                id: id,
-                date: date,
-                templateText: templateText,
-                note: note,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required DateTime date,
-                required String templateText,
-                Value<String?> note = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => PlansCompanion.insert(
-                id: id,
-                date: date,
-                templateText: templateText,
-                note: note,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<String> menuName = const Value.absent(),
+            Value<int?> distance = const Value.absent(),
+            Value<int?> pace = const Value.absent(),
+            Value<Zone?> zone = const Value.absent(),
+            Value<int> reps = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlansCompanion(
+            id: id,
+            date: date,
+            menuName: menuName,
+            distance: distance,
+            pace: pace,
+            zone: zone,
+            reps: reps,
+            note: note,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required DateTime date,
+            required String menuName,
+            Value<int?> distance = const Value.absent(),
+            Value<int?> pace = const Value.absent(),
+            Value<Zone?> zone = const Value.absent(),
+            Value<int> reps = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlansCompanion.insert(
+            id: id,
+            date: date,
+            menuName: menuName,
+            distance: distance,
+            pace: pace,
+            zone: zone,
+            reps: reps,
+            note: note,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$PlansTableReferences(db, table, e)),
-              )
+              .map((e) =>
+                  (e.readTable(table), $$PlansTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({sessionsRefs = false}) {
             return PrefetchHooks(
@@ -2254,104 +2112,95 @@ class $$PlansTableTableManager
                 return [
                   if (sessionsRefs)
                     await $_getPrefetchedData<Plan, $PlansTable, Session>(
-                      currentTable: table,
-                      referencedTable: $$PlansTableReferences
-                          ._sessionsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$PlansTableReferences(db, table, p0).sessionsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.planId == item.id),
-                      typedResults: items,
-                    ),
+                        currentTable: table,
+                        referencedTable:
+                            $$PlansTableReferences._sessionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$PlansTableReferences(db, table, p0).sessionsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.planId == item.id),
+                        typedResults: items)
                 ];
               },
             );
           },
-        ),
-      );
+        ));
 }
 
-typedef $$PlansTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $PlansTable,
-      Plan,
-      $$PlansTableFilterComposer,
-      $$PlansTableOrderingComposer,
-      $$PlansTableAnnotationComposer,
-      $$PlansTableCreateCompanionBuilder,
-      $$PlansTableUpdateCompanionBuilder,
-      (Plan, $$PlansTableReferences),
-      Plan,
-      PrefetchHooks Function({bool sessionsRefs})
-    >;
-typedef $$SessionsTableCreateCompanionBuilder =
-    SessionsCompanion Function({
-      required String id,
-      required DateTime startedAt,
-      Value<String?> planId,
-      required String templateText,
-      Value<int?> distanceMainM,
-      Value<int?> durationMainSec,
-      Value<int?> paceSecPerKm,
-      Value<Zone?> zone,
-      Value<int?> rpeValue,
-      Value<RestType?> restType,
-      Value<int?> restDurationSec,
-      Value<int?> restDistanceM,
-      Value<int?> wuDistanceM,
-      Value<int?> wuDurationSec,
-      Value<int?> cdDistanceM,
-      Value<int?> cdDurationSec,
-      required SessionStatus status,
-      Value<String?> note,
-      Value<int?> repLoad,
-      Value<int> rowid,
-    });
-typedef $$SessionsTableUpdateCompanionBuilder =
-    SessionsCompanion Function({
-      Value<String> id,
-      Value<DateTime> startedAt,
-      Value<String?> planId,
-      Value<String> templateText,
-      Value<int?> distanceMainM,
-      Value<int?> durationMainSec,
-      Value<int?> paceSecPerKm,
-      Value<Zone?> zone,
-      Value<int?> rpeValue,
-      Value<RestType?> restType,
-      Value<int?> restDurationSec,
-      Value<int?> restDistanceM,
-      Value<int?> wuDistanceM,
-      Value<int?> wuDurationSec,
-      Value<int?> cdDistanceM,
-      Value<int?> cdDurationSec,
-      Value<SessionStatus> status,
-      Value<String?> note,
-      Value<int?> repLoad,
-      Value<int> rowid,
-    });
+typedef $$PlansTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PlansTable,
+    Plan,
+    $$PlansTableFilterComposer,
+    $$PlansTableOrderingComposer,
+    $$PlansTableAnnotationComposer,
+    $$PlansTableCreateCompanionBuilder,
+    $$PlansTableUpdateCompanionBuilder,
+    (Plan, $$PlansTableReferences),
+    Plan,
+    PrefetchHooks Function({bool sessionsRefs})>;
+typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
+  required String id,
+  required DateTime startedAt,
+  Value<String?> planId,
+  required String templateText,
+  Value<int?> distanceMainM,
+  Value<int?> durationMainSec,
+  Value<int?> paceSecPerKm,
+  Value<Zone?> zone,
+  Value<int?> rpeValue,
+  Value<RestType?> restType,
+  Value<int?> restDurationSec,
+  Value<int?> restDistanceM,
+  Value<int?> wuDistanceM,
+  Value<int?> wuDurationSec,
+  Value<int?> cdDistanceM,
+  Value<int?> cdDurationSec,
+  required SessionStatus status,
+  Value<String?> note,
+  Value<int?> repLoad,
+  Value<int> rowid,
+});
+typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
+  Value<String> id,
+  Value<DateTime> startedAt,
+  Value<String?> planId,
+  Value<String> templateText,
+  Value<int?> distanceMainM,
+  Value<int?> durationMainSec,
+  Value<int?> paceSecPerKm,
+  Value<Zone?> zone,
+  Value<int?> rpeValue,
+  Value<RestType?> restType,
+  Value<int?> restDurationSec,
+  Value<int?> restDistanceM,
+  Value<int?> wuDistanceM,
+  Value<int?> wuDurationSec,
+  Value<int?> cdDistanceM,
+  Value<int?> cdDurationSec,
+  Value<SessionStatus> status,
+  Value<String?> note,
+  Value<int?> repLoad,
+  Value<int> rowid,
+});
 
 final class $$SessionsTableReferences
     extends BaseReferences<_$AppDatabase, $SessionsTable, Session> {
   $$SessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $PlansTable _planIdTable(_$AppDatabase db) => db.plans.createAlias(
-    $_aliasNameGenerator(db.sessions.planId, db.plans.id),
-  );
+  static $PlansTable _planIdTable(_$AppDatabase db) => db.plans
+      .createAlias($_aliasNameGenerator(db.sessions.planId, db.plans.id));
 
   $$PlansTableProcessedTableManager? get planId {
     final $_column = $_itemColumn<String>('plan_id');
     if ($_column == null) return null;
-    final manager = $$PlansTableTableManager(
-      $_db,
-      $_db.plans,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$PlansTableTableManager($_db, $_db.plans)
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_planIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+        manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -2365,118 +2214,84 @@ class $$SessionsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.startedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get templateText => $composableBuilder(
-    column: $table.templateText,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.templateText, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get distanceMainM => $composableBuilder(
-    column: $table.distanceMainM,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.distanceMainM, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get durationMainSec => $composableBuilder(
-    column: $table.durationMainSec,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.durationMainSec,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get paceSecPerKm => $composableBuilder(
-    column: $table.paceSecPerKm,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.paceSecPerKm, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<Zone?, Zone, String> get zone =>
       $composableBuilder(
-        column: $table.zone,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+          column: $table.zone,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<int> get rpeValue => $composableBuilder(
-    column: $table.rpeValue,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.rpeValue, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<RestType?, RestType, String> get restType =>
       $composableBuilder(
-        column: $table.restType,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+          column: $table.restType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<int> get restDurationSec => $composableBuilder(
-    column: $table.restDurationSec,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.restDurationSec,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get restDistanceM => $composableBuilder(
-    column: $table.restDistanceM,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.restDistanceM, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get wuDistanceM => $composableBuilder(
-    column: $table.wuDistanceM,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.wuDistanceM, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get wuDurationSec => $composableBuilder(
-    column: $table.wuDurationSec,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.wuDurationSec, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get cdDistanceM => $composableBuilder(
-    column: $table.cdDistanceM,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.cdDistanceM, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get cdDurationSec => $composableBuilder(
-    column: $table.cdDurationSec,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.cdDurationSec, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<SessionStatus, SessionStatus, String>
-  get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+      get status => $composableBuilder(
+          column: $table.status,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.note, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get repLoad => $composableBuilder(
-    column: $table.repLoad,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.repLoad, builder: (column) => ColumnFilters(column));
 
   $$PlansTableFilterComposer get planId {
     final $$PlansTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.planId,
-      referencedTable: $db.plans,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlansTableFilterComposer(
-            $db: $db,
-            $table: $db.plans,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.planId,
+        referencedTable: $db.plans,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PlansTableFilterComposer(
+              $db: $db,
+              $table: $db.plans,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return composer;
   }
 }
@@ -2491,115 +2306,84 @@ class $$SessionsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.startedAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get templateText => $composableBuilder(
-    column: $table.templateText,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.templateText,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get distanceMainM => $composableBuilder(
-    column: $table.distanceMainM,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.distanceMainM,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get durationMainSec => $composableBuilder(
-    column: $table.durationMainSec,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.durationMainSec,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get paceSecPerKm => $composableBuilder(
-    column: $table.paceSecPerKm,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.paceSecPerKm,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get zone => $composableBuilder(
-    column: $table.zone,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.zone, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get rpeValue => $composableBuilder(
-    column: $table.rpeValue,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.rpeValue, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get restType => $composableBuilder(
-    column: $table.restType,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.restType, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get restDurationSec => $composableBuilder(
-    column: $table.restDurationSec,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.restDurationSec,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get restDistanceM => $composableBuilder(
-    column: $table.restDistanceM,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.restDistanceM,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get wuDistanceM => $composableBuilder(
-    column: $table.wuDistanceM,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.wuDistanceM, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get wuDurationSec => $composableBuilder(
-    column: $table.wuDurationSec,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.wuDurationSec,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get cdDistanceM => $composableBuilder(
-    column: $table.cdDistanceM,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.cdDistanceM, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get cdDurationSec => $composableBuilder(
-    column: $table.cdDurationSec,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.cdDurationSec,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.status, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.note, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get repLoad => $composableBuilder(
-    column: $table.repLoad,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.repLoad, builder: (column) => ColumnOrderings(column));
 
   $$PlansTableOrderingComposer get planId {
     final $$PlansTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.planId,
-      referencedTable: $db.plans,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlansTableOrderingComposer(
-            $db: $db,
-            $table: $db.plans,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.planId,
+        referencedTable: $db.plans,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PlansTableOrderingComposer(
+              $db: $db,
+              $table: $db.plans,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return composer;
   }
 }
@@ -2620,24 +2404,16 @@ class $$SessionsTableAnnotationComposer
       $composableBuilder(column: $table.startedAt, builder: (column) => column);
 
   GeneratedColumn<String> get templateText => $composableBuilder(
-    column: $table.templateText,
-    builder: (column) => column,
-  );
+      column: $table.templateText, builder: (column) => column);
 
   GeneratedColumn<int> get distanceMainM => $composableBuilder(
-    column: $table.distanceMainM,
-    builder: (column) => column,
-  );
+      column: $table.distanceMainM, builder: (column) => column);
 
   GeneratedColumn<int> get durationMainSec => $composableBuilder(
-    column: $table.durationMainSec,
-    builder: (column) => column,
-  );
+      column: $table.durationMainSec, builder: (column) => column);
 
   GeneratedColumn<int> get paceSecPerKm => $composableBuilder(
-    column: $table.paceSecPerKm,
-    builder: (column) => column,
-  );
+      column: $table.paceSecPerKm, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<Zone?, String> get zone =>
       $composableBuilder(column: $table.zone, builder: (column) => column);
@@ -2649,34 +2425,22 @@ class $$SessionsTableAnnotationComposer
       $composableBuilder(column: $table.restType, builder: (column) => column);
 
   GeneratedColumn<int> get restDurationSec => $composableBuilder(
-    column: $table.restDurationSec,
-    builder: (column) => column,
-  );
+      column: $table.restDurationSec, builder: (column) => column);
 
   GeneratedColumn<int> get restDistanceM => $composableBuilder(
-    column: $table.restDistanceM,
-    builder: (column) => column,
-  );
+      column: $table.restDistanceM, builder: (column) => column);
 
   GeneratedColumn<int> get wuDistanceM => $composableBuilder(
-    column: $table.wuDistanceM,
-    builder: (column) => column,
-  );
+      column: $table.wuDistanceM, builder: (column) => column);
 
   GeneratedColumn<int> get wuDurationSec => $composableBuilder(
-    column: $table.wuDurationSec,
-    builder: (column) => column,
-  );
+      column: $table.wuDurationSec, builder: (column) => column);
 
   GeneratedColumn<int> get cdDistanceM => $composableBuilder(
-    column: $table.cdDistanceM,
-    builder: (column) => column,
-  );
+      column: $table.cdDistanceM, builder: (column) => column);
 
   GeneratedColumn<int> get cdDurationSec => $composableBuilder(
-    column: $table.cdDurationSec,
-    builder: (column) => column,
-  );
+      column: $table.cdDurationSec, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<SessionStatus, String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
@@ -2689,46 +2453,39 @@ class $$SessionsTableAnnotationComposer
 
   $$PlansTableAnnotationComposer get planId {
     final $$PlansTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.planId,
-      referencedTable: $db.plans,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PlansTableAnnotationComposer(
-            $db: $db,
-            $table: $db.plans,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
+        composer: this,
+        getCurrentColumn: (t) => t.planId,
+        referencedTable: $db.plans,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PlansTableAnnotationComposer(
+              $db: $db,
+              $table: $db.plans,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return composer;
   }
 }
 
-class $$SessionsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SessionsTable,
-          Session,
-          $$SessionsTableFilterComposer,
-          $$SessionsTableOrderingComposer,
-          $$SessionsTableAnnotationComposer,
-          $$SessionsTableCreateCompanionBuilder,
-          $$SessionsTableUpdateCompanionBuilder,
-          (Session, $$SessionsTableReferences),
-          Session,
-          PrefetchHooks Function({bool planId})
-        > {
+class $$SessionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SessionsTable,
+    Session,
+    $$SessionsTableFilterComposer,
+    $$SessionsTableOrderingComposer,
+    $$SessionsTableAnnotationComposer,
+    $$SessionsTableCreateCompanionBuilder,
+    $$SessionsTableUpdateCompanionBuilder,
+    (Session, $$SessionsTableReferences),
+    Session,
+    PrefetchHooks Function({bool planId})> {
   $$SessionsTableTableManager(_$AppDatabase db, $SessionsTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2737,109 +2494,104 @@ class $$SessionsTableTableManager
               $$SessionsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$SessionsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<DateTime> startedAt = const Value.absent(),
-                Value<String?> planId = const Value.absent(),
-                Value<String> templateText = const Value.absent(),
-                Value<int?> distanceMainM = const Value.absent(),
-                Value<int?> durationMainSec = const Value.absent(),
-                Value<int?> paceSecPerKm = const Value.absent(),
-                Value<Zone?> zone = const Value.absent(),
-                Value<int?> rpeValue = const Value.absent(),
-                Value<RestType?> restType = const Value.absent(),
-                Value<int?> restDurationSec = const Value.absent(),
-                Value<int?> restDistanceM = const Value.absent(),
-                Value<int?> wuDistanceM = const Value.absent(),
-                Value<int?> wuDurationSec = const Value.absent(),
-                Value<int?> cdDistanceM = const Value.absent(),
-                Value<int?> cdDurationSec = const Value.absent(),
-                Value<SessionStatus> status = const Value.absent(),
-                Value<String?> note = const Value.absent(),
-                Value<int?> repLoad = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SessionsCompanion(
-                id: id,
-                startedAt: startedAt,
-                planId: planId,
-                templateText: templateText,
-                distanceMainM: distanceMainM,
-                durationMainSec: durationMainSec,
-                paceSecPerKm: paceSecPerKm,
-                zone: zone,
-                rpeValue: rpeValue,
-                restType: restType,
-                restDurationSec: restDurationSec,
-                restDistanceM: restDistanceM,
-                wuDistanceM: wuDistanceM,
-                wuDurationSec: wuDurationSec,
-                cdDistanceM: cdDistanceM,
-                cdDurationSec: cdDurationSec,
-                status: status,
-                note: note,
-                repLoad: repLoad,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required DateTime startedAt,
-                Value<String?> planId = const Value.absent(),
-                required String templateText,
-                Value<int?> distanceMainM = const Value.absent(),
-                Value<int?> durationMainSec = const Value.absent(),
-                Value<int?> paceSecPerKm = const Value.absent(),
-                Value<Zone?> zone = const Value.absent(),
-                Value<int?> rpeValue = const Value.absent(),
-                Value<RestType?> restType = const Value.absent(),
-                Value<int?> restDurationSec = const Value.absent(),
-                Value<int?> restDistanceM = const Value.absent(),
-                Value<int?> wuDistanceM = const Value.absent(),
-                Value<int?> wuDurationSec = const Value.absent(),
-                Value<int?> cdDistanceM = const Value.absent(),
-                Value<int?> cdDurationSec = const Value.absent(),
-                required SessionStatus status,
-                Value<String?> note = const Value.absent(),
-                Value<int?> repLoad = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SessionsCompanion.insert(
-                id: id,
-                startedAt: startedAt,
-                planId: planId,
-                templateText: templateText,
-                distanceMainM: distanceMainM,
-                durationMainSec: durationMainSec,
-                paceSecPerKm: paceSecPerKm,
-                zone: zone,
-                rpeValue: rpeValue,
-                restType: restType,
-                restDurationSec: restDurationSec,
-                restDistanceM: restDistanceM,
-                wuDistanceM: wuDistanceM,
-                wuDurationSec: wuDurationSec,
-                cdDistanceM: cdDistanceM,
-                cdDurationSec: cdDurationSec,
-                status: status,
-                note: note,
-                repLoad: repLoad,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<DateTime> startedAt = const Value.absent(),
+            Value<String?> planId = const Value.absent(),
+            Value<String> templateText = const Value.absent(),
+            Value<int?> distanceMainM = const Value.absent(),
+            Value<int?> durationMainSec = const Value.absent(),
+            Value<int?> paceSecPerKm = const Value.absent(),
+            Value<Zone?> zone = const Value.absent(),
+            Value<int?> rpeValue = const Value.absent(),
+            Value<RestType?> restType = const Value.absent(),
+            Value<int?> restDurationSec = const Value.absent(),
+            Value<int?> restDistanceM = const Value.absent(),
+            Value<int?> wuDistanceM = const Value.absent(),
+            Value<int?> wuDurationSec = const Value.absent(),
+            Value<int?> cdDistanceM = const Value.absent(),
+            Value<int?> cdDurationSec = const Value.absent(),
+            Value<SessionStatus> status = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<int?> repLoad = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SessionsCompanion(
+            id: id,
+            startedAt: startedAt,
+            planId: planId,
+            templateText: templateText,
+            distanceMainM: distanceMainM,
+            durationMainSec: durationMainSec,
+            paceSecPerKm: paceSecPerKm,
+            zone: zone,
+            rpeValue: rpeValue,
+            restType: restType,
+            restDurationSec: restDurationSec,
+            restDistanceM: restDistanceM,
+            wuDistanceM: wuDistanceM,
+            wuDurationSec: wuDurationSec,
+            cdDistanceM: cdDistanceM,
+            cdDurationSec: cdDurationSec,
+            status: status,
+            note: note,
+            repLoad: repLoad,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required DateTime startedAt,
+            Value<String?> planId = const Value.absent(),
+            required String templateText,
+            Value<int?> distanceMainM = const Value.absent(),
+            Value<int?> durationMainSec = const Value.absent(),
+            Value<int?> paceSecPerKm = const Value.absent(),
+            Value<Zone?> zone = const Value.absent(),
+            Value<int?> rpeValue = const Value.absent(),
+            Value<RestType?> restType = const Value.absent(),
+            Value<int?> restDurationSec = const Value.absent(),
+            Value<int?> restDistanceM = const Value.absent(),
+            Value<int?> wuDistanceM = const Value.absent(),
+            Value<int?> wuDurationSec = const Value.absent(),
+            Value<int?> cdDistanceM = const Value.absent(),
+            Value<int?> cdDurationSec = const Value.absent(),
+            required SessionStatus status,
+            Value<String?> note = const Value.absent(),
+            Value<int?> repLoad = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SessionsCompanion.insert(
+            id: id,
+            startedAt: startedAt,
+            planId: planId,
+            templateText: templateText,
+            distanceMainM: distanceMainM,
+            durationMainSec: durationMainSec,
+            paceSecPerKm: paceSecPerKm,
+            zone: zone,
+            rpeValue: rpeValue,
+            restType: restType,
+            restDurationSec: restDurationSec,
+            restDistanceM: restDistanceM,
+            wuDistanceM: wuDistanceM,
+            wuDurationSec: wuDurationSec,
+            cdDistanceM: cdDistanceM,
+            cdDurationSec: cdDurationSec,
+            status: status,
+            note: note,
+            repLoad: repLoad,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SessionsTableReferences(db, table, e),
-                ),
-              )
+              .map((e) =>
+                  (e.readTable(table), $$SessionsTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({planId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
+              addJoins: <
+                  T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -2850,48 +2602,39 @@ class $$SessionsTableTableManager
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (planId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.planId,
-                                referencedTable: $$SessionsTableReferences
-                                    ._planIdTable(db),
-                                referencedColumn: $$SessionsTableReferences
-                                    ._planIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+                      dynamic>>(state) {
+                if (planId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.planId,
+                    referencedTable: $$SessionsTableReferences._planIdTable(db),
+                    referencedColumn:
+                        $$SessionsTableReferences._planIdTable(db).id,
+                  ) as T;
+                }
 
-                    return state;
-                  },
+                return state;
+              },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ),
-      );
+        ));
 }
 
-typedef $$SessionsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SessionsTable,
-      Session,
-      $$SessionsTableFilterComposer,
-      $$SessionsTableOrderingComposer,
-      $$SessionsTableAnnotationComposer,
-      $$SessionsTableCreateCompanionBuilder,
-      $$SessionsTableUpdateCompanionBuilder,
-      (Session, $$SessionsTableReferences),
-      Session,
-      PrefetchHooks Function({bool planId})
-    >;
+typedef $$SessionsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SessionsTable,
+    Session,
+    $$SessionsTableFilterComposer,
+    $$SessionsTableOrderingComposer,
+    $$SessionsTableAnnotationComposer,
+    $$SessionsTableCreateCompanionBuilder,
+    $$SessionsTableUpdateCompanionBuilder,
+    (Session, $$SessionsTableReferences),
+    Session,
+    PrefetchHooks Function({bool planId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
