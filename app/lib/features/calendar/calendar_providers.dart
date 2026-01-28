@@ -110,12 +110,6 @@ final monthCalendarDataProvider =
     dailyLoads[date] = (dailyLoads[date] ?? 0) + load;
   }
 
-  // 月の全日の能力を推定
-  final capacity = capacityEst.estimateCapacityForDate(
-    dailyLoads,
-    DateTime(month.year, month.month + 1, 0), // 月末
-  );
-
   // 月の各日のデータを作成
   final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
   final List<DayCalendarData> result = [];
@@ -136,7 +130,8 @@ final monthCalendarDataProvider =
     final dayLoad = loadCalc.computeDayLoad(daySessions);
 
     // 負荷比率と濃淡
-    final loadRatio = capacityEst.computeLoadRatio(dayLoad, capacity);
+    final dayCapacity = capacityEst.estimateCapacityForDate(dailyLoads, date);
+    final loadRatio = capacityEst.computeLoadRatio(dayLoad, dayCapacity);
     final bucket = heatmapScaler.bucketize(loadRatio);
 
     result.add(DayCalendarData(

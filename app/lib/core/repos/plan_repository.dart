@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -15,31 +16,44 @@ class PlanRepository {
   Future<void> updatePlansForDate(DateTime date, List<PlanInput> inputs) async {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
+    
+    dev.log('[PlanRepo] updatePlansForDate: date=$startOfDay, count=${inputs.length}');
 
-    await _db.transaction(() async {
-      // 指定日の既存Planを削除
-      await (_db.delete(_db.plans)
-            ..where((t) =>
-                t.date.isBiggerOrEqualValue(startOfDay) &
-                t.date.isSmallerThanValue(endOfDay)))
-          .go();
+    try {
+      await _db.transaction(() async {
+        dev.log('[PlanRepo] Transaction started');
+        
+        // 指定日の既存Planを削除
+        final deleted = await (_db.delete(_db.plans)
+              ..where((t) =>
+                  t.date.isBiggerOrEqualValue(startOfDay) &
+                  t.date.isSmallerThanValue(endOfDay)))
+            .go();
+        dev.log('[PlanRepo] Deleted $deleted existing plans');
 
-      // 新しいPlanを一括登録
-      for (final input in inputs) {
-        await _db.into(_db.plans).insert(
-              PlansCompanion.insert(
-                id: _uuid.v4(),
-                date: startOfDay, // 時間情報は切り捨てて日付だけで管理
-                menuName: input.menuName,
-                distance: Value(input.distance),
-                pace: Value(input.pace),
-                zone: Value(input.zone),
-                reps: Value(input.reps),
-                note: Value(input.note),
-              ),
-            );
-      }
-    });
+        // 新しいPlanを一括登録
+        for (final input in inputs) {
+          dev.log('[PlanRepo] Inserting plan: ${input.menuName}, dist=${input.distance}, reps=${input.reps}');
+          await _db.into(_db.plans).insert(
+                PlansCompanion.insert(
+                  id: _uuid.v4(),
+                  date: startOfDay, // 時間情報は切り捨てて日付だけで管理
+                  menuName: input.menuName,
+                  distance: Value(input.distance),
+                  pace: Value(input.pace),
+                  zone: Value(input.zone),
+                  reps: Value(input.reps),
+                  note: Value(input.note),
+                ),
+              );
+        }
+        dev.log('[PlanRepo] Insert loop completed');
+      });
+      dev.log('[PlanRepo] Transaction committed successfully');
+    } catch (e, st) {
+      dev.log('[PlanRepo] Error in updatePlansForDate', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 
   /// 指定日のPlan一覧を取得（日付の日部分で抽出）

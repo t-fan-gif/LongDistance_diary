@@ -34,9 +34,10 @@ class CapacityEstimator {
   /// ゼロ除算を防ぐためepsilon（0.01）を使用
   double computeLoadRatio(int dayLoad, double capacity) {
     const epsilon = 0.01;
-    if (capacity < epsilon) {
-      // 能力が極小の場合、負荷があれば大きな値を返す
-      return dayLoad > 0 ? dayLoad.toDouble() : 0.0;
+    // ゼロ除算およびデータ不足時の異常値を防ぐ
+    // 基準値(5.0)未満の場合は、評価に十分な履歴がないとみなし比率0（評価なし/グレー）とする
+    if (capacity < 5.0) {
+      return 0.0;
     }
     return dayLoad / capacity;
   }

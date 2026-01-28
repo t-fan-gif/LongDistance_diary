@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/domain/enums.dart';
+import '../../core/repos/menu_preset_repository.dart';
 import '../../core/repos/personal_best_repository.dart';
+import '../../core/services/vdot_calculator.dart';
 import 'export_usecase.dart';
 
 /// PersonalBestRepositoryのプロバイダ
@@ -17,6 +19,18 @@ final personalBestRepositoryProvider = Provider<PersonalBestRepository>((ref) {
 final personalBestsProvider = FutureProvider<List<PersonalBest>>((ref) async {
   final repo = ref.watch(personalBestRepositoryProvider);
   return repo.listPersonalBests();
+});
+
+/// MenuPresetRepositoryのプロバイダ
+final menuPresetRepositoryProvider = Provider<MenuPresetRepository>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return MenuPresetRepository(db);
+});
+
+/// 全プリセットを取得
+final menuPresetsProvider = FutureProvider<List<MenuPreset>>((ref) async {
+  final repo = ref.watch(menuPresetRepositoryProvider);
+  return repo.listPresets();
 });
 
 
@@ -66,7 +80,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                 ),
                 trailing: TextButton.icon(
-                  onPressed: () => _showPbEditor(context, ref),
+                  onPressed: () => _showPbEditor(null),
                   icon: const Icon(Icons.add),
                   label: const Text('追加'),
                 ),
@@ -83,7 +97,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: pbs
                         .map((pb) => _PbTile(
                               pb: pb,
-                              onEdit: () => _showPbEditor(context, ref, pb: pb),
+                              onEdit: () => _showPbEditor(pb),
                             ))
                         .toList(),
                   );
@@ -106,6 +120,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : null,
+              ),
+              const Divider(),
+
+              // カスタムメニュー（プリセット）
+              ListTile(
+                title: Text(
+                  'カスタムメニュー',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                trailing: TextButton.icon(
+                  onPressed: _showPresetEditor,
+                  icon: const Icon(Icons.add),
+                  label: const Text('追加'),
+                ),
+              ),
+              ref.watch(menuPresetsProvider).when(
+                data: (presets) {
+                  if (presets.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('よく使うメニュー名を登録しておくと、予定入力時に素早く選択できます'),
+                    );
+                  }
+                  return Column(
+                    children: presets
+                        .map((p) => ListTile(
+                              leading: const Icon(Icons.label_outline),
+                              title: Text(p.name),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () => _deletePreset(p.id),
+                              ),
+                            ))
+                        .toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Text('エラー: $e'),
               ),
 
               // アプリ情報
@@ -143,13 +197,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  void _showPbEditor(BuildContext context, WidgetRef ref, {PersonalBest? pb}) {
-// ...
+  void _showPbEditor(PersonalBest? pb) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) => _PbEditorSheet(existingPb: pb),
     );
+  }
+
+  void _showPresetEditor() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('メニュー名を登録'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: '例: インターバル',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                await ref.read(menuPresetRepositoryProvider).createPreset(name);
+                ref.invalidate(menuPresetsProvider);
+              }
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('追加'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePreset(String id) async {
+    await ref.read(menuPresetRepositoryProvider).deletePreset(id);
+    ref.invalidate(menuPresetsProvider);
   }
 }
 
@@ -322,9 +414,16 @@ class _PbEditorSheetState extends ConsumerState<_PbEditorSheet> {
           ),
           const SizedBox(height: 24),
 
+
           ElevatedButton(
             onPressed: _savePb,
             child: const Text('保存'),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: _calcVdot,
+            icon: const Icon(Icons.calculate),
+            label: const Text('この記録でVDOT計算'),
           ),
         ],
       ),
@@ -380,6 +479,64 @@ class _PbEditorSheetState extends ConsumerState<_PbEditorSheet> {
 
     if (mounted) {
       Navigator.pop(context);
+      // 保存後にVDOT表示
+      if (_needsHour(_selectedEvent) || _selectedEvent == PbEvent.m5000 || _selectedEvent == PbEvent.m10000) {
+         _showVdotResult(totalMs);
+      }
     }
+  }
+
+  void _calcVdot() {
+     final hours = int.tryParse(_hourController.text) ?? 0;
+     final minutes = int.tryParse(_minuteController.text) ?? 0;
+     final seconds = int.tryParse(_secondController.text) ?? 0;
+     final totalMs = ((hours * 3600) + (minutes * 60) + seconds) * 1000;
+     if (totalMs > 0) {
+        _showVdotResult(totalMs);
+     }
+  }
+
+  void _showVdotResult(int timeMs) {
+    int dist = 0;
+    switch(_selectedEvent) {
+       case PbEvent.m5000: dist=5000; break;
+       case PbEvent.m10000: dist=10000; break;
+       case PbEvent.half: dist=21097; break;
+       case PbEvent.full: dist=42195; break;
+       default: return; // 対応外
+    }
+    
+    final calc = VdotCalculator();
+    final vdot = calc.calculateVdot(dist, timeMs ~/ 1000);
+    final paces = calc.calculatePaces(vdot);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('VDOT: $vdot'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('推奨トレーニングペース (分:秒/km)'),
+              const Divider(),
+              ...paces.entries.map((e) {
+                return ListTile(
+                  title: Text(e.key.name),
+                  trailing: Text(e.value.toString()),
+                  dense: true,
+                );
+              }),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
+    );
   }
 }

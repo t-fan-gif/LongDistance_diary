@@ -42,6 +42,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   final _durationController = TextEditingController();
   final _restDurationController = TextEditingController();
   final _noteController = TextEditingController();
+  late FocusNode _paceFocusNode;
 
   Zone? _selectedZone;
   int _rpeValue = 5;
@@ -55,6 +56,8 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   void initState() {
     super.initState();
     _isEditMode = widget.sessionId != null;
+    _paceFocusNode = FocusNode();
+    _paceFocusNode.addListener(_onPaceFocusChange);
 
     if (widget.initialDate != null) {
       _selectedDateTime = DateTime.parse(widget.initialDate!);
@@ -73,7 +76,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         // ユーザー要望「トータルの距離は...予測で出す」に従い、reps込みの距離を入れる
         int dist = int.tryParse(widget.initialDistance!) ?? 0;
         int reps = widget.initialReps != null ? (int.tryParse(widget.initialReps!) ?? 1) : 1;
-        _distanceController.text = (dist * reps).toString();
+        _distanceController.text = ((dist * reps) / 1000).toString();
       }
       
       if (widget.initialPace != null) {
@@ -138,10 +141,28 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     }
   }
 
+  void _onPaceFocusChange() {
+    if (_paceFocusNode.hasFocus) {
+      // Gain focus: remove : (e.g. 3:20 -> 320)
+      final val = _paceController.text.replaceAll(':', '');
+      _paceController.text = val;
+      _paceController.selection = TextSelection.fromPosition(TextPosition(offset: val.length));
+    } else {
+      // Lose focus: add : (e.g. 320 -> 3:20)
+      final val = _paceController.text;
+      if (val.length >= 3 && !val.contains(':')) {
+        final m = val.substring(0, val.length - 2);
+        final s = val.substring(val.length - 2);
+        _paceController.text = '$m:$s';
+      }
+    }
+  }
+
   String _formatPaceForInput(int secPerKm) {
     final min = secPerKm ~/ 60;
     final sec = secPerKm % 60;
-    return '$min${sec.toString().padLeft(2, '0')}';
+    // 初期表示やボタン操作時はコロン付きで表示（フォーカスがない状態を想定）
+    return '$min:${sec.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -152,6 +173,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     _durationController.dispose();
     _restDurationController.dispose();
     _noteController.dispose();
+    _paceFocusNode.dispose();
     super.dispose();
   }
 
@@ -210,11 +232,11 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   const Divider(),
 
                   // テンプレ入力
-                  _buildSectionTitle('メニュー'),
+                  _buildSectionTitle('メニュー名'),
                   TextFormField(
                     controller: _templateController,
                     decoration: const InputDecoration(
-                      hintText: '例: 12km @E',
+                      hintText: '例: インターバル',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
@@ -223,6 +245,120 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 8),
+
+                  // メニュー内容とTotal距離
+                  // Planから遷移してきている場合はメニュー内容を表示し、Total距離を横に並べる
+                  if (widget.initialReps != null && (int.tryParse(widget.initialReps!) ?? 1) > 1) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // メニュー内容
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                                _buildSectionTitle('メニュー内容'),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.grey.shade300),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                       Text('${(int.tryParse(widget.initialDistance ?? '0') ?? 0)}m × ${widget.initialReps}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                       if (widget.initialPace != null)
+                                         Text('@${_formatPace(int.tryParse(widget.initialPace!) ?? 0)}/km', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Total距離
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                                _buildSectionTitle('Total距離'),
+                                TextFormField(
+                                  controller: _distanceController,
+                                  decoration: const InputDecoration(
+                                    hintText: '10',
+                                    suffixText: 'km',
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  ),
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                ),
+                             ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                     // Planでない場合は普通に距離入力（ここに置く）
+                     Row(
+                       children: [
+                         Expanded(
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               _buildSectionTitle('Total距離 (km)'),
+                               TextFormField(
+                                 controller: _distanceController,
+                                 decoration: const InputDecoration(
+                                   hintText: '例: 12',
+                                   suffixText: 'km',
+                                   border: OutlineInputBorder(),
+                                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                 ),
+                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                               ),
+                             ],
+                           ),
+                         ),
+                       ],
+                     ),
+                  ],
+                  const SizedBox(height: 16),
+                  
+                  // 平均ペース（ここに移動）
+                  _buildSectionTitle('平均ペース'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _paceController,
+                          focusNode: _paceFocusNode,
+                          keyboardType: TextInputType.datetime,
+                          decoration: const InputDecoration(
+                            labelText: 'ペース',
+                            hintText: '4:00',
+                            suffixText: '/km',
+                            helperText: '例: 430 -> 4:30',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.remove),
+                        onPressed: () => _adjustPace(-5),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => _adjustPace(5),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
@@ -258,45 +394,9 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 距離
-                  _buildSectionTitle('距離 (km)'),
-                  TextFormField(
-                    controller: _distanceController,
-                    decoration: const InputDecoration(
-                      hintText: '例: 12',
-                      border: OutlineInputBorder(),
-                      suffixText: 'km',
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  ),
-                  const SizedBox(height: 16),
 
-                  // ペース（1フィールド）
-                  _buildSectionTitle('ペース'),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _paceController,
-                          decoration: const InputDecoration(
-                            hintText: '430 → 4:30/km',
-                            border: OutlineInputBorder(),
-                            suffixText: '/km',
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        onPressed: () => _adjustPace(-5),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () => _adjustPace(5),
-                      ),
-                    ],
-                  ),
+
+
                   const SizedBox(height: 16),
 
                   // ゾーン
@@ -547,6 +647,12 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
   String _formatDateTime(DateTime dt) {
     return '${dt.year}年${dt.month}月${dt.day}日 ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatPace(int secPerKm) {
+    final min = secPerKm ~/ 60;
+    final sec = secPerKm % 60;
+    return '$min:${sec.toString().padLeft(2, '0')}';
   }
 }
 

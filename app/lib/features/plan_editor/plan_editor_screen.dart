@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
 import '../calendar/calendar_providers.dart';
+import '../day_detail/day_detail_screen.dart';
+import '../settings/settings_screen.dart';
 
 class PlanEditorScreen extends ConsumerStatefulWidget {
   const PlanEditorScreen({super.key, required this.dateString});
@@ -106,15 +108,13 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
     }
 
     final row = _PlanRowState();
+    row.init(() => _onPaceFocusChange(row));
     if (menuName != null) row.menuController.text = menuName;
     row.distanceController.text = distText;
     row.isKm = isKm;
     if (reps != null) row.repsController.text = reps.toString();
     if (pace != null) {
-        // 秒/km -> 分:秒
-        final m = pace ~/ 60;
-        final s = pace % 60;
-        row.paceController.text = '$m:${s.toString().padLeft(2, '0')}';
+        row.paceController.text = _formatPace(pace);
     }
     row.selectedZone = zone;
     if (note != null) row.noteController.text = note;
@@ -122,11 +122,33 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
     // リスナー追加（合計距離再計算のため）
     row.distanceController.addListener(_onRowChanged);
     row.repsController.addListener(_onRowChanged);
-    // 単位変更時もsetStateしたいので、UI側でハンドリングが必要
 
     setState(() {
       _rows.add(row);
     });
+  }
+
+  void _onPaceFocusChange(_PlanRowState row) {
+    if (row.paceFocusNode.hasFocus) {
+      // Gain focus: remove :
+      final val = row.paceController.text.replaceAll(':', '');
+      row.paceController.text = val;
+      row.paceController.selection = TextSelection.fromPosition(TextPosition(offset: val.length));
+    } else {
+      // Lose focus: add :
+      final val = row.paceController.text;
+      if (val.length >= 3 && !val.contains(':')) {
+        final m = val.substring(0, val.length - 2);
+        final s = val.substring(val.length - 2);
+        row.paceController.text = '$m:$s';
+      }
+    }
+  }
+
+  String _formatPace(int paceSec) {
+    final m = paceSec ~/ 60;
+    final s = paceSec % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   void _onRowChanged() {
@@ -156,7 +178,7 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
         actions: [
           TextButton(
             onPressed: _savePlans,
-            child: const Text('保存', style: TextStyle(color: Colors.white)),
+            child: const Text('保存'),
           ),
         ],
       ),
@@ -268,6 +290,9 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
 
       // カレンダーキャッシュ更新
       ref.invalidate(monthCalendarDataProvider);
+      
+      // 日詳細のキャッシュ更新
+      ref.invalidate(dayPlansProvider(_targetDate));
 
       if (mounted) {
         context.pop();
@@ -285,8 +310,14 @@ class _PlanRowState {
   final paceController = TextEditingController();
   final noteController = TextEditingController();
   
+  late FocusNode paceFocusNode;
   bool isKm = true;
   Zone? selectedZone;
+
+  void init(VoidCallback onPaceFocusChange) {
+    paceFocusNode = FocusNode();
+    paceFocusNode.addListener(onPaceFocusChange);
+  }
 
   void dispose() {
     menuController.dispose();
@@ -294,6 +325,7 @@ class _PlanRowState {
     repsController.dispose();
     paceController.dispose();
     noteController.dispose();
+    paceFocusNode.dispose();
   }
 }
 
@@ -323,10 +355,33 @@ class _PlanRowItem extends StatelessWidget {
               flex: 4,
               child: TextFormField(
                 controller: row.menuController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'メニュー名 (例: インターバル)',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  suffixIcon: Consumer(
+                    builder: (context, ref, child) {
+                      final presetsAsync = ref.watch(menuPresetsProvider);
+                      return presetsAsync.maybeWhen(
+                        data: (presets) => presets.isEmpty
+                            ? const SizedBox.shrink()
+                            : PopupMenuButton<String>(
+                                icon: const Icon(Icons.arrow_drop_down),
+                                onSelected: (value) {
+                                  row.menuController.text = value;
+                                  onChanged();
+                                },
+                                itemBuilder: (context) => presets
+                                    .map((p) => PopupMenuItem(
+                                          value: p.name,
+                                          child: Text(p.name),
+                                        ))
+                                    .toList(),
+                              ),
+                        orElse: () => const SizedBox.shrink(),
+                      );
+                    },
+                  ),
                 ),
                 onChanged: (_) => onChanged(),
               ),
@@ -415,18 +470,20 @@ class _PlanRowItem extends StatelessWidget {
               ),
              ),
              const SizedBox(width: 8),
-             Expanded(
-              child: TextFormField(
-                controller: row.paceController,
-                keyboardType: TextInputType.datetime,
-                decoration: const InputDecoration(
-                  labelText: 'ペース (分:秒)',
-                  hintText: '4:00',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ),
-            ),
+              Expanded(
+               child: TextFormField(
+                 controller: row.paceController,
+                 focusNode: row.paceFocusNode,
+                 keyboardType: TextInputType.datetime,
+                 decoration: const InputDecoration(
+                   labelText: 'ペース',
+                   hintText: '4:00',
+                   border: OutlineInputBorder(),
+                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                   helperText: '例: 430 -> 4:30',
+                 ),
+               ),
+             ),
           ],
         ),
       ],
