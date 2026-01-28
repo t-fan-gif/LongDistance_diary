@@ -147,9 +147,9 @@
 flowchart TD
   A[日付選択] --> B[テンプレ入力: 距離or時間 + 強度]
   B --> C{入力妥当?}
-  C -- No --> B
-  C -- Yes --> D[PlanRepository.createPlan]
-  D --> E[カレンダー再描画]
+  C -->|いいえ| B
+  C -->|はい| D["Planを保存"]
+  D --> E["カレンダーを更新"]
 ```
 
 ### 実績入力（Session）: 予定あり/なし共通
