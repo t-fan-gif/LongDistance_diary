@@ -86,6 +86,14 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
            final s = pace % 60;
            _paceController.text = '$m:${s.toString().padLeft(2, '0')}';
         }
+
+        // 時間の予測 (距離 / 1000 * ペース)
+        if (widget.initialDistance != null && pace > 0) {
+          int dist = int.tryParse(widget.initialDistance!) ?? 0;
+          int reps = widget.initialReps != null ? (int.tryParse(widget.initialReps!) ?? 1) : 1;
+          final totalSec = (dist * reps / 1000.0) * pace;
+          _durationController.text = (totalSec / 60).round().toString();
+        }
       }
 
       if (widget.initialZone != null) {
@@ -637,8 +645,15 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
     if (confirmed == true && widget.sessionId != null) {
       final repo = ref.read(sessionRepositoryProvider);
+      
+      // 削除前に月キーを保持
+      final monthKey = DateTime(_selectedDateTime.year, _selectedDateTime.month);
+      
       await repo.deleteSession(widget.sessionId!);
-      ref.invalidate(monthCalendarDataProvider);
+      
+      // 削除した月のカレンダーデータを無効化
+      ref.invalidate(monthCalendarDataProvider(monthKey));
+      
       if (mounted) {
         context.pop();
       }

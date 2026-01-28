@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/domain/enums.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/repos/plan_repository.dart';
@@ -48,6 +49,7 @@ class DayCalendarData {
     required this.sessions,
     required this.plans,
     required this.dayLoad,
+    required this.totalDistanceM,
     required this.loadRatio,
     required this.heatmapBucket,
   });
@@ -56,6 +58,7 @@ class DayCalendarData {
   final List<Session> sessions;
   final List<Plan> plans;
   final int dayLoad;
+  final int totalDistanceM;
   final double loadRatio;
   final int heatmapBucket;
 
@@ -129,6 +132,14 @@ final monthCalendarDataProvider =
     // 日負荷
     final dayLoad = loadCalc.computeDayLoad(daySessions);
 
+    // 日合計距離
+    int totalDistanceM = 0;
+    for (final s in daySessions) {
+      if (s.status != SessionStatus.skipped) {
+        totalDistanceM += s.distanceMainM ?? 0;
+      }
+    }
+
     // 負荷比率と濃淡
     final dayCapacity = capacityEst.estimateCapacityForDate(dailyLoads, date);
     final loadRatio = capacityEst.computeLoadRatio(dayLoad, dayCapacity);
@@ -139,6 +150,7 @@ final monthCalendarDataProvider =
       sessions: daySessions,
       plans: dayPlans,
       dayLoad: dayLoad,
+      totalDistanceM: totalDistanceM,
       loadRatio: loadRatio,
       heatmapBucket: bucket,
     ));

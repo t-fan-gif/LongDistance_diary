@@ -35,8 +35,9 @@ class CapacityEstimator {
   double computeLoadRatio(int dayLoad, double capacity) {
     const epsilon = 0.01;
     // ゼロ除算およびデータ不足時の異常値を防ぐ
-    // 基準値(5.0)未満の場合は、評価に十分な履歴がないとみなし比率0（評価なし/グレー）とする
-    if (capacity < 5.0) {
+    // 基準値(60.0)未満の場合は、評価に十分な履歴がないとみなし比率0（評価なし/グレー）とする
+    // 1時間E走(180)を週数回行うレベルが定着するまでは評価を保留する
+    if (capacity < 60.0) {
       return 0.0;
     }
     return dayLoad / capacity;

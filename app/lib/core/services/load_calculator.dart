@@ -22,8 +22,9 @@ class LoadCalculator {
     final distanceKm = distanceM / 1000.0;
     // 速いほど係数が高い: 基準ペース/実際のペース
     final paceCoefficient = _basePaceSecPerKm / paceSecPerKm;
-    // 負荷 = 距離 × ペース係数 × 100（整数化のため）
-    return (distanceKm * paceCoefficient * 100).round();
+    // 負荷 = 距離 × ペース係数 × 15
+    // 例: 12kmを5:00/km(300s)で走った場合: 12 * (300/300) * 15 = 180
+    return (distanceKm * paceCoefficient * 15).round();
   }
 
   /// sRPE（主観的運動強度 × 時間）を計算
@@ -53,7 +54,9 @@ class LoadCalculator {
 
     final zoneCoefficient = _getZoneCoefficient(zone);
     final durationMin = durationSec / 60.0;
-    return (zoneCoefficient * durationMin).round();
+    // 負荷 = ゾーン係数 × 分 × 3
+    // 例: Zone E(1.0)で60分走った場合: 1.0 * 60 * 3 = 180
+    return (zoneCoefficient * durationMin * 3).round();
   }
 
   /// ゾーンごとの係数

@@ -169,7 +169,7 @@ class _CalendarGrid extends StatelessWidget {
         return Row(
           children: List.generate(7, (dayIndex) {
             if (dayIndex >= week.length || week[dayIndex] == null) {
-              return const Expanded(child: SizedBox(height: 80));
+              return const Expanded(child: SizedBox(height: 100));
             }
             return Expanded(
               child: _DayCell(data: week[dayIndex]!),
@@ -197,7 +197,7 @@ class _DayCell extends StatelessWidget {
         context.push('/day/${data.date.toIso8601String().split('T')[0]}');
       },
       child: Container(
-        height: 80,
+        height: 100,
         margin: const EdgeInsets.all(1),
         decoration: BoxDecoration(
           color: bgColor,
@@ -206,97 +206,122 @@ class _DayCell extends StatelessWidget {
               ? Border.all(color: Colors.teal, width: 2)
               : Border.all(color: Colors.grey.shade200),
         ),
-        child: Stack(
-          children: [
-            // 日付
-            Positioned(
-              top: 4,
-              left: 4,
-              child: Text(
-                '${data.date.day}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                  color: isToday ? Colors.teal : null,
-                ),
-              ),
-            ),
-            // セッション数バッジ
-            if (data.sessionCount > 0)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.teal,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${data.sessionCount}',
-                    style: const TextStyle(
+        child: Padding(
+          padding: const EdgeInsets.all(2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. 日付とバッジ
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   Text(
+                    '${data.date.day}',
+                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                      color: isToday ? Colors.teal : null,
                     ),
                   ),
-                ),
+                  if (data.sessionCount > 0)
+                    _buildBadge('${data.sessionCount}', Colors.teal, Colors.white)
+                  else if (data.planCount > 0)
+                     _buildBadge('${data.planCount}', Colors.transparent, Colors.teal, isBorder: true),
+                ],
               ),
-            // 予定のみの場合は枠線で表示
-            if (data.sessionCount == 0 && data.planCount > 0)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.teal),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${data.planCount}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.teal,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              const Spacer(),
+              // 2. メニュー名
+              if (_hasMenu()) 
+                Text(
+                  _getMenuName(),
+                  style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, height: 1.0),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            // メニュー表示（最大負荷のセッション、なければ最初のプラン）
-            Positioned(
-              bottom: 4,
-              left: 4,
-              right: 4,
-              child: _buildMenuLabel(),
-            ),
-          ],
+              // 3. メニュー内容 (距離 @ペース)
+              if (_hasContent())
+                Text(
+                  _getContentText(),
+                  style: const TextStyle(fontSize: 8, height: 1.0, color: Colors.black87),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              const Spacer(),
+              // 4. トータル距離
+              if (data.totalDistanceM > 0)
+                Text(
+                  '${(data.totalDistanceM / 1000).toStringAsFixed(1)}km',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMenuLabel() {
-    String? label;
-    if (data.maxLoadSession != null) {
-      label = data.maxLoadSession!.templateText;
-    } else if (data.plans.isNotEmpty) {
-      label = data.plans.first.menuName;
-    }
-
-    if (label == null) return const SizedBox.shrink();
-
-    // 長い場合は省略
-    if (label.length > 10) {
-      label = '${label.substring(0, 10)}…';
-    }
-
-    return Text(
-      label,
-      style: const TextStyle(fontSize: 10),
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
+  Widget _buildBadge(String text, Color bgColor, Color textColor, {bool isBorder = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+        border: isBorder ? Border.all(color: textColor, width: 0.5) : null,
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 8,
+          color: textColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
+  }
+
+  bool _hasMenu() => data.maxLoadSession != null || data.plans.isNotEmpty;
+
+  String _getMenuName() {
+    if (data.maxLoadSession != null) return data.maxLoadSession!.templateText;
+    if (data.plans.isNotEmpty) return data.plans.first.menuName;
+    return '';
+  }
+
+  bool _hasContent() {
+    if (data.maxLoadSession != null) {
+      return data.maxLoadSession!.distanceMainM != null || data.maxLoadSession!.paceSecPerKm != null;
+    }
+    if (data.plans.isNotEmpty) return true;
+    return false;
+  }
+
+  String _getContentText() {
+    if (data.maxLoadSession != null) {
+      final s = data.maxLoadSession!;
+      final dist = s.distanceMainM != null ? '${(s.distanceMainM! / 1000).toStringAsFixed(1)}k' : '';
+      final pace = s.paceSecPerKm != null ? '@${_formatPace(s.paceSecPerKm!)}' : '';
+      return '$dist$pace';
+    }
+    if (data.plans.isNotEmpty) {
+      final p = data.plans.first;
+      final dist = (p.distance ?? 0) > 0 ? '${(p.distance! / 1000).toStringAsFixed(1)}k' : '';
+      final pace = p.pace != null ? '@${_formatPace(p.pace!)}' : '';
+      return '$dist$pace';
+    }
+    return '';
+  }
+
+  String _formatPace(int secPerKm) {
+    final min = secPerKm ~/ 60;
+    final sec = (secPerKm % 60).toString().padLeft(2, '0');
+    return '$min:$sec';
   }
 
   bool _isToday(DateTime date) {
