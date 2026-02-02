@@ -29,4 +29,44 @@ class ExportRepository {
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert(data);
   }
+
+  /// JSONデータから全データを復元する
+  Future<void> importFromJson(String jsonString) async {
+    final Map<String, dynamic> data = json.decode(jsonString);
+
+    await _db.transaction(() async {
+      // 既存データを削除
+      await _db.delete(_db.plans).go();
+      await _db.delete(_db.sessions).go();
+      await _db.delete(_db.personalBests).go();
+      await _db.delete(_db.menuPresets).go();
+
+      // インポート処理
+      if (data['plans'] != null) {
+        for (final item in data['plans']) {
+          await _db.into(_db.plans).insert(Plan.fromJson(item));
+        }
+      }
+      if (data['sessions'] != null) {
+        for (final item in data['sessions']) {
+          await _db.into(_db.sessions).insert(Session.fromJson(item));
+        }
+      }
+      if (data['personal_bests'] != null) {
+        for (final item in data['personal_bests']) {
+          await _db.into(_db.personalBests).insert(PersonalBest.fromJson(item));
+        }
+      }
+    });
+  }
+
+  /// 全データを初期化する
+  Future<void> resetData() async {
+    await _db.transaction(() async {
+      await _db.delete(_db.plans).go();
+      await _db.delete(_db.sessions).go();
+      await _db.delete(_db.personalBests).go();
+      await _db.delete(_db.menuPresets).go();
+    });
+  }
 }

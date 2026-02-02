@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../core/services/heatmap_scaler.dart';
 import 'calendar_providers.dart';
+import '../day_detail/day_detail_screen.dart';
+import '../../core/domain/enums.dart';
+import '../../core/db/app_database.dart';
 
 class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
@@ -13,53 +15,97 @@ class CalendarScreen extends ConsumerWidget {
     final selectedMonth = ref.watch(selectedMonthProvider);
     final calendarDataAsync = ref.watch(monthCalendarDataProvider(selectedMonth));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('カレンダー'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(DateFormat('yyyy年MM月').format(selectedMonth)),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
+              Tab(text: '今日', icon: Icon(Icons.today)),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 月選択ヘッダー
-          _MonthHeader(
-            selectedMonth: selectedMonth,
-            onPreviousMonth: () {
-              ref.read(selectedMonthProvider.notifier).state = DateTime(
-                selectedMonth.year,
-                selectedMonth.month - 1,
-              );
-            },
-            onNextMonth: () {
-              ref.read(selectedMonthProvider.notifier).state = DateTime(
-                selectedMonth.year,
-                selectedMonth.month + 1,
-              );
-            },
-          ),
-          // 曜日ヘッダー
-          const _WeekdayHeader(),
-          // カレンダーグリッド
-          Expanded(
-            child: calendarDataAsync.when(
-              data: (days) => _CalendarGrid(days: days),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('エラー: $e')),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () => context.push('/settings'),
             ),
+          ],
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(color: Colors.teal),
+                child: const Text('メニュー', style: TextStyle(color: Colors.white, fontSize: 24)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: const Text('トレーニング履歴'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/history');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.analytics),
+                title: const Text('トレーニング分析'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/analysis');
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('設定'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/settings');
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // 今日の日付で予定作成
-          final today = DateTime.now();
-          context.push('/plan/edit?date=${today.toIso8601String().split('T')[0]}');
-        },
-        child: const Icon(Icons.add),
+        ),
+        body: TabBarView(
+          children: [
+            // カレンダータブ
+            Column(
+              children: [
+                // 月選択ヘッダー (重複表示を避けるため年号は削除)
+                _MonthHeader(
+                  selectedMonth: selectedMonth,
+                  onPreviousMonth: () {
+                    ref.read(selectedMonthProvider.notifier).state = DateTime(
+                      selectedMonth.year,
+                      selectedMonth.month - 1,
+                    );
+                  },
+                  onNextMonth: () {
+                    ref.read(selectedMonthProvider.notifier).state = DateTime(
+                      selectedMonth.year,
+                      selectedMonth.month + 1,
+                    );
+                  },
+                ),
+                // 曜日ヘッダー
+                const _WeekdayHeader(),
+                // カレンダーグリッド
+                Expanded(
+                  child: calendarDataAsync.when(
+                    data: (days) => _CalendarGrid(days: days),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => Center(child: Text('エラー: $e')),
+                  ),
+                ),
+              ],
+            ),
+            // 今日の予定タブ
+            const _TodayView(),
+          ],
+        ),
       ),
     );
   }
@@ -78,19 +124,16 @@ class _MonthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPreviousMonth,
           ),
-          Text(
-            '${selectedMonth.year}年${selectedMonth.month}月',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          const Expanded(child: Divider()), // 年月表示をAppBarに移したので中央は空けるか仕切り
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNextMonth,
@@ -102,34 +145,28 @@ class _MonthHeader extends StatelessWidget {
 }
 
 class _WeekdayHeader extends StatelessWidget {
-  const _WeekdayHeader();
-
-  static const _weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const _WeekdayHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
+    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300),
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      color: Colors.grey.shade100,
       child: Row(
-        children: _weekdays.map((day) {
-          final isWeekend = day == '日' || day == '土';
-          return Expanded(
-            child: Center(
-              child: Text(
-                day,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isWeekend ? Colors.red.shade400 : null,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+        children: weekdays
+            .map((w) => Expanded(
+                  child: Center(
+                    child: Text(
+                      w,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ))
+            .toList(),
       ),
     );
   }
@@ -142,186 +179,118 @@ class _CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (days.isEmpty) {
-      return const Center(child: Text('データがありません'));
-    }
+    // 初日の曜日を計算してオフセットを調整
+    final firstDate = days.first.date;
+    final offset = (firstDate.weekday - 1); 
 
-    // 月初の曜日を取得（0=日曜日）
-    final firstDayOfMonth = days.first.date;
-    final firstWeekday = firstDayOfMonth.weekday % 7; // 日曜日=0に変換
-
-    // グリッドに空白セルを追加
-    final List<DayCalendarData?> cells = [
-      ...List.filled(firstWeekday, null),
-      ...days,
-    ];
-
-    // 週ごとにグループ化
-    final weeks = <List<DayCalendarData?>>[];
-    for (int i = 0; i < cells.length; i += 7) {
-      weeks.add(cells.sublist(i, (i + 7).clamp(0, cells.length)));
-    }
-
-    return ListView.builder(
-      itemCount: weeks.length,
-      itemBuilder: (context, weekIndex) {
-        final week = weeks[weekIndex];
-        return Row(
-          children: List.generate(7, (dayIndex) {
-            if (dayIndex >= week.length || week[dayIndex] == null) {
-              return const Expanded(child: SizedBox(height: 100));
-            }
-            return Expanded(
-              child: _DayCell(data: week[dayIndex]!),
-            );
-          }),
-        );
+    return GridView.builder(
+      padding: const EdgeInsets.all(4),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        childAspectRatio: 0.6, // 少し縦長にする
+      ),
+      itemCount: days.length + offset,
+      itemBuilder: (context, index) {
+        if (index < offset) {
+          return const SizedBox.shrink();
+        }
+        final dayData = days[index - offset];
+        return _CalendarCell(dayData: dayData);
       },
     );
   }
 }
 
-class _DayCell extends StatelessWidget {
-  const _DayCell({required this.data});
+class _CalendarCell extends StatelessWidget {
+  const _CalendarCell({required this.dayData});
 
-  final DayCalendarData data;
+  final DayCalendarData dayData;
 
   @override
   Widget build(BuildContext context) {
-    final heatmapScaler = HeatmapScaler();
-    final bgColor = heatmapScaler.getColorForBucket(data.heatmapBucket);
-    final isToday = _isToday(data.date);
-
-    return GestureDetector(
+    final isToday = _isToday(dayData.date);
+    
+    return InkWell(
       onTap: () {
-        context.push('/day/${data.date.toIso8601String().split('T')[0]}');
+        context.push('/day/${dayData.date.toIso8601String().split('T')[0]}');
       },
       child: Container(
-        height: 100,
-        margin: const EdgeInsets.all(1),
+        margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(4),
-          border: isToday
-              ? Border.all(color: Colors.teal, width: 2)
-              : Border.all(color: Colors.grey.shade200),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. 日付とバッジ
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                   Text(
-                    '${data.date.day}',
-                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                      color: isToday ? Colors.teal : null,
-                    ),
-                  ),
-                  if (data.sessionCount > 0)
-                    _buildBadge('${data.sessionCount}', Colors.teal, Colors.white)
-                  else if (data.planCount > 0)
-                     _buildBadge('${data.planCount}', Colors.transparent, Colors.teal, isBorder: true),
-                ],
-              ),
-              const Spacer(),
-              // 2. メニュー名
-              if (_hasMenu()) 
-                Text(
-                  _getMenuName(),
-                  style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, height: 1.0),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              // 3. メニュー内容 (距離 @ペース)
-              if (_hasContent())
-                Text(
-                  _getContentText(),
-                  style: const TextStyle(fontSize: 8, height: 1.0, color: Colors.black87),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              const Spacer(),
-              // 4. トータル距離
-              if (data.totalDistanceM > 0)
-                Text(
-                  '${(data.totalDistanceM / 1000).toStringAsFixed(1)}km',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    height: 1.0,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-            ],
+          color: _getHeatmapColor(dayData.heatmapBucket),
+          border: Border.all(
+            color: isToday ? Colors.teal : Colors.grey.shade300,
+            width: isToday ? 2 : 1,
           ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          children: [
+            // 日付
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              color: isToday ? Colors.teal : Colors.black12,
+              child: Text(
+                dayData.date.day.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isToday ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+            
+            // 内容表示
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(1),
+                child: dayData.maxLoadSession != null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            dayData.maxLoadSession!.templateText,
+                            style: const TextStyle(fontSize: 8, overflow: TextOverflow.ellipsis),
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                          ),
+                          if (dayData.dayLoad > 0)
+                            Text(
+                              'L:${dayData.dayLoad}',
+                              style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                            ),
+                          if (dayData.totalDistanceM > 0)
+                            Text(
+                              '${(dayData.totalDistanceM / 1000).toStringAsFixed(1)}k',
+                              style: const TextStyle(fontSize: 7, color: Colors.black54),
+                            ),
+                        ],
+                      )
+                    : dayData.plans.isNotEmpty
+                        ? const Center(
+                            child: Icon(Icons.event_note, size: 12, color: Colors.orange),
+                          )
+                        : const SizedBox.shrink(),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildBadge(String text, Color bgColor, Color textColor, {bool isBorder = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-        border: isBorder ? Border.all(color: textColor, width: 0.5) : null,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 8,
-          color: textColor,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  bool _hasMenu() => data.maxLoadSession != null || data.plans.isNotEmpty;
-
-  String _getMenuName() {
-    if (data.maxLoadSession != null) return data.maxLoadSession!.templateText;
-    if (data.plans.isNotEmpty) return data.plans.first.menuName;
-    return '';
-  }
-
-  bool _hasContent() {
-    if (data.maxLoadSession != null) {
-      return data.maxLoadSession!.distanceMainM != null || data.maxLoadSession!.paceSecPerKm != null;
+  Color _getHeatmapColor(int bucket) {
+    switch (bucket) {
+      case 0: return Colors.transparent;
+      case 1: return Colors.teal.shade50;
+      case 2: return Colors.teal.shade100;
+      case 3: return Colors.teal.shade200;
+      case 4: return Colors.teal.shade300;
+      case 5: return Colors.teal.shade400;
+      default: return Colors.transparent;
     }
-    if (data.plans.isNotEmpty) return true;
-    return false;
-  }
-
-  String _getContentText() {
-    if (data.maxLoadSession != null) {
-      final s = data.maxLoadSession!;
-      final dist = s.distanceMainM != null ? '${(s.distanceMainM! / 1000).toStringAsFixed(1)}k' : '';
-      final pace = s.paceSecPerKm != null ? '@${_formatPace(s.paceSecPerKm!)}' : '';
-      return '$dist$pace';
-    }
-    if (data.plans.isNotEmpty) {
-      final p = data.plans.first;
-      final dist = (p.distance ?? 0) > 0 ? '${(p.distance! / 1000).toStringAsFixed(1)}k' : '';
-      final pace = p.pace != null ? '@${_formatPace(p.pace!)}' : '';
-      return '$dist$pace';
-    }
-    return '';
-  }
-
-  String _formatPace(int secPerKm) {
-    final min = secPerKm ~/ 60;
-    final sec = (secPerKm % 60).toString().padLeft(2, '0');
-    return '$min:$sec';
   }
 
   bool _isToday(DateTime date) {
@@ -329,5 +298,139 @@ class _DayCell extends StatelessWidget {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+}
+
+class _TodayView extends ConsumerWidget {
+  const _TodayView();
+
+  static const _emojis = ['😴', '😌', '🙂', '😊', '😐', '😤', '😰', '😫', '🥵', '💀', '☠️'];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final today = DateTime.now();
+    final dateKey = DateTime(today.year, today.month, today.day);
+    
+    final sessionsAsync = ref.watch(daySessionsProvider(dateKey));
+    final plansAsync = ref.watch(dayPlansProvider(dateKey));
+    final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
+    final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+    final loadCalc = ref.watch(loadCalculatorProvider);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildSectionHeader(context, '今日の予定'),
+        plansAsync.when(
+          data: (plans) {
+            if (plans.isEmpty) return const Card(child: ListTile(title: Text('予定はありません')));
+            return Column(
+              children: plans.map((p) => Card(
+                child: ListTile(
+                  title: Text(p.menuName),
+                  subtitle: Text(_formatPlanSubtitle(p)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                       IconButton(
+                        icon: const Icon(Icons.directions_run),
+                        tooltip: '実績にする',
+                        onPressed: () => _copyToSession(context, p),
+                      ),
+                      const Icon(Icons.chevron_right),
+                    ],
+                  ),
+                  onTap: () => context.push('/plan/edit?date=${dateKey.toIso8601String().split('T')[0]}'),
+                ),
+              )).toList(),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Text('エラー: $e'),
+        ),
+        const SizedBox(height: 24),
+        _buildSectionHeader(context, '今日の実績'),
+        sessionsAsync.when(
+          data: (sessions) {
+            if (sessions.isEmpty) return const Card(child: ListTile(title: Text('実績はありません')));
+            return Column(
+              children: sessions.map((s) {
+                final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
+                final load = loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace);
+                final rpeEmoji = s.rpeValue != null && s.rpeValue! < _emojis.length ? _emojis[s.rpeValue!] : '';
+
+                return Card(
+                  child: ListTile(
+                    leading: Text(rpeEmoji, style: const TextStyle(fontSize: 24)),
+                    title: Text(s.templateText),
+                    subtitle: Text(
+                      '${(s.distanceMainM ?? 0) / 1000}km • ${_formatPace(s.paceSecPerKm)} • 負荷: ${load ?? 0}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/session/${s.id}'),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Text('エラー: $e'),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(
+          onPressed: () => context.push('/session/new?date=${dateKey.toIso8601String().split('T')[0]}'),
+          icon: const Icon(Icons.add),
+          label: const Text('実績を入力する'),
+          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () => context.push('/plan/edit?date=${dateKey.toIso8601String().split('T')[0]}'),
+          icon: const Icon(Icons.event_note),
+          label: const Text('予定を追加する'),
+        ),
+      ],
+    );
+  }
+
+  void _copyToSession(BuildContext context, Plan plan) {
+    final dateString = plan.date.toIso8601String().split('T')[0];
+    final query = <String, String>{
+      'date': dateString,
+      'menuName': plan.menuName,
+      if (plan.distance != null) 'distance': plan.distance.toString(),
+      if (plan.pace != null) 'pace': plan.pace.toString(),
+      if (plan.zone != null) 'zone': plan.zone!.name,
+      if (plan.reps > 1) 'reps': plan.reps.toString(),
+      if (plan.note != null) 'note': plan.note!,
+    };
+    final uri = Uri(path: '/session/new', queryParameters: query);
+    context.push(uri.toString());
+  }
+
+  String _formatPlanSubtitle(Plan p) {
+    final segments = <String>[];
+    if (p.distance != null) segments.add('${(p.distance! / 1000).toStringAsFixed(1)}km');
+    if (p.reps > 1) segments.add('× ${p.reps}');
+    if (p.pace != null) segments.add('@${_formatPace(p.pace)}');
+    if (p.zone != null) segments.add('(${p.zone!.name})');
+    return segments.join(' ');
+  }
+
+  String _formatPace(int? seconds) {
+    if (seconds == null || seconds <= 0) return '-';
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
+    );
   }
 }

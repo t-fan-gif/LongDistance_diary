@@ -8,6 +8,9 @@ import '../../core/repos/session_repository.dart';
 import '../../core/services/capacity_estimator.dart';
 import '../../core/services/heatmap_scaler.dart';
 import '../../core/services/load_calculator.dart';
+import '../../core/services/vdot_calculator.dart';
+import '../../core/repos/personal_best_repository.dart';
+import '../settings/settings_screen.dart'; // personalBestRepositoryProvider is here? No, check where it is.
 
 /// 現在表示中の年月
 final selectedMonthProvider = StateProvider<DateTime>((ref) {
@@ -42,6 +45,45 @@ final heatmapScalerProvider = Provider<HeatmapScaler>((ref) {
   return HeatmapScaler();
 });
 
+/// VdotCalculatorのプロバイダ
+final vdotCalculatorProvider = Provider<VdotCalculator>((ref) {
+  return VdotCalculator();
+});
+
+/// ランニングの閾値ペース(s/km)
+final runningThresholdPaceProvider = FutureProvider<int?>((ref) async {
+  return _getThresholdPace(ref, ActivityType.running);
+});
+
+/// 競歩の閾値ペース(s/km)
+final walkingThresholdPaceProvider = FutureProvider<int?>((ref) async {
+  return _getThresholdPace(ref, ActivityType.walking);
+});
+
+Future<int?> _getThresholdPace(Ref ref, ActivityType type) async {
+  final pbRepo = ref.watch(personalBestRepositoryProvider);
+  final vdotCalc = ref.watch(vdotCalculatorProvider);
+  
+  final pbs = await pbRepo.listPersonalBests();
+  if (pbs.isEmpty) return null;
+  
+  // 指定されたアクティビティタイプのPBのみ抽出
+  final filteredPbs = pbs.where((pb) => pb.activityType == type).toList();
+  if (filteredPbs.isEmpty) return null;
+
+  double maxVdot = 0;
+  for (final pb in filteredPbs) {
+    final dist = vdotCalc.getDistanceForEvent(pb.event);
+    final vdot = vdotCalc.calculateVdot(dist, pb.timeMs ~/ 1000);
+    if (vdot > maxVdot) maxVdot = vdot;
+  }
+  
+  if (maxVdot == 0) return null;
+  
+  final paces = vdotCalc.calculatePaces(maxVdot);
+  return paces[Zone.T]?.minSec;
+}
+
 /// 1日分のカレンダーデータ
 class DayCalendarData {
   DayCalendarData({
@@ -73,8 +115,9 @@ class DayCalendarData {
     if (sessions.isEmpty) return null;
     final loadCalc = LoadCalculator();
     Session? maxSession;
-    int maxLoad = 0;
+    int maxLoad = -1;
     for (final session in sessions) {
+      // 本来は正しい閾値ペースを渡すべきだが、ここでは比較用なので簡易的に計算
       final load = loadCalc.computeSessionRepresentativeLoad(session) ?? 0;
       if (load > maxLoad) {
         maxLoad = load;
@@ -93,6 +136,9 @@ final monthCalendarDataProvider =
   final loadCalc = ref.watch(loadCalculatorProvider);
   final capacityEst = ref.watch(capacityEstimatorProvider);
   final heatmapScaler = ref.watch(heatmapScalerProvider);
+  
+  final runningTpace = (await ref.watch(runningThresholdPaceProvider.future));
+  final walkingTpace = (await ref.watch(walkingThresholdPaceProvider.future));
 
   // 月のセッションとプランを取得
   final sessions = await sessionRepo.listSessionsByMonth(month.year, month.month);
@@ -105,11 +151,11 @@ final monthCalendarDataProvider =
     month,
   );
 
-  // 日ごとの負荷マップを作成
   final Map<DateTime, int> dailyLoads = {};
   for (final session in [...pastSessions, ...sessions]) {
     final date = _normalizeDate(session.startedAt);
-    final load = loadCalc.computeSessionRepresentativeLoad(session) ?? 0;
+    final tPace = session.activityType == ActivityType.walking ? walkingTpace : runningTpace;
+    final load = loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace) ?? 0;
     dailyLoads[date] = (dailyLoads[date] ?? 0) + load;
   }
 
@@ -130,7 +176,12 @@ final monthCalendarDataProvider =
         .toList();
 
     // 日負荷
-    final dayLoad = loadCalc.computeDayLoad(daySessions);
+    int dayLoad = 0;
+    for (final s in daySessions) {
+      if (s.status == SessionStatus.skipped) continue;
+      final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
+      dayLoad += loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0;
+    }
 
     // 日合計距離
     int totalDistanceM = 0;

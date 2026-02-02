@@ -8,6 +8,7 @@ class PersonalBests extends Table {
   IntColumn get timeMs => integer()();
   DateTimeColumn get date => dateTime().nullable()();
   TextColumn get note => text().nullable()();
+  TextColumn get activityType => textEnum<ActivityType>().withDefault(const Constant('running'))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -25,6 +26,7 @@ class Plans extends Table {
   IntColumn get pace => integer().nullable()();     // 秒/km
   TextColumn get zone => textEnum<Zone>().nullable()();
   IntColumn get reps => integer().withDefault(const Constant(1))();
+  TextColumn get activityType => textEnum<ActivityType>().withDefault(const Constant('running'))();
   
   TextColumn get note => text().nullable()();
 
@@ -60,6 +62,7 @@ class Sessions extends Table {
   TextColumn get note => text().nullable()();
 
   IntColumn get repLoad => integer().nullable()();
+  TextColumn get activityType => textEnum<ActivityType>().withDefault(const Constant('running'))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

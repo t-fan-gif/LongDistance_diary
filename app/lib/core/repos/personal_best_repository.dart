@@ -15,6 +15,7 @@ class PersonalBestRepository {
   Future<String> upsertPersonalBest({
     required PbEvent event,
     required int timeMs,
+    ActivityType activityType = ActivityType.running,
     DateTime? date,
     String? note,
   }) async {
@@ -30,6 +31,7 @@ class PersonalBestRepository {
           .write(
         PersonalBestsCompanion(
           timeMs: Value(timeMs),
+          activityType: Value(activityType),
           date: Value(date),
           note: Value(note),
         ),
@@ -43,6 +45,7 @@ class PersonalBestRepository {
           id: id,
           event: event,
           timeMs: timeMs,
+          activityType: Value(activityType),
           date: Value(date),
           note: Value(note),
         ),

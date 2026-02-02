@@ -1,3 +1,4 @@
+import 'dart:math';
 import '../db/app_database.dart';
 import '../domain/enums.dart';
 
@@ -11,20 +12,37 @@ class LoadCalculator {
 
   /// ペース由来負荷を計算
   /// 距離とペースが必要
-  int? computePaceLoad(Session session) {
-    final distanceM = session.distanceMainM;
+  /// 
+  /// [thresholdPaceSecPerKm]: その日のユーザーの閾値ペース（Tペース）
+  int? computePaceLoad(Session session, {int? thresholdPaceSecPerKm}) {
+    final durationSec = session.durationMainSec;
     final paceSecPerKm = session.paceSecPerKm;
+    final distanceM = session.distanceMainM;
 
-    if (distanceM == null || paceSecPerKm == null || paceSecPerKm <= 0) {
+    // ペースと（時間または距離）が必要
+    if (paceSecPerKm == null || paceSecPerKm <= 0) return null;
+    
+    double durationMin;
+    if (durationSec != null && durationSec > 0) {
+      durationMin = durationSec / 60.0;
+    } else if (distanceM != null && distanceM > 0) {
+      durationMin = (distanceM / 1000.0) * paceSecPerKm / 60.0;
+    } else {
       return null;
     }
 
-    final distanceKm = distanceM / 1000.0;
-    // 速いほど係数が高い: 基準ペース/実際のペース
-    final paceCoefficient = _basePaceSecPerKm / paceSecPerKm;
-    // 負荷 = 距離 × ペース係数 × 15
-    // 例: 12kmを5:00/km(300s)で走った場合: 12 * (300/300) * 15 = 180
-    return (distanceKm * paceCoefficient * 15).round();
+    // 閾値ペースがない場合はデフォルトを使用
+    final tPace = thresholdPaceSecPerKm ?? _basePaceSecPerKm;
+
+    // 相対強度 = 閾値ペース / 実際のペース
+    // 例: 閾値 4:00(240s) の人が 5:00(300s) で走る場合、強度は 240/300 = 0.8
+    final intensity = tPace / paceSecPerKm;
+
+    // 負荷 = 時間(分) × 強度^3 × 修正係数
+    // 3乗にすることで、ジョグの負荷を抑え、インターバルの負荷を鋭く評価する
+    // 基準1.0の時、1時間で60ポイント程度になるよう調整（あるいは以前のスケールに合わせるなら 3.0倍など）
+    // 以前は 5:00(300s) 基準で 1時間180ポイントだったので、係数は 3.0 にする
+    return (durationMin * pow(intensity, 3) * 3.0).round();
   }
 
   /// sRPE（主観的運動強度 × 時間）を計算
@@ -81,9 +99,9 @@ class LoadCalculator {
   /// 1. ペース由来負荷（距離+ペースがある場合）
   /// 2. sRPE（RPE+時間がある場合）
   /// 3. ゾーン負荷（ゾーン+時間がある場合）
-  int? computeSessionRepresentativeLoad(Session session) {
+  int? computeSessionRepresentativeLoad(Session session, {int? thresholdPaceSecPerKm}) {
     // 1. ペース由来負荷を試す
-    final paceLoad = computePaceLoad(session);
+    final paceLoad = computePaceLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm);
     if (paceLoad != null) {
       return paceLoad;
     }
@@ -105,14 +123,14 @@ class LoadCalculator {
   }
 
   /// 日単位の代表負荷（その日の全セッションの合計）
-  int computeDayLoad(List<Session> sessions) {
+  int computeDayLoad(List<Session> sessions, {int? thresholdPaceSecPerKm}) {
     int total = 0;
     for (final session in sessions) {
       // statusがskippedの場合は負荷0
       if (session.status == SessionStatus.skipped) {
         continue;
       }
-      final load = computeSessionRepresentativeLoad(session);
+      final load = computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm);
       if (load != null) {
         total += load;
       }

@@ -11,7 +11,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -23,6 +23,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             // Version 3: MenuPresets テーブル作成
             await m.createTable(menuPresets);
+          }
+          if (from < 4) {
+            // Version 4: ActivityType カラムの追加
+            await m.addColumn(personalBests, personalBests.activityType);
+            await m.addColumn(plans, plans.activityType);
+            await m.addColumn(sessions, sessions.activityType);
           }
         },
         beforeOpen: (details) async {

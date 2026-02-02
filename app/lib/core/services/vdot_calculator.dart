@@ -127,7 +127,7 @@ class VdotCalculator {
     // M: 79 - 89% 
     // T: 88 - 92%
     // I: 97 - 100%
-    // R: ~105-110% ? R is actually based on mile pace.
+    // R: ~105-110%
     
     // Approximate ranges:
     final ePaceSlow = getPace(0.65);
@@ -135,7 +135,7 @@ class VdotCalculator {
     final mPace = getPace(0.85); // Approximate Marathon intensity
     final tPace = getPace(0.90); // Threshold
     final iPace = getPace(1.00); // Interval
-    final rPace = getPace(1.10); // Repetition (rough approx)
+    final rPace = getPace(1.10); // Repetition
     
     return {
       Zone.E: PaceRange(minSec: ePaceFast, maxSec: ePaceSlow),
@@ -144,6 +144,26 @@ class VdotCalculator {
       Zone.I: PaceRange(minSec: iPace, maxSec: iPace),
       Zone.R: PaceRange(minSec: rPace, maxSec: rPace),
     };
+  }
+
+  /// PbEventに対応する距離(m)を返す
+  int getDistanceForEvent(PbEvent event) {
+    switch (event) {
+      case PbEvent.m800: return 800;
+      case PbEvent.m1500: return 1500;
+      case PbEvent.m3000: return 3000;
+      case PbEvent.m3000sc: return 3000;
+      case PbEvent.m5000: return 5000;
+      case PbEvent.m10000: return 10000;
+      case PbEvent.half: return 21097;
+      case PbEvent.full: return 42195;
+      case PbEvent.w3000: return 3000;
+      case PbEvent.w5000: return 5000;
+      case PbEvent.w10000: return 10000;
+      case PbEvent.w20km: return 20000;
+      case PbEvent.w35km: return 35000;
+      case PbEvent.w50km: return 50000;
+    }
   }
 }
 

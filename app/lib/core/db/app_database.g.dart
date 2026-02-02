@@ -35,7 +35,17 @@ class $PersonalBestsTable extends PersonalBests
       'note', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [id, event, timeMs, date, note];
+  late final GeneratedColumnWithTypeConverter<ActivityType, String>
+      activityType = GeneratedColumn<String>(
+              'activity_type', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: const Constant('running'))
+          .withConverter<ActivityType>(
+              $PersonalBestsTable.$converteractivityType);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, event, timeMs, date, note, activityType];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -85,6 +95,9 @@ class $PersonalBestsTable extends PersonalBests
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date']),
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      activityType: $PersonalBestsTable.$converteractivityType.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}activity_type'])!),
     );
   }
 
@@ -95,6 +108,9 @@ class $PersonalBestsTable extends PersonalBests
 
   static JsonTypeConverter2<PbEvent, String, String> $converterevent =
       const EnumNameConverter<PbEvent>(PbEvent.values);
+  static JsonTypeConverter2<ActivityType, String, String>
+      $converteractivityType =
+      const EnumNameConverter<ActivityType>(ActivityType.values);
 }
 
 class PersonalBest extends DataClass implements Insertable<PersonalBest> {
@@ -103,12 +119,14 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
   final int timeMs;
   final DateTime? date;
   final String? note;
+  final ActivityType activityType;
   const PersonalBest(
       {required this.id,
       required this.event,
       required this.timeMs,
       this.date,
-      this.note});
+      this.note,
+      required this.activityType});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -124,6 +142,10 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    {
+      map['activity_type'] = Variable<String>(
+          $PersonalBestsTable.$converteractivityType.toSql(activityType));
+    }
     return map;
   }
 
@@ -134,6 +156,7 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
       timeMs: Value(timeMs),
       date: date == null && nullToAbsent ? const Value.absent() : Value(date),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      activityType: Value(activityType),
     );
   }
 
@@ -147,6 +170,8 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
       timeMs: serializer.fromJson<int>(json['timeMs']),
       date: serializer.fromJson<DateTime?>(json['date']),
       note: serializer.fromJson<String?>(json['note']),
+      activityType: $PersonalBestsTable.$converteractivityType
+          .fromJson(serializer.fromJson<String>(json['activityType'])),
     );
   }
   @override
@@ -159,6 +184,8 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
       'timeMs': serializer.toJson<int>(timeMs),
       'date': serializer.toJson<DateTime?>(date),
       'note': serializer.toJson<String?>(note),
+      'activityType': serializer.toJson<String>(
+          $PersonalBestsTable.$converteractivityType.toJson(activityType)),
     };
   }
 
@@ -167,13 +194,15 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
           PbEvent? event,
           int? timeMs,
           Value<DateTime?> date = const Value.absent(),
-          Value<String?> note = const Value.absent()}) =>
+          Value<String?> note = const Value.absent(),
+          ActivityType? activityType}) =>
       PersonalBest(
         id: id ?? this.id,
         event: event ?? this.event,
         timeMs: timeMs ?? this.timeMs,
         date: date.present ? date.value : this.date,
         note: note.present ? note.value : this.note,
+        activityType: activityType ?? this.activityType,
       );
   PersonalBest copyWithCompanion(PersonalBestsCompanion data) {
     return PersonalBest(
@@ -182,6 +211,9 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
       timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
       date: data.date.present ? data.date.value : this.date,
       note: data.note.present ? data.note.value : this.note,
+      activityType: data.activityType.present
+          ? data.activityType.value
+          : this.activityType,
     );
   }
 
@@ -192,13 +224,14 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
           ..write('event: $event, ')
           ..write('timeMs: $timeMs, ')
           ..write('date: $date, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('activityType: $activityType')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, event, timeMs, date, note);
+  int get hashCode => Object.hash(id, event, timeMs, date, note, activityType);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -207,7 +240,8 @@ class PersonalBest extends DataClass implements Insertable<PersonalBest> {
           other.event == this.event &&
           other.timeMs == this.timeMs &&
           other.date == this.date &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.activityType == this.activityType);
 }
 
 class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
@@ -216,6 +250,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
   final Value<int> timeMs;
   final Value<DateTime?> date;
   final Value<String?> note;
+  final Value<ActivityType> activityType;
   final Value<int> rowid;
   const PersonalBestsCompanion({
     this.id = const Value.absent(),
@@ -223,6 +258,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     this.timeMs = const Value.absent(),
     this.date = const Value.absent(),
     this.note = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PersonalBestsCompanion.insert({
@@ -231,6 +267,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     required int timeMs,
     this.date = const Value.absent(),
     this.note = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         event = Value(event),
@@ -241,6 +278,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     Expression<int>? timeMs,
     Expression<DateTime>? date,
     Expression<String>? note,
+    Expression<String>? activityType,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -249,6 +287,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
       if (timeMs != null) 'time_ms': timeMs,
       if (date != null) 'date': date,
       if (note != null) 'note': note,
+      if (activityType != null) 'activity_type': activityType,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -259,6 +298,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
       Value<int>? timeMs,
       Value<DateTime?>? date,
       Value<String?>? note,
+      Value<ActivityType>? activityType,
       Value<int>? rowid}) {
     return PersonalBestsCompanion(
       id: id ?? this.id,
@@ -266,6 +306,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
       timeMs: timeMs ?? this.timeMs,
       date: date ?? this.date,
       note: note ?? this.note,
+      activityType: activityType ?? this.activityType,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -289,6 +330,10 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (activityType.present) {
+      map['activity_type'] = Variable<String>(
+          $PersonalBestsTable.$converteractivityType.toSql(activityType.value));
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -303,6 +348,7 @@ class PersonalBestsCompanion extends UpdateCompanion<PersonalBest> {
           ..write('timeMs: $timeMs, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
+          ..write('activityType: $activityType, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -353,6 +399,14 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
+  @override
+  late final GeneratedColumnWithTypeConverter<ActivityType, String>
+      activityType = GeneratedColumn<String>(
+              'activity_type', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: const Constant('running'))
+          .withConverter<ActivityType>($PlansTable.$converteractivityType);
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
@@ -360,7 +414,7 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, date, menuName, distance, pace, zone, reps, note];
+      [id, date, menuName, distance, pace, zone, reps, activityType, note];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -427,6 +481,9 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
           .read(DriftSqlType.string, data['${effectivePrefix}zone'])),
       reps: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}reps'])!,
+      activityType: $PlansTable.$converteractivityType.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}activity_type'])!),
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
     );
@@ -441,6 +498,9 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
       const EnumNameConverter<Zone>(Zone.values);
   static JsonTypeConverter2<Zone?, String?, String?> $converterzonen =
       JsonTypeConverter2.asNullable($converterzone);
+  static JsonTypeConverter2<ActivityType, String, String>
+      $converteractivityType =
+      const EnumNameConverter<ActivityType>(ActivityType.values);
 }
 
 class Plan extends DataClass implements Insertable<Plan> {
@@ -451,6 +511,7 @@ class Plan extends DataClass implements Insertable<Plan> {
   final int? pace;
   final Zone? zone;
   final int reps;
+  final ActivityType activityType;
   final String? note;
   const Plan(
       {required this.id,
@@ -460,6 +521,7 @@ class Plan extends DataClass implements Insertable<Plan> {
       this.pace,
       this.zone,
       required this.reps,
+      required this.activityType,
       this.note});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -477,6 +539,10 @@ class Plan extends DataClass implements Insertable<Plan> {
       map['zone'] = Variable<String>($PlansTable.$converterzonen.toSql(zone));
     }
     map['reps'] = Variable<int>(reps);
+    {
+      map['activity_type'] = Variable<String>(
+          $PlansTable.$converteractivityType.toSql(activityType));
+    }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
@@ -494,6 +560,7 @@ class Plan extends DataClass implements Insertable<Plan> {
       pace: pace == null && nullToAbsent ? const Value.absent() : Value(pace),
       zone: zone == null && nullToAbsent ? const Value.absent() : Value(zone),
       reps: Value(reps),
+      activityType: Value(activityType),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
     );
   }
@@ -510,6 +577,8 @@ class Plan extends DataClass implements Insertable<Plan> {
       zone: $PlansTable.$converterzonen
           .fromJson(serializer.fromJson<String?>(json['zone'])),
       reps: serializer.fromJson<int>(json['reps']),
+      activityType: $PlansTable.$converteractivityType
+          .fromJson(serializer.fromJson<String>(json['activityType'])),
       note: serializer.fromJson<String?>(json['note']),
     );
   }
@@ -525,6 +594,8 @@ class Plan extends DataClass implements Insertable<Plan> {
       'zone':
           serializer.toJson<String?>($PlansTable.$converterzonen.toJson(zone)),
       'reps': serializer.toJson<int>(reps),
+      'activityType': serializer.toJson<String>(
+          $PlansTable.$converteractivityType.toJson(activityType)),
       'note': serializer.toJson<String?>(note),
     };
   }
@@ -537,6 +608,7 @@ class Plan extends DataClass implements Insertable<Plan> {
           Value<int?> pace = const Value.absent(),
           Value<Zone?> zone = const Value.absent(),
           int? reps,
+          ActivityType? activityType,
           Value<String?> note = const Value.absent()}) =>
       Plan(
         id: id ?? this.id,
@@ -546,6 +618,7 @@ class Plan extends DataClass implements Insertable<Plan> {
         pace: pace.present ? pace.value : this.pace,
         zone: zone.present ? zone.value : this.zone,
         reps: reps ?? this.reps,
+        activityType: activityType ?? this.activityType,
         note: note.present ? note.value : this.note,
       );
   Plan copyWithCompanion(PlansCompanion data) {
@@ -557,6 +630,9 @@ class Plan extends DataClass implements Insertable<Plan> {
       pace: data.pace.present ? data.pace.value : this.pace,
       zone: data.zone.present ? data.zone.value : this.zone,
       reps: data.reps.present ? data.reps.value : this.reps,
+      activityType: data.activityType.present
+          ? data.activityType.value
+          : this.activityType,
       note: data.note.present ? data.note.value : this.note,
     );
   }
@@ -571,14 +647,15 @@ class Plan extends DataClass implements Insertable<Plan> {
           ..write('pace: $pace, ')
           ..write('zone: $zone, ')
           ..write('reps: $reps, ')
+          ..write('activityType: $activityType, ')
           ..write('note: $note')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, date, menuName, distance, pace, zone, reps, note);
+  int get hashCode => Object.hash(
+      id, date, menuName, distance, pace, zone, reps, activityType, note);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -590,6 +667,7 @@ class Plan extends DataClass implements Insertable<Plan> {
           other.pace == this.pace &&
           other.zone == this.zone &&
           other.reps == this.reps &&
+          other.activityType == this.activityType &&
           other.note == this.note);
 }
 
@@ -601,6 +679,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
   final Value<int?> pace;
   final Value<Zone?> zone;
   final Value<int> reps;
+  final Value<ActivityType> activityType;
   final Value<String?> note;
   final Value<int> rowid;
   const PlansCompanion({
@@ -611,6 +690,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     this.pace = const Value.absent(),
     this.zone = const Value.absent(),
     this.reps = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -622,6 +702,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     this.pace = const Value.absent(),
     this.zone = const Value.absent(),
     this.reps = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
@@ -635,6 +716,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     Expression<int>? pace,
     Expression<String>? zone,
     Expression<int>? reps,
+    Expression<String>? activityType,
     Expression<String>? note,
     Expression<int>? rowid,
   }) {
@@ -646,6 +728,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
       if (pace != null) 'pace': pace,
       if (zone != null) 'zone': zone,
       if (reps != null) 'reps': reps,
+      if (activityType != null) 'activity_type': activityType,
       if (note != null) 'note': note,
       if (rowid != null) 'rowid': rowid,
     });
@@ -659,6 +742,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
       Value<int?>? pace,
       Value<Zone?>? zone,
       Value<int>? reps,
+      Value<ActivityType>? activityType,
       Value<String?>? note,
       Value<int>? rowid}) {
     return PlansCompanion(
@@ -669,6 +753,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
       pace: pace ?? this.pace,
       zone: zone ?? this.zone,
       reps: reps ?? this.reps,
+      activityType: activityType ?? this.activityType,
       note: note ?? this.note,
       rowid: rowid ?? this.rowid,
     );
@@ -699,6 +784,10 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     if (reps.present) {
       map['reps'] = Variable<int>(reps.value);
     }
+    if (activityType.present) {
+      map['activity_type'] = Variable<String>(
+          $PlansTable.$converteractivityType.toSql(activityType.value));
+    }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
@@ -718,6 +807,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
           ..write('pace: $pace, ')
           ..write('zone: $zone, ')
           ..write('reps: $reps, ')
+          ..write('activityType: $activityType, ')
           ..write('note: $note, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -842,6 +932,14 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       'rep_load', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
   @override
+  late final GeneratedColumnWithTypeConverter<ActivityType, String>
+      activityType = GeneratedColumn<String>(
+              'activity_type', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: const Constant('running'))
+          .withConverter<ActivityType>($SessionsTable.$converteractivityType);
+  @override
   List<GeneratedColumn> get $columns => [
         id,
         startedAt,
@@ -861,7 +959,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         cdDurationSec,
         status,
         note,
-        repLoad
+        repLoad,
+        activityType
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1011,6 +1110,9 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
       repLoad: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}rep_load']),
+      activityType: $SessionsTable.$converteractivityType.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}activity_type'])!),
     );
   }
 
@@ -1029,6 +1131,9 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       JsonTypeConverter2.asNullable($converterrestType);
   static JsonTypeConverter2<SessionStatus, String, String> $converterstatus =
       const EnumNameConverter<SessionStatus>(SessionStatus.values);
+  static JsonTypeConverter2<ActivityType, String, String>
+      $converteractivityType =
+      const EnumNameConverter<ActivityType>(ActivityType.values);
 }
 
 class Session extends DataClass implements Insertable<Session> {
@@ -1051,6 +1156,7 @@ class Session extends DataClass implements Insertable<Session> {
   final SessionStatus status;
   final String? note;
   final int? repLoad;
+  final ActivityType activityType;
   const Session(
       {required this.id,
       required this.startedAt,
@@ -1070,7 +1176,8 @@ class Session extends DataClass implements Insertable<Session> {
       this.cdDurationSec,
       required this.status,
       this.note,
-      this.repLoad});
+      this.repLoad,
+      required this.activityType});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1128,6 +1235,10 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || repLoad != null) {
       map['rep_load'] = Variable<int>(repLoad);
     }
+    {
+      map['activity_type'] = Variable<String>(
+          $SessionsTable.$converteractivityType.toSql(activityType));
+    }
     return map;
   }
 
@@ -1177,6 +1288,7 @@ class Session extends DataClass implements Insertable<Session> {
       repLoad: repLoad == null && nullToAbsent
           ? const Value.absent()
           : Value(repLoad),
+      activityType: Value(activityType),
     );
   }
 
@@ -1206,6 +1318,8 @@ class Session extends DataClass implements Insertable<Session> {
           .fromJson(serializer.fromJson<String>(json['status'])),
       note: serializer.fromJson<String?>(json['note']),
       repLoad: serializer.fromJson<int?>(json['repLoad']),
+      activityType: $SessionsTable.$converteractivityType
+          .fromJson(serializer.fromJson<String>(json['activityType'])),
     );
   }
   @override
@@ -1234,6 +1348,8 @@ class Session extends DataClass implements Insertable<Session> {
           .toJson<String>($SessionsTable.$converterstatus.toJson(status)),
       'note': serializer.toJson<String?>(note),
       'repLoad': serializer.toJson<int?>(repLoad),
+      'activityType': serializer.toJson<String>(
+          $SessionsTable.$converteractivityType.toJson(activityType)),
     };
   }
 
@@ -1256,7 +1372,8 @@ class Session extends DataClass implements Insertable<Session> {
           Value<int?> cdDurationSec = const Value.absent(),
           SessionStatus? status,
           Value<String?> note = const Value.absent(),
-          Value<int?> repLoad = const Value.absent()}) =>
+          Value<int?> repLoad = const Value.absent(),
+          ActivityType? activityType}) =>
       Session(
         id: id ?? this.id,
         startedAt: startedAt ?? this.startedAt,
@@ -1286,6 +1403,7 @@ class Session extends DataClass implements Insertable<Session> {
         status: status ?? this.status,
         note: note.present ? note.value : this.note,
         repLoad: repLoad.present ? repLoad.value : this.repLoad,
+        activityType: activityType ?? this.activityType,
       );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -1326,6 +1444,9 @@ class Session extends DataClass implements Insertable<Session> {
       status: data.status.present ? data.status.value : this.status,
       note: data.note.present ? data.note.value : this.note,
       repLoad: data.repLoad.present ? data.repLoad.value : this.repLoad,
+      activityType: data.activityType.present
+          ? data.activityType.value
+          : this.activityType,
     );
   }
 
@@ -1350,7 +1471,8 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('cdDurationSec: $cdDurationSec, ')
           ..write('status: $status, ')
           ..write('note: $note, ')
-          ..write('repLoad: $repLoad')
+          ..write('repLoad: $repLoad, ')
+          ..write('activityType: $activityType')
           ..write(')'))
         .toString();
   }
@@ -1375,7 +1497,8 @@ class Session extends DataClass implements Insertable<Session> {
       cdDurationSec,
       status,
       note,
-      repLoad);
+      repLoad,
+      activityType);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1398,7 +1521,8 @@ class Session extends DataClass implements Insertable<Session> {
           other.cdDurationSec == this.cdDurationSec &&
           other.status == this.status &&
           other.note == this.note &&
-          other.repLoad == this.repLoad);
+          other.repLoad == this.repLoad &&
+          other.activityType == this.activityType);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -1421,6 +1545,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<SessionStatus> status;
   final Value<String?> note;
   final Value<int?> repLoad;
+  final Value<ActivityType> activityType;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -1442,6 +1567,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.status = const Value.absent(),
     this.note = const Value.absent(),
     this.repLoad = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -1464,6 +1590,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     required SessionStatus status,
     this.note = const Value.absent(),
     this.repLoad = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         startedAt = Value(startedAt),
@@ -1489,6 +1616,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? status,
     Expression<String>? note,
     Expression<int>? repLoad,
+    Expression<String>? activityType,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1511,6 +1639,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (status != null) 'status': status,
       if (note != null) 'note': note,
       if (repLoad != null) 'rep_load': repLoad,
+      if (activityType != null) 'activity_type': activityType,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1535,6 +1664,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       Value<SessionStatus>? status,
       Value<String?>? note,
       Value<int?>? repLoad,
+      Value<ActivityType>? activityType,
       Value<int>? rowid}) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -1556,6 +1686,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       status: status ?? this.status,
       note: note ?? this.note,
       repLoad: repLoad ?? this.repLoad,
+      activityType: activityType ?? this.activityType,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1623,6 +1754,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (repLoad.present) {
       map['rep_load'] = Variable<int>(repLoad.value);
     }
+    if (activityType.present) {
+      map['activity_type'] = Variable<String>(
+          $SessionsTable.$converteractivityType.toSql(activityType.value));
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1651,6 +1786,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('status: $status, ')
           ..write('note: $note, ')
           ..write('repLoad: $repLoad, ')
+          ..write('activityType: $activityType, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1866,6 +2002,7 @@ typedef $$PersonalBestsTableCreateCompanionBuilder = PersonalBestsCompanion
   required int timeMs,
   Value<DateTime?> date,
   Value<String?> note,
+  Value<ActivityType> activityType,
   Value<int> rowid,
 });
 typedef $$PersonalBestsTableUpdateCompanionBuilder = PersonalBestsCompanion
@@ -1875,6 +2012,7 @@ typedef $$PersonalBestsTableUpdateCompanionBuilder = PersonalBestsCompanion
   Value<int> timeMs,
   Value<DateTime?> date,
   Value<String?> note,
+  Value<ActivityType> activityType,
   Value<int> rowid,
 });
 
@@ -1903,6 +2041,11 @@ class $$PersonalBestsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<ActivityType, ActivityType, String>
+      get activityType => $composableBuilder(
+          column: $table.activityType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 }
 
 class $$PersonalBestsTableOrderingComposer
@@ -1928,6 +2071,10 @@ class $$PersonalBestsTableOrderingComposer
 
   ColumnOrderings<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get activityType => $composableBuilder(
+      column: $table.activityType,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PersonalBestsTableAnnotationComposer
@@ -1953,6 +2100,10 @@ class $$PersonalBestsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<ActivityType, String> get activityType =>
+      $composableBuilder(
+          column: $table.activityType, builder: (column) => column);
 }
 
 class $$PersonalBestsTableTableManager extends RootTableManager<
@@ -1986,6 +2137,7 @@ class $$PersonalBestsTableTableManager extends RootTableManager<
             Value<int> timeMs = const Value.absent(),
             Value<DateTime?> date = const Value.absent(),
             Value<String?> note = const Value.absent(),
+            Value<ActivityType> activityType = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PersonalBestsCompanion(
@@ -1994,6 +2146,7 @@ class $$PersonalBestsTableTableManager extends RootTableManager<
             timeMs: timeMs,
             date: date,
             note: note,
+            activityType: activityType,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -2002,6 +2155,7 @@ class $$PersonalBestsTableTableManager extends RootTableManager<
             required int timeMs,
             Value<DateTime?> date = const Value.absent(),
             Value<String?> note = const Value.absent(),
+            Value<ActivityType> activityType = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PersonalBestsCompanion.insert(
@@ -2010,6 +2164,7 @@ class $$PersonalBestsTableTableManager extends RootTableManager<
             timeMs: timeMs,
             date: date,
             note: note,
+            activityType: activityType,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -2042,6 +2197,7 @@ typedef $$PlansTableCreateCompanionBuilder = PlansCompanion Function({
   Value<int?> pace,
   Value<Zone?> zone,
   Value<int> reps,
+  Value<ActivityType> activityType,
   Value<String?> note,
   Value<int> rowid,
 });
@@ -2053,6 +2209,7 @@ typedef $$PlansTableUpdateCompanionBuilder = PlansCompanion Function({
   Value<int?> pace,
   Value<Zone?> zone,
   Value<int> reps,
+  Value<ActivityType> activityType,
   Value<String?> note,
   Value<int> rowid,
 });
@@ -2106,6 +2263,11 @@ class $$PlansTableFilterComposer extends Composer<_$AppDatabase, $PlansTable> {
 
   ColumnFilters<int> get reps => $composableBuilder(
       column: $table.reps, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<ActivityType, ActivityType, String>
+      get activityType => $composableBuilder(
+          column: $table.activityType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnFilters(column));
@@ -2162,6 +2324,10 @@ class $$PlansTableOrderingComposer
   ColumnOrderings<int> get reps => $composableBuilder(
       column: $table.reps, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get activityType => $composableBuilder(
+      column: $table.activityType,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnOrderings(column));
 }
@@ -2195,6 +2361,10 @@ class $$PlansTableAnnotationComposer
 
   GeneratedColumn<int> get reps =>
       $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<ActivityType, String> get activityType =>
+      $composableBuilder(
+          column: $table.activityType, builder: (column) => column);
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
@@ -2251,6 +2421,7 @@ class $$PlansTableTableManager extends RootTableManager<
             Value<int?> pace = const Value.absent(),
             Value<Zone?> zone = const Value.absent(),
             Value<int> reps = const Value.absent(),
+            Value<ActivityType> activityType = const Value.absent(),
             Value<String?> note = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -2262,6 +2433,7 @@ class $$PlansTableTableManager extends RootTableManager<
             pace: pace,
             zone: zone,
             reps: reps,
+            activityType: activityType,
             note: note,
             rowid: rowid,
           ),
@@ -2273,6 +2445,7 @@ class $$PlansTableTableManager extends RootTableManager<
             Value<int?> pace = const Value.absent(),
             Value<Zone?> zone = const Value.absent(),
             Value<int> reps = const Value.absent(),
+            Value<ActivityType> activityType = const Value.absent(),
             Value<String?> note = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -2284,6 +2457,7 @@ class $$PlansTableTableManager extends RootTableManager<
             pace: pace,
             zone: zone,
             reps: reps,
+            activityType: activityType,
             note: note,
             rowid: rowid,
           ),
@@ -2348,6 +2522,7 @@ typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   required SessionStatus status,
   Value<String?> note,
   Value<int?> repLoad,
+  Value<ActivityType> activityType,
   Value<int> rowid,
 });
 typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
@@ -2370,6 +2545,7 @@ typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<SessionStatus> status,
   Value<String?> note,
   Value<int?> repLoad,
+  Value<ActivityType> activityType,
   Value<int> rowid,
 });
 
@@ -2463,6 +2639,11 @@ class $$SessionsTableFilterComposer
   ColumnFilters<int> get repLoad => $composableBuilder(
       column: $table.repLoad, builder: (column) => ColumnFilters(column));
 
+  ColumnWithTypeConverterFilters<ActivityType, ActivityType, String>
+      get activityType => $composableBuilder(
+          column: $table.activityType,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
   $$PlansTableFilterComposer get planId {
     final $$PlansTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -2555,6 +2736,10 @@ class $$SessionsTableOrderingComposer
   ColumnOrderings<int> get repLoad => $composableBuilder(
       column: $table.repLoad, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get activityType => $composableBuilder(
+      column: $table.activityType,
+      builder: (column) => ColumnOrderings(column));
+
   $$PlansTableOrderingComposer get planId {
     final $$PlansTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -2639,6 +2824,10 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<int> get repLoad =>
       $composableBuilder(column: $table.repLoad, builder: (column) => column);
 
+  GeneratedColumnWithTypeConverter<ActivityType, String> get activityType =>
+      $composableBuilder(
+          column: $table.activityType, builder: (column) => column);
+
   $$PlansTableAnnotationComposer get planId {
     final $$PlansTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -2702,6 +2891,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             Value<SessionStatus> status = const Value.absent(),
             Value<String?> note = const Value.absent(),
             Value<int?> repLoad = const Value.absent(),
+            Value<ActivityType> activityType = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SessionsCompanion(
@@ -2724,6 +2914,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             status: status,
             note: note,
             repLoad: repLoad,
+            activityType: activityType,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -2746,6 +2937,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             required SessionStatus status,
             Value<String?> note = const Value.absent(),
             Value<int?> repLoad = const Value.absent(),
+            Value<ActivityType> activityType = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SessionsCompanion.insert(
@@ -2768,6 +2960,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             status: status,
             note: note,
             repLoad: repLoad,
+            activityType: activityType,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

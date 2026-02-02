@@ -31,6 +31,7 @@ class SessionRepository {
     int? cdDurationSec,
     String? note,
     int? repLoad,
+    ActivityType activityType = ActivityType.running,
   }) async {
     final id = _uuid.v4();
     await _db.into(_db.sessions).insert(
@@ -54,6 +55,7 @@ class SessionRepository {
         cdDurationSec: Value(cdDurationSec),
         note: Value(note),
         repLoad: Value(repLoad),
+        activityType: Value(activityType),
       ),
     );
     return id;
@@ -80,6 +82,7 @@ class SessionRepository {
     int? cdDurationSec,
     String? note,
     int? repLoad,
+    ActivityType? activityType,
   }) async {
     await (_db.update(_db.sessions)..where((t) => t.id.equals(id))).write(
       SessionsCompanion(
@@ -114,6 +117,7 @@ class SessionRepository {
             cdDurationSec != null ? Value(cdDurationSec) : const Value.absent(),
         note: note != null ? Value(note) : const Value.absent(),
         repLoad: repLoad != null ? Value(repLoad) : const Value.absent(),
+        activityType: activityType != null ? Value(activityType) : const Value.absent(),
       ),
     );
   }

@@ -10,6 +10,11 @@ import '../calendar/calendar_providers.dart';
 /// 選択された日付のプロバイダ
 final selectedDateProvider = StateProvider<DateTime?>((ref) => null);
 
+/// 基準となる閾値ペース(s/km)を取得するプロバイダ
+// settings_screen.dart にある personalBestRepositoryProvider を使う
+// もしくは calendar_providers.dart に共通化する
+// ここでは calendar_providers.dart のものを使う
+
 /// 指定日のセッション一覧
 final daySessionsProvider = FutureProvider.family<List<Session>, DateTime>(
   (ref, date) async {
@@ -36,7 +41,9 @@ class DayDetailScreen extends ConsumerWidget {
     final date = DateTime.parse(dateString);
     final sessionsAsync = ref.watch(daySessionsProvider(date));
     final plansAsync = ref.watch(dayPlansProvider(date));
-    final loadCalc = LoadCalculator();
+    final runningTpaceAsync = ref.watch(runningThresholdPaceProvider);
+    final walkingTpaceAsync = ref.watch(walkingThresholdPaceProvider);
+    final loadCalc = ref.watch(loadCalculatorProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +55,16 @@ class DayDetailScreen extends ConsumerWidget {
           // 日負荷サマリー
           sessionsAsync.when(
             data: (sessions) {
-              final dayLoad = loadCalc.computeDayLoad(sessions);
+              final rTpace = runningTpaceAsync.valueOrNull;
+              final wTpace = walkingTpaceAsync.valueOrNull;
+              
+              int dayLoad = 0;
+              for (final s in sessions) {
+                if (s.status == SessionStatus.skipped) continue;
+                final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
+                dayLoad += loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0;
+              }
+
               return Container(
                 padding: const EdgeInsets.all(16),
                 color: Colors.teal.shade50,
@@ -223,18 +239,24 @@ class _PlanTile extends StatelessWidget {
   }
 }
 
-class _SessionTile extends StatelessWidget {
+class _SessionTile extends ConsumerWidget {
   const _SessionTile({required this.session});
 
   final Session session;
 
   @override
-  Widget build(BuildContext context) {
-    final loadCalc = LoadCalculator();
-    final load = loadCalc.computeSessionRepresentativeLoad(session);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loadCalc = ref.watch(loadCalculatorProvider);
+    final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
+    final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+    final tPace = session.activityType == ActivityType.walking ? wTpace : rTpace;
+    final load = loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace);
+    final rpeEmoji = session.rpeValue != null && session.rpeValue! < 11 ? ['😴','😌','🙂','😊','😐','😤','😰','😫','🥵','💀','☠️'][session.rpeValue!] : '';
 
     return ListTile(
-      leading: _buildStatusIcon(),
+      leading: session.rpeValue != null 
+          ? Text(rpeEmoji, style: const TextStyle(fontSize: 24))
+          : _buildStatusIcon(),
       title: Text(session.templateText),
       subtitle: Row(
         children: [

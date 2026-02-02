@@ -6,6 +6,11 @@ import '../features/day_detail/day_detail_screen.dart';
 import '../features/plan_editor/plan_editor_screen.dart';
 import '../features/session_editor/session_editor_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/settings/personal_best_settings_page.dart';
+import '../features/settings/menu_preset_settings_page.dart';
+import '../features/settings/data_settings_page.dart';
+import '../features/history/history_list_screen.dart';
+import '../features/analysis/analysis_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
@@ -67,6 +72,32 @@ final GoRouter appRouter = GoRouter(
       builder: (BuildContext context, GoRouterState state) {
         return const SettingsScreen();
       },
+      routes: [
+        GoRoute(
+          path: 'pb',
+          builder: (context, state) => const PersonalBestSettingsPage(),
+        ),
+        GoRoute(
+          path: 'presets',
+          builder: (context, state) => const MenuPresetSettingsPage(),
+        ),
+        GoRoute(
+          path: 'data',
+          builder: (context, state) => const DataSettingsPage(),
+        ),
+      ],
+    ),
+
+    // 履歴
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const HistoryListScreen(),
+    ),
+
+    // 分析
+    GoRoute(
+      path: '/analysis',
+      builder: (context, state) => const AnalysisScreen(),
     ),
   ],
 );

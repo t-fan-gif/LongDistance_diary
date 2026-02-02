@@ -7,7 +7,16 @@ enum PbEvent {
   m10000,
   half,
   full,
+  // Race Walking
+  w3000,
+  w5000,
+  w10000,
+  w20km,
+  w35km,
+  w50km,
 }
+
+enum ActivityType { running, walking }
 
 enum Zone { E, M, T, I, R }
 

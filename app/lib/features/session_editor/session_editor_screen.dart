@@ -49,6 +49,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   RestType _restType = RestType.stop;
   SessionStatus _status = SessionStatus.done;
 
+  ActivityType _activityType = ActivityType.running;
   bool _isLoading = false;
   bool _isEditMode = false;
 
@@ -142,6 +143,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           _rpeValue = session.rpeValue ?? 5;
           _restType = session.restType ?? RestType.stop;
           _status = session.status;
+          _activityType = session.activityType;
         });
       }
     } finally {
@@ -237,6 +239,19 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                       }
                     },
                   ),
+                  // 走・歩 選択
+                  _buildSectionTitle('種別'),
+                  SegmentedButton<ActivityType>(
+                    segments: const [
+                      ButtonSegment(value: ActivityType.running, label: Text('ランニング'), icon: Icon(Icons.directions_run)),
+                      ButtonSegment(value: ActivityType.walking, label: Text('競歩'), icon: Icon(Icons.directions_walk)),
+                    ],
+                    selected: {_activityType},
+                    onSelectionChanged: (selected) {
+                      setState(() => _activityType = selected.first);
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   const Divider(),
 
                   // テンプレ入力
@@ -586,6 +601,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           restType: _restType,
           restDurationSec: restDurationSec,
           note: _noteController.text.isEmpty ? null : _noteController.text,
+          activityType: _activityType,
         );
       } else {
         await repo.createSession(
@@ -600,6 +616,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           restType: _restType,
           restDurationSec: restDurationSec,
           note: _noteController.text.isEmpty ? null : _noteController.text,
+          activityType: _activityType,
         );
       }
 
@@ -646,13 +663,15 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     if (confirmed == true && widget.sessionId != null) {
       final repo = ref.read(sessionRepositoryProvider);
       
-      // 削除前に月キーを保持
+      // 削除前に月・日のキーを保持
       final monthKey = DateTime(_selectedDateTime.year, _selectedDateTime.month);
+      final dayKey = DateTime(_selectedDateTime.year, _selectedDateTime.month, _selectedDateTime.day);
       
       await repo.deleteSession(widget.sessionId!);
       
-      // 削除した月のカレンダーデータを無効化
+      // 削除した月・日のデータを無効化
       ref.invalidate(monthCalendarDataProvider(monthKey));
+      ref.invalidate(daySessionsProvider(dayKey));
       
       if (mounted) {
         context.pop();
