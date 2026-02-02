@@ -1980,6 +1980,196 @@ class MenuPresetsCompanion extends UpdateCompanion<MenuPreset> {
   }
 }
 
+class $DailyPlanMemosTable extends DailyPlanMemos
+    with TableInfo<$DailyPlanMemosTable, DailyPlanMemo> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyPlanMemosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [date, note];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_plan_memos';
+  @override
+  VerificationContext validateIntegrity(Insertable<DailyPlanMemo> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    } else if (isInserting) {
+      context.missing(_noteMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {date};
+  @override
+  DailyPlanMemo map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyPlanMemo(
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+    );
+  }
+
+  @override
+  $DailyPlanMemosTable createAlias(String alias) {
+    return $DailyPlanMemosTable(attachedDatabase, alias);
+  }
+}
+
+class DailyPlanMemo extends DataClass implements Insertable<DailyPlanMemo> {
+  final DateTime date;
+  final String note;
+  const DailyPlanMemo({required this.date, required this.note});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['date'] = Variable<DateTime>(date);
+    map['note'] = Variable<String>(note);
+    return map;
+  }
+
+  DailyPlanMemosCompanion toCompanion(bool nullToAbsent) {
+    return DailyPlanMemosCompanion(
+      date: Value(date),
+      note: Value(note),
+    );
+  }
+
+  factory DailyPlanMemo.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyPlanMemo(
+      date: serializer.fromJson<DateTime>(json['date']),
+      note: serializer.fromJson<String>(json['note']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'date': serializer.toJson<DateTime>(date),
+      'note': serializer.toJson<String>(note),
+    };
+  }
+
+  DailyPlanMemo copyWith({DateTime? date, String? note}) => DailyPlanMemo(
+        date: date ?? this.date,
+        note: note ?? this.note,
+      );
+  DailyPlanMemo copyWithCompanion(DailyPlanMemosCompanion data) {
+    return DailyPlanMemo(
+      date: data.date.present ? data.date.value : this.date,
+      note: data.note.present ? data.note.value : this.note,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyPlanMemo(')
+          ..write('date: $date, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(date, note);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyPlanMemo &&
+          other.date == this.date &&
+          other.note == this.note);
+}
+
+class DailyPlanMemosCompanion extends UpdateCompanion<DailyPlanMemo> {
+  final Value<DateTime> date;
+  final Value<String> note;
+  final Value<int> rowid;
+  const DailyPlanMemosCompanion({
+    this.date = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyPlanMemosCompanion.insert({
+    required DateTime date,
+    required String note,
+    this.rowid = const Value.absent(),
+  })  : date = Value(date),
+        note = Value(note);
+  static Insertable<DailyPlanMemo> custom({
+    Expression<DateTime>? date,
+    Expression<String>? note,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (date != null) 'date': date,
+      if (note != null) 'note': note,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyPlanMemosCompanion copyWith(
+      {Value<DateTime>? date, Value<String>? note, Value<int>? rowid}) {
+    return DailyPlanMemosCompanion(
+      date: date ?? this.date,
+      note: note ?? this.note,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyPlanMemosCompanion(')
+          ..write('date: $date, ')
+          ..write('note: $note, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1987,12 +2177,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlansTable plans = $PlansTable(this);
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $MenuPresetsTable menuPresets = $MenuPresetsTable(this);
+  late final $DailyPlanMemosTable dailyPlanMemos = $DailyPlanMemosTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [personalBests, plans, sessions, menuPresets];
+      [personalBests, plans, sessions, menuPresets, dailyPlanMemos];
 }
 
 typedef $$PersonalBestsTableCreateCompanionBuilder = PersonalBestsCompanion
@@ -3138,6 +3329,135 @@ typedef $$MenuPresetsTableProcessedTableManager = ProcessedTableManager<
     (MenuPreset, BaseReferences<_$AppDatabase, $MenuPresetsTable, MenuPreset>),
     MenuPreset,
     PrefetchHooks Function()>;
+typedef $$DailyPlanMemosTableCreateCompanionBuilder = DailyPlanMemosCompanion
+    Function({
+  required DateTime date,
+  required String note,
+  Value<int> rowid,
+});
+typedef $$DailyPlanMemosTableUpdateCompanionBuilder = DailyPlanMemosCompanion
+    Function({
+  Value<DateTime> date,
+  Value<String> note,
+  Value<int> rowid,
+});
+
+class $$DailyPlanMemosTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyPlanMemosTable> {
+  $$DailyPlanMemosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
+}
+
+class $$DailyPlanMemosTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyPlanMemosTable> {
+  $$DailyPlanMemosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+}
+
+class $$DailyPlanMemosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyPlanMemosTable> {
+  $$DailyPlanMemosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+}
+
+class $$DailyPlanMemosTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DailyPlanMemosTable,
+    DailyPlanMemo,
+    $$DailyPlanMemosTableFilterComposer,
+    $$DailyPlanMemosTableOrderingComposer,
+    $$DailyPlanMemosTableAnnotationComposer,
+    $$DailyPlanMemosTableCreateCompanionBuilder,
+    $$DailyPlanMemosTableUpdateCompanionBuilder,
+    (
+      DailyPlanMemo,
+      BaseReferences<_$AppDatabase, $DailyPlanMemosTable, DailyPlanMemo>
+    ),
+    DailyPlanMemo,
+    PrefetchHooks Function()> {
+  $$DailyPlanMemosTableTableManager(
+      _$AppDatabase db, $DailyPlanMemosTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyPlanMemosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyPlanMemosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyPlanMemosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<DateTime> date = const Value.absent(),
+            Value<String> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DailyPlanMemosCompanion(
+            date: date,
+            note: note,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required DateTime date,
+            required String note,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DailyPlanMemosCompanion.insert(
+            date: date,
+            note: note,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DailyPlanMemosTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DailyPlanMemosTable,
+    DailyPlanMemo,
+    $$DailyPlanMemosTableFilterComposer,
+    $$DailyPlanMemosTableOrderingComposer,
+    $$DailyPlanMemosTableAnnotationComposer,
+    $$DailyPlanMemosTableCreateCompanionBuilder,
+    $$DailyPlanMemosTableUpdateCompanionBuilder,
+    (
+      DailyPlanMemo,
+      BaseReferences<_$AppDatabase, $DailyPlanMemosTable, DailyPlanMemo>
+    ),
+    DailyPlanMemo,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3150,4 +3470,6 @@ class $AppDatabaseManager {
       $$SessionsTableTableManager(_db, _db.sessions);
   $$MenuPresetsTableTableManager get menuPresets =>
       $$MenuPresetsTableTableManager(_db, _db.menuPresets);
+  $$DailyPlanMemosTableTableManager get dailyPlanMemos =>
+      $$DailyPlanMemosTableTableManager(_db, _db.dailyPlanMemos);
 }

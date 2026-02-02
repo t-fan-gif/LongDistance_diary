@@ -75,3 +75,11 @@ class MenuPresets extends Table {
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
+
+class DailyPlanMemos extends Table {
+  DateTimeColumn get date => dateTime()(); // 日付部分のみ使用
+  TextColumn get note => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {date};
+}

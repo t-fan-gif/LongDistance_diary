@@ -11,6 +11,7 @@ import '../features/settings/menu_preset_settings_page.dart';
 import '../features/settings/data_settings_page.dart';
 import '../features/history/history_list_screen.dart';
 import '../features/analysis/analysis_screen.dart';
+import '../features/plan_editor/weekly_plan_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
@@ -40,6 +41,12 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
+    // 週間予定一覧
+    GoRoute(
+      path: '/plan/weekly',
+      builder: (context, state) => const WeeklyPlanScreen(),
+    ),
+
     // 実績作成
     GoRoute(
       path: '/session/new',
@@ -53,6 +60,8 @@ final GoRouter appRouter = GoRouter(
           initialZone: q['zone'],
           initialReps: q['reps'],
           initialNote: q['note'],
+          initialActivityType: q['activityType'],
+          initialDailyMemo: q['dailyMemo'],
         );
       },
     ),

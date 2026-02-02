@@ -179,14 +179,14 @@ class DayDetailScreen extends ConsumerWidget {
   }
 }
 
-class _PlanTile extends StatelessWidget {
+class _PlanTile extends ConsumerWidget {
   const _PlanTile({required this.plan, required this.dateString});
 
   final Plan plan;
   final String dateString;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       leading: const Icon(Icons.event_note, color: Colors.teal),
       title: Text(plan.menuName),
@@ -209,7 +209,7 @@ class _PlanTile extends StatelessWidget {
       trailing: IconButton(
         icon: const Icon(Icons.directions_run),
         tooltip: '実績にする',
-        onPressed: () => _copyToSession(context),
+        onPressed: () => _copyToSession(context, ref),
       ),
       onTap: () {
         // 同じ日ならまとめて編集画面へ
@@ -218,7 +218,11 @@ class _PlanTile extends StatelessWidget {
     );
   }
 
-  void _copyToSession(BuildContext context) {
+  void _copyToSession(BuildContext context, WidgetRef ref) async {
+    final date = DateTime.parse(dateString);
+    final repo = ref.read(planRepositoryProvider);
+    final dailyMemo = await repo.getDailyMemo(date);
+
     final query = <String, String>{
       'date': dateString,
       'menuName': plan.menuName,
@@ -227,9 +231,13 @@ class _PlanTile extends StatelessWidget {
       if (plan.zone != null) 'zone': plan.zone!.name,
       if (plan.reps > 1) 'reps': plan.reps.toString(),
       if (plan.note != null) 'note': plan.note!,
+      if (dailyMemo != null && dailyMemo.note.isNotEmpty) 'dailyMemo': dailyMemo.note,
+      'activityType': plan.activityType.name,
     };
     final uri = Uri(path: '/session/new', queryParameters: query);
-    context.push(uri.toString());
+    if (context.mounted) {
+      context.push(uri.toString());
+    }
   }
 
   String _formatPace(int secPerKm) {

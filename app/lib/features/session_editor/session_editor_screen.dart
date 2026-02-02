@@ -17,6 +17,8 @@ class SessionEditorScreen extends ConsumerStatefulWidget {
     this.initialZone,
     this.initialReps,
     this.initialNote,
+    this.initialActivityType,
+    this.initialDailyMemo,
   });
 
   final String? sessionId;
@@ -28,6 +30,8 @@ class SessionEditorScreen extends ConsumerStatefulWidget {
   final String? initialZone;
   final String? initialReps;
   final String? initialNote;
+  final String? initialActivityType;
+  final String? initialDailyMemo;
 
   @override
   ConsumerState<SessionEditorScreen> createState() => _SessionEditorScreenState();
@@ -71,27 +75,30 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     } else {
       // 新規作成時、初期値があればセット
       if (widget.initialMenuName != null) _templateController.text = widget.initialMenuName!;
-      
-      if (widget.initialDistance != null) {
-        // repsがある場合は掛け算して合計にするか、単にdistanceを入れるか
-        // ユーザー要望「トータルの距離は...予測で出す」に従い、reps込みの距離を入れる
-        int dist = int.tryParse(widget.initialDistance!) ?? 0;
-        int reps = widget.initialReps != null ? (int.tryParse(widget.initialReps!) ?? 1) : 1;
-        _distanceController.text = ((dist * reps) / 1000).toString();
+
+      if (widget.initialActivityType != null) {
+        try {
+          _activityType = ActivityType.values.firstWhere((e) => e.name == widget.initialActivityType);
+        } catch (_) {}
       }
       
+      if (widget.initialDistance != null) {
+        final dist = int.tryParse(widget.initialDistance!) ?? 0;
+        final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
+        // km表示ではなくm単位で入れる仕様（？）
+        // 実際には distanceController は km 単位の入力を期待している場合があるが、
+        // 既存の _saveSession では double.parse(...) * 1000 しているので km 単位。
+        _distanceController.text = ((dist * reps) / 1000.0).toString();
+      }
+
       if (widget.initialPace != null) {
-        int pace = int.tryParse(widget.initialPace!) ?? 0;
-        if (pace > 0) {
-           final m = pace ~/ 60;
-           final s = pace % 60;
-           _paceController.text = '$m:${s.toString().padLeft(2, '0')}';
-        }
+        final pace = int.tryParse(widget.initialPace!) ?? 0;
+        _paceController.text = _formatPace(pace);
 
         // 時間の予測 (距離 / 1000 * ペース)
         if (widget.initialDistance != null && pace > 0) {
-          int dist = int.tryParse(widget.initialDistance!) ?? 0;
-          int reps = widget.initialReps != null ? (int.tryParse(widget.initialReps!) ?? 1) : 1;
+          final dist = int.tryParse(widget.initialDistance!) ?? 0;
+          final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
           final totalSec = (dist * reps / 1000.0) * pace;
           _durationController.text = (totalSec / 60).round().toString();
         }
@@ -103,15 +110,17 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         } catch (_) {}
       }
 
-      // メモの組み立て
-      final noteBuffer = StringBuffer();
-      if (widget.initialReps != null && (int.tryParse(widget.initialReps!) ?? 1) > 1) {
-        noteBuffer.write('セット数: ${widget.initialReps}\n');
+      // 予定のメモと一日のメモを合体させて初期値にする
+      final List<String> notes = [];
+      if (widget.initialNote != null && widget.initialNote!.isNotEmpty) {
+        notes.add(widget.initialNote!);
       }
-      if (widget.initialNote != null) {
-         noteBuffer.write(widget.initialNote);
+      if (widget.initialDailyMemo != null && widget.initialDailyMemo!.isNotEmpty) {
+        notes.add('【日記】${widget.initialDailyMemo!}');
       }
-      _noteController.text = noteBuffer.toString();
+      if (notes.isNotEmpty) {
+        _noteController.text = notes.join('\n');
+      }
     }
   }
 

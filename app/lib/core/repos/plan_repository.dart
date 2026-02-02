@@ -44,6 +44,7 @@ class PlanRepository {
                   zone: Value(input.zone),
                   reps: Value(input.reps),
                   note: Value(input.note),
+                  activityType: Value(input.activityType),
                 ),
               );
         }
@@ -54,6 +55,27 @@ class PlanRepository {
       dev.log('[PlanRepo] Error in updatePlansForDate', error: e, stackTrace: st);
       rethrow;
     }
+  }
+
+  /// 指定日のメモを取得
+  Future<DailyPlanMemo?> getDailyMemo(DateTime date) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    return (_db.select(_db.dailyPlanMemos)..where((t) => t.date.equals(startOfDay))).getSingleOrNull();
+  }
+
+  /// 指定日のメモを更新
+  Future<void> updateDailyMemo(DateTime date, String note) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    if (note.isEmpty) {
+      await (_db.delete(_db.dailyPlanMemos)..where((t) => t.date.equals(startOfDay))).go();
+      return;
+    }
+    await _db.into(_db.dailyPlanMemos).insertOnConflictUpdate(
+          DailyPlanMemosCompanion.insert(
+            date: startOfDay,
+            note: note,
+          ),
+        );
   }
 
   /// 指定日のPlan一覧を取得（日付の日部分で抽出）
@@ -96,6 +118,7 @@ class PlanInput {
     this.zone,
     this.reps = 1,
     this.note,
+    this.activityType = ActivityType.running,
   });
 
   final String menuName;
@@ -104,4 +127,5 @@ class PlanInput {
   final Zone? zone;
   final int reps;
   final String? note;
+  final ActivityType activityType;
 }

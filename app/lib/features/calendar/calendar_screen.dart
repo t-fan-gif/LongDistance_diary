@@ -50,6 +50,14 @@ class CalendarScreen extends ConsumerWidget {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.event_note),
+                title: const Text('トレーニング予定'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/plan/weekly');
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.analytics),
                 title: const Text('トレーニング分析'),
                 onTap: () {

@@ -6,12 +6,12 @@ import 'tables.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: <Type>[PersonalBests, Plans, Sessions, MenuPresets])
+@DriftDatabase(tables: <Type>[PersonalBests, Plans, Sessions, MenuPresets, DailyPlanMemos])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -29,6 +29,10 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(personalBests, personalBests.activityType);
             await m.addColumn(plans, plans.activityType);
             await m.addColumn(sessions, sessions.activityType);
+          }
+          if (from < 5) {
+            // Version 5: DailyPlanMemos テーブル作成
+            await m.createTable(dailyPlanMemos);
           }
         },
         beforeOpen: (details) async {
