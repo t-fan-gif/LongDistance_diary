@@ -1,15 +1,12 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:drift_flutter/drift_flutter.dart';
 
-LazyDatabase openConnection() {
-  return LazyDatabase(() async {
-    final Directory dir = await getApplicationDocumentsDirectory();
-    final File file = File(p.join(dir.path, 'long_distance_diary.sqlite'));
-    return NativeDatabase.createInBackground(file);
-  });
+/// Opens a database connection that works on all platforms.
+/// - Native platforms (Android, iOS, macOS, Linux, Windows): Uses SQLite
+/// - Web: Uses IndexedDB via sql.js
+QueryExecutor openConnection() {
+  return driftDatabase(
+    name: 'long_distance_diary',
+    // Web uses IndexedDB, native uses SQLite file in app documents directory
+  );
 }
-
