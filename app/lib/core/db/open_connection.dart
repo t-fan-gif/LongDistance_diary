@@ -8,8 +8,8 @@ QueryExecutor openConnection() {
   return driftDatabase(
     name: 'long_distance_diary',
     web: DriftWebOptions(
-      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-      driftWorker: Uri.parse('drift_worker.js'),
+      sqlite3Wasm: Uri.parse('sqlite3_v294.wasm'),
+      driftWorker: Uri.parse('drift_worker_v2301.js'),
     ),
   );
 }
