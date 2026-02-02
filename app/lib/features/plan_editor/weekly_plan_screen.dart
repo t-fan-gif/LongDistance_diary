@@ -7,6 +7,7 @@ import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
 import '../day_detail/day_detail_screen.dart';
+import '../calendar/calendar_providers.dart';
 
 final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTime>((ref, startDate) async {
   final repo = ref.watch(planRepositoryProvider);

@@ -925,6 +925,11 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _loadMeta = const VerificationMeta('load');
+  @override
+  late final GeneratedColumn<double> load = GeneratedColumn<double>(
+      'load', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _repLoadMeta =
       const VerificationMeta('repLoad');
   @override
@@ -959,6 +964,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         cdDurationSec,
         status,
         note,
+        load,
         repLoad,
         activityType
       ];
@@ -1057,6 +1063,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
+    if (data.containsKey('load')) {
+      context.handle(
+          _loadMeta, load.isAcceptableOrUnknown(data['load']!, _loadMeta));
+    }
     if (data.containsKey('rep_load')) {
       context.handle(_repLoadMeta,
           repLoad.isAcceptableOrUnknown(data['rep_load']!, _repLoadMeta));
@@ -1108,6 +1118,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
           .read(DriftSqlType.string, data['${effectivePrefix}status'])!),
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      load: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}load']),
       repLoad: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}rep_load']),
       activityType: $SessionsTable.$converteractivityType.fromSql(
@@ -1155,6 +1167,7 @@ class Session extends DataClass implements Insertable<Session> {
   final int? cdDurationSec;
   final SessionStatus status;
   final String? note;
+  final double? load;
   final int? repLoad;
   final ActivityType activityType;
   const Session(
@@ -1176,6 +1189,7 @@ class Session extends DataClass implements Insertable<Session> {
       this.cdDurationSec,
       required this.status,
       this.note,
+      this.load,
       this.repLoad,
       required this.activityType});
   @override
@@ -1232,6 +1246,9 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    if (!nullToAbsent || load != null) {
+      map['load'] = Variable<double>(load);
+    }
     if (!nullToAbsent || repLoad != null) {
       map['rep_load'] = Variable<int>(repLoad);
     }
@@ -1285,6 +1302,7 @@ class Session extends DataClass implements Insertable<Session> {
           : Value(cdDurationSec),
       status: Value(status),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      load: load == null && nullToAbsent ? const Value.absent() : Value(load),
       repLoad: repLoad == null && nullToAbsent
           ? const Value.absent()
           : Value(repLoad),
@@ -1317,6 +1335,7 @@ class Session extends DataClass implements Insertable<Session> {
       status: $SessionsTable.$converterstatus
           .fromJson(serializer.fromJson<String>(json['status'])),
       note: serializer.fromJson<String?>(json['note']),
+      load: serializer.fromJson<double?>(json['load']),
       repLoad: serializer.fromJson<int?>(json['repLoad']),
       activityType: $SessionsTable.$converteractivityType
           .fromJson(serializer.fromJson<String>(json['activityType'])),
@@ -1347,6 +1366,7 @@ class Session extends DataClass implements Insertable<Session> {
       'status': serializer
           .toJson<String>($SessionsTable.$converterstatus.toJson(status)),
       'note': serializer.toJson<String?>(note),
+      'load': serializer.toJson<double?>(load),
       'repLoad': serializer.toJson<int?>(repLoad),
       'activityType': serializer.toJson<String>(
           $SessionsTable.$converteractivityType.toJson(activityType)),
@@ -1372,6 +1392,7 @@ class Session extends DataClass implements Insertable<Session> {
           Value<int?> cdDurationSec = const Value.absent(),
           SessionStatus? status,
           Value<String?> note = const Value.absent(),
+          Value<double?> load = const Value.absent(),
           Value<int?> repLoad = const Value.absent(),
           ActivityType? activityType}) =>
       Session(
@@ -1402,6 +1423,7 @@ class Session extends DataClass implements Insertable<Session> {
             cdDurationSec.present ? cdDurationSec.value : this.cdDurationSec,
         status: status ?? this.status,
         note: note.present ? note.value : this.note,
+        load: load.present ? load.value : this.load,
         repLoad: repLoad.present ? repLoad.value : this.repLoad,
         activityType: activityType ?? this.activityType,
       );
@@ -1443,6 +1465,7 @@ class Session extends DataClass implements Insertable<Session> {
           : this.cdDurationSec,
       status: data.status.present ? data.status.value : this.status,
       note: data.note.present ? data.note.value : this.note,
+      load: data.load.present ? data.load.value : this.load,
       repLoad: data.repLoad.present ? data.repLoad.value : this.repLoad,
       activityType: data.activityType.present
           ? data.activityType.value
@@ -1471,6 +1494,7 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('cdDurationSec: $cdDurationSec, ')
           ..write('status: $status, ')
           ..write('note: $note, ')
+          ..write('load: $load, ')
           ..write('repLoad: $repLoad, ')
           ..write('activityType: $activityType')
           ..write(')'))
@@ -1478,27 +1502,29 @@ class Session extends DataClass implements Insertable<Session> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      startedAt,
-      planId,
-      templateText,
-      distanceMainM,
-      durationMainSec,
-      paceSecPerKm,
-      zone,
-      rpeValue,
-      restType,
-      restDurationSec,
-      restDistanceM,
-      wuDistanceM,
-      wuDurationSec,
-      cdDistanceM,
-      cdDurationSec,
-      status,
-      note,
-      repLoad,
-      activityType);
+  int get hashCode => Object.hashAll([
+        id,
+        startedAt,
+        planId,
+        templateText,
+        distanceMainM,
+        durationMainSec,
+        paceSecPerKm,
+        zone,
+        rpeValue,
+        restType,
+        restDurationSec,
+        restDistanceM,
+        wuDistanceM,
+        wuDurationSec,
+        cdDistanceM,
+        cdDurationSec,
+        status,
+        note,
+        load,
+        repLoad,
+        activityType
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1521,6 +1547,7 @@ class Session extends DataClass implements Insertable<Session> {
           other.cdDurationSec == this.cdDurationSec &&
           other.status == this.status &&
           other.note == this.note &&
+          other.load == this.load &&
           other.repLoad == this.repLoad &&
           other.activityType == this.activityType);
 }
@@ -1544,6 +1571,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int?> cdDurationSec;
   final Value<SessionStatus> status;
   final Value<String?> note;
+  final Value<double?> load;
   final Value<int?> repLoad;
   final Value<ActivityType> activityType;
   final Value<int> rowid;
@@ -1566,6 +1594,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.cdDurationSec = const Value.absent(),
     this.status = const Value.absent(),
     this.note = const Value.absent(),
+    this.load = const Value.absent(),
     this.repLoad = const Value.absent(),
     this.activityType = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1589,6 +1618,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.cdDurationSec = const Value.absent(),
     required SessionStatus status,
     this.note = const Value.absent(),
+    this.load = const Value.absent(),
     this.repLoad = const Value.absent(),
     this.activityType = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1615,6 +1645,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? cdDurationSec,
     Expression<String>? status,
     Expression<String>? note,
+    Expression<double>? load,
     Expression<int>? repLoad,
     Expression<String>? activityType,
     Expression<int>? rowid,
@@ -1638,6 +1669,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (cdDurationSec != null) 'cd_duration_sec': cdDurationSec,
       if (status != null) 'status': status,
       if (note != null) 'note': note,
+      if (load != null) 'load': load,
       if (repLoad != null) 'rep_load': repLoad,
       if (activityType != null) 'activity_type': activityType,
       if (rowid != null) 'rowid': rowid,
@@ -1663,6 +1695,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       Value<int?>? cdDurationSec,
       Value<SessionStatus>? status,
       Value<String?>? note,
+      Value<double?>? load,
       Value<int?>? repLoad,
       Value<ActivityType>? activityType,
       Value<int>? rowid}) {
@@ -1685,6 +1718,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       cdDurationSec: cdDurationSec ?? this.cdDurationSec,
       status: status ?? this.status,
       note: note ?? this.note,
+      load: load ?? this.load,
       repLoad: repLoad ?? this.repLoad,
       activityType: activityType ?? this.activityType,
       rowid: rowid ?? this.rowid,
@@ -1751,6 +1785,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (load.present) {
+      map['load'] = Variable<double>(load.value);
+    }
     if (repLoad.present) {
       map['rep_load'] = Variable<int>(repLoad.value);
     }
@@ -1785,6 +1822,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('cdDurationSec: $cdDurationSec, ')
           ..write('status: $status, ')
           ..write('note: $note, ')
+          ..write('load: $load, ')
           ..write('repLoad: $repLoad, ')
           ..write('activityType: $activityType, ')
           ..write('rowid: $rowid')
@@ -2712,6 +2750,7 @@ typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   Value<int?> cdDurationSec,
   required SessionStatus status,
   Value<String?> note,
+  Value<double?> load,
   Value<int?> repLoad,
   Value<ActivityType> activityType,
   Value<int> rowid,
@@ -2735,6 +2774,7 @@ typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<int?> cdDurationSec,
   Value<SessionStatus> status,
   Value<String?> note,
+  Value<double?> load,
   Value<int?> repLoad,
   Value<ActivityType> activityType,
   Value<int> rowid,
@@ -2826,6 +2866,9 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get load => $composableBuilder(
+      column: $table.load, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get repLoad => $composableBuilder(
       column: $table.repLoad, builder: (column) => ColumnFilters(column));
@@ -2924,6 +2967,9 @@ class $$SessionsTableOrderingComposer
   ColumnOrderings<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get load => $composableBuilder(
+      column: $table.load, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get repLoad => $composableBuilder(
       column: $table.repLoad, builder: (column) => ColumnOrderings(column));
 
@@ -3012,6 +3058,9 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
 
+  GeneratedColumn<double> get load =>
+      $composableBuilder(column: $table.load, builder: (column) => column);
+
   GeneratedColumn<int> get repLoad =>
       $composableBuilder(column: $table.repLoad, builder: (column) => column);
 
@@ -3081,6 +3130,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             Value<int?> cdDurationSec = const Value.absent(),
             Value<SessionStatus> status = const Value.absent(),
             Value<String?> note = const Value.absent(),
+            Value<double?> load = const Value.absent(),
             Value<int?> repLoad = const Value.absent(),
             Value<ActivityType> activityType = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -3104,6 +3154,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             cdDurationSec: cdDurationSec,
             status: status,
             note: note,
+            load: load,
             repLoad: repLoad,
             activityType: activityType,
             rowid: rowid,
@@ -3127,6 +3178,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             Value<int?> cdDurationSec = const Value.absent(),
             required SessionStatus status,
             Value<String?> note = const Value.absent(),
+            Value<double?> load = const Value.absent(),
             Value<int?> repLoad = const Value.absent(),
             Value<ActivityType> activityType = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -3150,6 +3202,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             cdDurationSec: cdDurationSec,
             status: status,
             note: note,
+            load: load,
             repLoad: repLoad,
             activityType: activityType,
             rowid: rowid,
