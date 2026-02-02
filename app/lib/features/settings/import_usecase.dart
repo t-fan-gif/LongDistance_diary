@@ -1,5 +1,6 @@
 import 'dart:io';
-
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,11 +25,22 @@ class ImportUseCase {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
+      withData: true, // Webでbytesを取得するために必要
     );
 
-    if (result != null && result.files.single.path != null) {
-      final file = File(result.files.single.path!);
-      final jsonString = await file.readAsString();
+    if (result != null) {
+      String jsonString;
+      
+      if (kIsWeb) {
+        final bytes = result.files.single.bytes;
+        if (bytes == null) return;
+        jsonString = utf8.decode(bytes);
+      } else {
+        final path = result.files.single.path;
+        if (path == null) return;
+        final file = File(path);
+        jsonString = await file.readAsString();
+      }
       
       await _repo.importFromJson(jsonString);
 
