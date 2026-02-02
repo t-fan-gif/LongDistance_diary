@@ -151,11 +151,16 @@ final monthCalendarDataProvider =
     month,
   );
 
-  final Map<DateTime, int> dailyLoads = {};
+  final Map<DateTime, double> dailyLoads = {};
   for (final session in [...pastSessions, ...sessions]) {
     final date = _normalizeDate(session.startedAt);
-    final tPace = session.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-    final load = loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace) ?? 0;
+    double load = 0;
+    if (session.load != null) {
+      load = session.load!;
+    } else {
+      final tPace = session.activityType == ActivityType.walking ? walkingTpace : runningTpace;
+      load = (loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace) ?? 0).toDouble();
+    }
     dailyLoads[date] = (dailyLoads[date] ?? 0) + load;
   }
 
@@ -176,11 +181,15 @@ final monthCalendarDataProvider =
         .toList();
 
     // 日負荷
-    int dayLoad = 0;
+    double dayLoad = 0;
     for (final s in daySessions) {
       if (s.status == SessionStatus.skipped) continue;
-      final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-      dayLoad += loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0;
+      if (s.load != null) {
+        dayLoad += s.load!;
+      } else {
+        final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
+        dayLoad += (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0).toDouble();
+      }
     }
 
     // 日合計距離
@@ -192,15 +201,18 @@ final monthCalendarDataProvider =
     }
 
     // 負荷比率と濃淡
-    final dayCapacity = capacityEst.estimateCapacityForDate(dailyLoads, date);
-    final loadRatio = capacityEst.computeLoadRatio(dayLoad, dayCapacity);
+    final dayCapacity = capacityEst.estimateCapacityForDate(
+      dailyLoads.map((k, v) => MapEntry(k, v.round())), 
+      date,
+    );
+    final loadRatio = capacityEst.computeLoadRatio(dayLoad.round(), dayCapacity);
     final bucket = heatmapScaler.bucketize(loadRatio);
 
     result.add(DayCalendarData(
       date: date,
       sessions: daySessions,
       plans: dayPlans,
-      dayLoad: dayLoad,
+      dayLoad: dayLoad.round(),
       totalDistanceM: totalDistanceM,
       loadRatio: loadRatio,
       heatmapBucket: bucket,

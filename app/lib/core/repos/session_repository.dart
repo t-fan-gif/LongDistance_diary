@@ -30,6 +30,7 @@ class SessionRepository {
     int? cdDistanceM,
     int? cdDurationSec,
     String? note,
+    double? load,
     int? repLoad,
     ActivityType activityType = ActivityType.running,
   }) async {
@@ -54,6 +55,7 @@ class SessionRepository {
         cdDistanceM: Value(cdDistanceM),
         cdDurationSec: Value(cdDurationSec),
         note: Value(note),
+        load: Value(load),
         repLoad: Value(repLoad),
         activityType: Value(activityType),
       ),
@@ -81,6 +83,7 @@ class SessionRepository {
     int? cdDistanceM,
     int? cdDurationSec,
     String? note,
+    double? load,
     int? repLoad,
     ActivityType? activityType,
   }) async {
@@ -116,6 +119,7 @@ class SessionRepository {
         cdDurationSec:
             cdDurationSec != null ? Value(cdDurationSec) : const Value.absent(),
         note: note != null ? Value(note) : const Value.absent(),
+        load: load != null ? Value(load) : const Value.absent(),
         repLoad: repLoad != null ? Value(repLoad) : const Value.absent(),
         activityType: activityType != null ? Value(activityType) : const Value.absent(),
       ),

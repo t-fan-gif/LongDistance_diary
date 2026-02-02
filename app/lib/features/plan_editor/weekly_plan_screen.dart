@@ -29,7 +29,8 @@ class DailyPlanData {
 }
 
 class WeeklyPlanScreen extends ConsumerWidget {
-  const WeeklyPlanScreen({super.key});
+  const WeeklyPlanScreen({super.key, this.isTab = true});
+  final bool isTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,21 +41,27 @@ class WeeklyPlanScreen extends ConsumerWidget {
     
     final weeklyAsync = ref.watch(weeklyPlansProvider(monday));
 
+    final content = weeklyAsync.when(
+      data: (days) => ListView.builder(
+        itemCount: days.length,
+        itemBuilder: (context, index) {
+          final day = days[index];
+          return _WeeklyDayTile(day: day);
+        },
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('エラー: $e')),
+    );
+
+    if (isTab) {
+      return content;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('トレーニング予定 (月〜日)'),
       ),
-      body: weeklyAsync.when(
-        data: (days) => ListView.builder(
-          itemCount: days.length,
-          itemBuilder: (context, index) {
-            final day = days[index];
-            return _WeeklyDayTile(day: day);
-          },
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('エラー: $e')),
-      ),
+      body: content,
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/plan/edit?date=${today.toIso8601String().split('T')[0]}'),
         child: const Icon(Icons.edit),

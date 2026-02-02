@@ -6,6 +6,7 @@ import 'calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
 import '../../core/domain/enums.dart';
 import '../../core/db/app_database.dart';
+import '../plan_editor/weekly_plan_screen.dart';
 
 class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
@@ -16,13 +17,14 @@ class CalendarScreen extends ConsumerWidget {
     final calendarDataAsync = ref.watch(monthCalendarDataProvider(selectedMonth));
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(DateFormat('yyyy年MM月').format(selectedMonth)),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
+              Tab(text: '1週間', icon: Icon(Icons.view_week)),
               Tab(text: '今日', icon: Icon(Icons.today)),
             ],
           ),
@@ -110,6 +112,8 @@ class CalendarScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            // 1週間予定タブ
+            const WeeklyPlanScreen(),
             // 今日の予定タブ
             const _TodayView(),
           ],
@@ -372,7 +376,7 @@ class _TodayView extends ConsumerWidget {
                     leading: Text(rpeEmoji, style: const TextStyle(fontSize: 24)),
                     title: Text(s.templateText),
                     subtitle: Text(
-                      '${(s.distanceMainM ?? 0) / 1000}km • ${_formatPace(s.paceSecPerKm)} • 負荷: ${load ?? 0}',
+                      '${(s.distanceMainM ?? 0) / 1000}km • ${_formatPace(s.paceSecPerKm)} • 負荷: ${(s.load ?? load ?? 0).round()}',
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/session/${s.id}'),

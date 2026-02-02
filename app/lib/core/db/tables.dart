@@ -60,7 +60,7 @@ class Sessions extends Table {
   TextColumn get status => textEnum<SessionStatus>()();
 
   TextColumn get note => text().nullable()();
-
+  RealColumn get load => real().nullable()();
   IntColumn get repLoad => integer().nullable()();
   TextColumn get activityType => textEnum<ActivityType>().withDefault(const Constant('running'))();
 

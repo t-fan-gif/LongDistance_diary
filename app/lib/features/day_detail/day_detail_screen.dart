@@ -58,11 +58,15 @@ class DayDetailScreen extends ConsumerWidget {
               final rTpace = runningTpaceAsync.valueOrNull;
               final wTpace = walkingTpaceAsync.valueOrNull;
               
-              int dayLoad = 0;
+              double dayLoad = 0;
               for (final s in sessions) {
                 if (s.status == SessionStatus.skipped) continue;
-                final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
-                dayLoad += loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0;
+                if (s.load != null) {
+                  dayLoad += s.load!;
+                } else {
+                  final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
+                  dayLoad += (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0).toDouble();
+                }
               }
 
               return Container(
@@ -72,7 +76,7 @@ class DayDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '日負荷: $dayLoad',
+                      '日負荷: ${dayLoad.round()}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
@@ -272,7 +276,7 @@ class _SessionTile extends ConsumerWidget {
             Text('${(session.distanceMainM! / 1000).toStringAsFixed(1)}km '),
           if (session.paceSecPerKm != null) Text('${_formatPace(session.paceSecPerKm!)} '),
           if (session.zone != null) Text('@${session.zone!.name} '),
-          if (load != null) Text('負荷: $load'),
+          if ((session.load ?? load) != null) Text('負荷: ${(session.load ?? load)!.round()}'),
         ],
       ),
       trailing: const Icon(Icons.chevron_right),

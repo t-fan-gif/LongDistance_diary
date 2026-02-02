@@ -11,7 +11,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -33,6 +33,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 5) {
             // Version 5: DailyPlanMemos テーブル作成
             await m.createTable(dailyPlanMemos);
+          }
+          if (from < 6) {
+            // Version 6: Sessions に load カラム追加
+            await m.addColumn(sessions, sessions.load);
           }
         },
         beforeOpen: (details) async {

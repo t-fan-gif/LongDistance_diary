@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
+import '../../core/services/service_providers.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
 
@@ -596,6 +598,29 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         restDurationSec = int.parse(_restDurationController.text);
       }
 
+      // 負荷計算
+      final loadCalc = ref.read(loadCalculatorProvider);
+      final rTpace = await ref.read(runningThresholdPaceProvider.future);
+      final wTpace = await ref.read(walkingThresholdPaceProvider.future);
+      final tPace = _activityType == ActivityType.walking ? wTpace : rTpace;
+      
+      // 暫定的なSessionオブジェクトを作成して負荷計算に回す
+      final tempSession = Session(
+        id: widget.sessionId ?? '',
+        startedAt: _selectedDateTime,
+        templateText: _templateController.text,
+        status: _status,
+        distanceMainM: distanceM,
+        durationMainSec: durationSec,
+        paceSecPerKm: paceSecPerKm,
+        zone: _selectedZone,
+        rpeValue: _rpeValue,
+        restType: _restType,
+        restDurationSec: restDurationSec,
+        activityType: _activityType,
+      );
+      final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(tempSession, thresholdPaceSecPerKm: tPace)?.toDouble();
+
       if (_isEditMode && widget.sessionId != null) {
         await repo.updateSession(
           id: widget.sessionId!,
@@ -610,6 +635,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           restType: _restType,
           restDurationSec: restDurationSec,
           note: _noteController.text.isEmpty ? null : _noteController.text,
+          load: calculatedLoad,
           activityType: _activityType,
         );
       } else {
@@ -625,6 +651,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           restType: _restType,
           restDurationSec: restDurationSec,
           note: _noteController.text.isEmpty ? null : _noteController.text,
+          load: calculatedLoad,
           activityType: _activityType,
         );
       }
