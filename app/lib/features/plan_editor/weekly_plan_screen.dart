@@ -42,7 +42,6 @@ class WeeklyPlanScreen extends ConsumerStatefulWidget {
 class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
   late ScrollController _scrollController;
   final GlobalKey _todayKey = GlobalKey();
-  bool _isInitialized = false;
 
 
   @override
@@ -56,7 +55,7 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
 
   void _handleTabSelection() {
     if (widget.tabController?.index == 1 && mounted) {
-      _scrollToToday(animate: true);
+      _scrollToToday(animate: false); // アニメーションなしで即座にジャンプ
     }
   }
 
@@ -98,18 +97,6 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     final endDate = today.add(const Duration(days: 30));
     
     final weeklyAsync = ref.watch(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)));
-
-    // 初回ロード完了時にバックグラウンドで位置を合わせる
-    ref.listen(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)), (previous, next) {
-      if (next is AsyncData && !_isInitialized) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _scrollToToday(animate: false);
-            _isInitialized = true;
-          }
-        });
-      }
-    });
 
     final content = weeklyAsync.when(
       data: (days) {
