@@ -106,9 +106,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
               unselectedLabelColor: Colors.white70,
               indicatorColor: Colors.white,
               onTap: (index) {
-                // すでにリストタブにいる場合に再度アイコンが押されたらジャンプを実行
-                if (index == 1 && _tabController.index == 1) {
-                  _weeklyPlanKey.currentState?.scrollToToday(animate: false);
+                // リストタブがタップされたら(切り替え時も)即座にジャンプを実行
+                if (index == 1) {
+                  // 少し遅延させることでタブ遷移と競合しないようにする
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    _weeklyPlanKey.currentState?.scrollToToday(animate: false);
+                  });
                 }
               },
               tabs: const [
