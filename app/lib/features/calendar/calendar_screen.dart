@@ -19,6 +19,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
 class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
+  final GlobalKey<WeeklyPlanScreenState> _weeklyPlanKey = GlobalKey<WeeklyPlanScreenState>();
 
   @override
   void initState() {
@@ -104,6 +105,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
               indicatorColor: Colors.white,
+              onTap: (index) {
+                // すでにリストタブにいる場合に再度アイコンが押されたらジャンプを実行
+                if (index == 1 && _tabController.index == 1) {
+                  _weeklyPlanKey.currentState?.scrollToToday(animate: false);
+                }
+              },
               tabs: const [
                 Tab(text: '今日', icon: Icon(Icons.today, size: 18)),
                 Tab(text: 'リスト', icon: Icon(Icons.view_list, size: 18)),
@@ -185,7 +192,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
             // 今日の予定タブ
             const _TodayView(),
             // リストタブ
-            WeeklyPlanScreen(tabController: _tabController),
+            WeeklyPlanScreen(
+              key: _weeklyPlanKey,
+              tabController: _tabController,
+            ),
             // カレンダータブ
             Column(
               children: [

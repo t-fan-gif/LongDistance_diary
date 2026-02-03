@@ -36,10 +36,10 @@ class WeeklyPlanScreen extends ConsumerStatefulWidget {
   final TabController? tabController;
 
   @override
-  ConsumerState<WeeklyPlanScreen> createState() => _WeeklyPlanScreenState();
+  ConsumerState<WeeklyPlanScreen> createState() => WeeklyPlanScreenState();
 }
 
-class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
+class WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
   late ScrollController _scrollController;
   final GlobalKey _todayKey = GlobalKey();
 
@@ -55,16 +55,19 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
 
   void _handleTabSelection() {
     if (widget.tabController?.index == 1 && mounted) {
-      // タブ切り替え直後はレイアウトが確定していない場合があるため、フレーム終了を待つ
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _scrollToToday(animate: false);
-        }
-      });
+      // 遷移完了時（!indexIsChanging）または遷移開始時に一度だけ実行
+      // リスナーは複数回呼ばれるため、タイミングを図る
+      if (!widget.tabController!.indexIsChanging) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            scrollToToday(animate: false);
+          }
+        });
+      }
     }
   }
 
-  void _scrollToToday({bool animate = true, int retryCount = 0}) {
+  void scrollToToday({bool animate = true, int retryCount = 0}) {
     final context = _todayKey.currentContext;
     if (context != null) {
       if (animate) {
@@ -85,7 +88,7 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
       // 特に初回は時間がかかることがあるため、少し間隔を置いてリトライする
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted && widget.tabController?.index == 1) {
-          _scrollToToday(animate: animate, retryCount: retryCount + 1);
+          scrollToToday(animate: animate, retryCount: retryCount + 1);
         }
       });
     }
@@ -112,7 +115,7 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
       if (next is AsyncData && widget.tabController?.index == 1) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            _scrollToToday(animate: false);
+            scrollToToday(animate: false);
           }
         });
       }
