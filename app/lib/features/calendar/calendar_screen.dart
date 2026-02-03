@@ -45,23 +45,56 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
     return Scaffold(
       drawerEnableOpenDragGesture: false,
       appBar: AppBar(
-        title: _currentTabIndex == 2
-            ? Text(DateFormat('yyyy年MM月').format(selectedMonth))
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.directions_run, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    'Long Distance Diary',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFE64A19), // Deep Orange
+                Color(0xFFFFA000), // Amber/Orange
+              ],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -10,
+                bottom: -15,
+                child: Icon(
+                  Icons.directions_run,
+                  size: 110,
+                  color: Colors.black.withOpacity(0.15),
+                ),
+              ),
+            ],
+          ),
+        ),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.directions_run, size: 24, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              'Long Distance Diary',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                color: Colors.white,
+                shadows: [
+                  Shadow(
+                    offset: Offset(0, 2),
+                    blurRadius: 4,
+                    color: Colors.black45,
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -84,7 +117,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   // 閉じアニメーションを少し待ってから遷移することで、戻り時の不具合を防止
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.go('/history');
+                    context.push('/history');
                   }
                 },
               ),
@@ -95,7 +128,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.go('/analysis');
+                    context.push('/analysis');
                   }
                 },
               ),
@@ -106,7 +139,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.go('/settings/pb');
+                    context.push('/settings/pb');
                   }
                 },
               ),
@@ -119,7 +152,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.go('/training-support');
+                    context.push('/training-support');
                   }
                 },
               ),
@@ -130,7 +163,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.go('/settings');
+                    context.push('/settings');
                   }
                 },
               ),
@@ -243,15 +276,24 @@ class _MonthHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPreviousMonth,
           ),
-          const Expanded(child: Divider()), // 年月表示をAppBarに移したので中央は空けるか仕切り
+          const SizedBox(width: 16),
+          Text(
+            DateFormat('yyyy年MM月').format(selectedMonth),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.teal,
+            ),
+          ),
+          const SizedBox(width: 16),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNextMonth,

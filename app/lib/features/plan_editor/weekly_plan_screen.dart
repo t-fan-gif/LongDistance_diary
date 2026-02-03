@@ -40,20 +40,26 @@ class WeeklyPlanScreen extends ConsumerStatefulWidget {
 
 class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
   late ScrollController _scrollController;
-  static const double _itemHeight = 80.0; // およその高さ
-  static const double _monthHeaderHeight = 36.0; // 月ヘッダーの高さ
-  static const int _todayIndex = 14;
+  final GlobalKey _todayKey = GlobalKey();
+
 
   @override
   void initState() {
     super.initState();
-    // 14日前から今日までの高さを計算。
-    // 今日が画面上部に来るように調整。
-    // 月ヘッダーが少なくとも1つは入るため、その分も考慮。
-    final offset = (_todayIndex * _itemHeight);
-    _scrollController = ScrollController(
-      initialScrollOffset: offset > 0 ? offset : 0,
-    );
+    _scrollController = ScrollController();
+    
+    // ウィジェットの描画完了後に「今日」までスクロール
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _todayKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.0, // 画面上部に合わせる
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   @override
@@ -99,7 +105,13 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
                       ),
                     ),
                   ),
-                _WeeklyDayTile(day: day),
+                _WeeklyDayTile(
+                  key: day.date.year == DateTime.now().year && 
+                       day.date.month == DateTime.now().month && 
+                       day.date.day == DateTime.now().day 
+                       ? _todayKey : null,
+                  day: day,
+                ),
               ],
             );
           },
@@ -131,7 +143,7 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
 }
 
 class _WeeklyDayTile extends StatelessWidget {
-  const _WeeklyDayTile({required this.day});
+  const _WeeklyDayTile({super.key, required this.day});
   final DailyPlanData day;
 
   @override

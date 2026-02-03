@@ -42,13 +42,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              Colors.teal.shade400,
-              Colors.teal.shade700,
+              Color(0xFFE64A19), // Deep Orange
+              Color(0xFFFFA000), // Amber/Orange
             ],
           ),
         ),
@@ -59,36 +59,52 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.directions_run,
-                    size: 60,
                     color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.directions_run,
+                      size: 80,
+                      color: Color(0xFFE64A19),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 48),
                 const Text(
                   'LONG DISTANCE',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
+                    letterSpacing: 3.0,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                        color: Colors.black26,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Training Diary',
                   style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
+                    color: Colors.white,
+                    fontSize: 18,
                     fontStyle: FontStyle.italic,
-                    letterSpacing: 1.0,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ],
