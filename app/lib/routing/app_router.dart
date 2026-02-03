@@ -13,6 +13,7 @@ import '../features/history/history_list_screen.dart';
 import '../features/analysis/analysis_screen.dart';
 import '../features/plan_editor/weekly_plan_screen.dart';
 import '../features/settings/advanced_settings_screen.dart';
+import '../features/settings/training_support_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
@@ -112,6 +113,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/analysis',
       builder: (context, state) => const AnalysisScreen(),
+    ),
+
+    // トレーニングサポート
+    GoRoute(
+      path: '/training-support',
+      builder: (context, state) => const TrainingSupportScreen(),
     ),
   ],
 );

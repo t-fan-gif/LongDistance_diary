@@ -41,13 +41,17 @@ class WeeklyPlanScreen extends ConsumerStatefulWidget {
 class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
   late ScrollController _scrollController;
   static const double _itemHeight = 80.0; // およその高さ
+  static const double _monthHeaderHeight = 36.0; // 月ヘッダーの高さ
   static const int _todayIndex = 14;
 
   @override
   void initState() {
     super.initState();
+    // 14日前から今日までに月境界があるかを考慮してオフセットを計算
+    // 今日が画面上部に来るように調整（少し上にスクロール）
+    final offset = (_todayIndex * _itemHeight) - _monthHeaderHeight;
     _scrollController = ScrollController(
-      initialScrollOffset: _todayIndex * _itemHeight,
+      initialScrollOffset: offset > 0 ? offset : 0,
     );
   }
 

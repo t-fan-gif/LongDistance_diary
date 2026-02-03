@@ -19,16 +19,16 @@ class CalendarScreen extends ConsumerWidget {
 
     return DefaultTabController(
       length: 3,
-      initialIndex: 2, // 「今日」タブをデフォルトに
+      initialIndex: 0, // 「今日」タブをデフォルトに
       child: Scaffold(
         drawerEnableOpenDragGesture: false, // ナビゲーション衝突回避のためスワイプでのドロワー排除
         appBar: AppBar(
           title: Text(DateFormat('yyyy年MM月').format(selectedMonth)),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
-              Tab(text: 'リスト', icon: Icon(Icons.view_list)),
               Tab(text: '今日', icon: Icon(Icons.today)),
+              Tab(text: 'リスト', icon: Icon(Icons.view_list)),
+              Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
             ],
           ),
           actions: [
@@ -69,6 +69,15 @@ class CalendarScreen extends ConsumerWidget {
               ),
               const Divider(),
               ListTile(
+                leading: const Icon(Icons.school),
+                title: const Text('トレーニング計画サポート'),
+                subtitle: const Text('ゾーン・VDOT・負荷について'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/training-support');
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('設定'),
                 onTap: () {
@@ -81,6 +90,10 @@ class CalendarScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
+            // 今日の予定タブ
+            const _TodayView(),
+            // リストタブ
+            const WeeklyPlanScreen(),
             // カレンダータブ
             Column(
               children: [
@@ -112,10 +125,6 @@ class CalendarScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            // 1週間予定タブ
-            const WeeklyPlanScreen(),
-            // 今日の予定タブ
-            const _TodayView(),
           ],
         ),
       ),
