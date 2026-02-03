@@ -51,7 +51,7 @@ class CalendarScreen extends ConsumerWidget {
                   // 閉じアニメーションを少し待ってから遷移することで、戻り時の不具合を防止
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.push('/history');
+                    context.go('/history');
                   }
                 },
               ),
@@ -62,7 +62,7 @@ class CalendarScreen extends ConsumerWidget {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.push('/analysis');
+                    context.go('/analysis');
                   }
                 },
               ),
@@ -73,7 +73,7 @@ class CalendarScreen extends ConsumerWidget {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.push('/settings/pb');
+                    context.go('/settings/pb');
                   }
                 },
               ),
@@ -86,7 +86,7 @@ class CalendarScreen extends ConsumerWidget {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.push('/training-support');
+                    context.go('/training-support');
                   }
                 },
               ),
@@ -97,7 +97,7 @@ class CalendarScreen extends ConsumerWidget {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 250));
                   if (context.mounted) {
-                    context.push('/settings');
+                    context.go('/settings');
                   }
                 },
               ),
@@ -105,7 +105,6 @@ class CalendarScreen extends ConsumerWidget {
           ),
         ),
         body: TabBarView(
-          physics: const NeverScrollableScrollPhysics(),
           children: [
             // 今日の予定タブ
             const _TodayView(),
