@@ -69,50 +69,44 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   ),
                 ),
               ),
-              Positioned(
-                right: -10,
-                bottom: -15,
-                child: Icon(
-                  Icons.directions_run,
-                  size: 110,
-                  color: Colors.white.withOpacity(0.15),
-                ),
+            ],
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white), // Drawerアイコンなどを白に
+        title: const Text(
+          'Long Distance Diary',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                offset: Offset(0, 2),
+                blurRadius: 4,
+                color: Colors.black45,
               ),
             ],
           ),
         ),
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.directions_run, size: 24, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              'Long Distance Diary',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    offset: Offset(0, 2),
-                    blurRadius: 4,
-                    color: Colors.black45,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '今日', icon: Icon(Icons.today)),
-            Tab(text: 'リスト', icon: Icon(Icons.view_list)),
-            Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: Colors.black.withOpacity(0.2), // タブバーの背景を少し暗くして視認性向上
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              tabs: const [
+                Tab(text: '今日', icon: Icon(Icons.today)),
+                Tab(text: 'リスト', icon: Icon(Icons.view_list)),
+                Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
+              ],
+            ),
+          ),
         ),
       ),
       drawer: Drawer(
@@ -247,7 +241,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
               color: Colors.white.withAlpha(50),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.fitness_center, color: Colors.white, size: 32),
+            child: const Icon(Icons.history, color: Colors.white, size: 32), // フィットネスアイコンを履歴アイコンに変更案、または削除
           ),
           const SizedBox(height: 16),
           const Text(

@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           Image.asset(
             'assets/bar.png',
             fit: BoxFit.cover,
-            alignment: const Alignment(0.6, 0.0), // 右側（人の部分）に寄せる
+            alignment: const Alignment(0.85, 0.0), // さらに右側（人の部分）に寄せる
           ),
           // オーバーレイグラデーション
           Container(
@@ -81,10 +81,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: const Center(
-                      child: Icon(
-                        Icons.directions_run,
-                        size: 80,
-                        color: Colors.white,
+                      child: Text(
+                        'LD',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

@@ -49,17 +49,28 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     _scrollController = ScrollController();
     
     // ウィジェットの描画完了後に「今日」までスクロール
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = _todayKey.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          alignment: 0.0, // 画面上部に合わせる
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 少し待機してから実行することで、レイアウト確定を確実にする
+      await Future.delayed(const Duration(milliseconds: 100));
+      _scrollToToday();
     });
+  }
+
+  void _scrollToToday() {
+    final context = _todayKey.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // 万が一コンテキストが取得できなかった場合、再試行
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToToday();
+      });
+    }
   }
 
   @override
@@ -195,14 +206,14 @@ class _WeeklyDayTile extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 2),
                       child: Row(
                         children: [
-                          Icon(
-                            p.activityType == ActivityType.walking 
-                              ? Icons.directions_walk 
-                              : Icons.directions_run,
-                            size: 14,
-                            color: Colors.teal,
-                          ),
-                          const SizedBox(width: 4),
+                          // Icon(
+                          //   p.activityType == ActivityType.walking 
+                          //     ? Icons.directions_walk 
+                          //     : Icons.directions_run,
+                          //   size: 14,
+                          //   color: Colors.teal,
+                          // ),
+                          // const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               _formatPlanText(p),
