@@ -52,32 +52,38 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     // タブコントローラーのリスナー登録
     widget.tabController?.addListener(_handleTabSelection);
 
-    // 初回描画完了後にも一度実行
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (mounted) _scrollToToday();
+    // 初回表示時に即座に位置を合わせる試み
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollToToday(animate: false);
     });
   }
 
   void _handleTabSelection() {
     if (widget.tabController?.index == 1 && mounted) {
-      _scrollToToday();
+      _scrollToToday(animate: true);
     }
   }
 
-  void _scrollToToday() {
+  void _scrollToToday({bool animate = true}) {
     final context = _todayKey.currentContext;
     if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        alignment: 0.0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      if (animate) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.0,
+        );
+      }
     } else {
-      // 万が一コンテキストが取得できなかった場合、再試行
+      // コンテキストがまだ無い場合は次フレームで再試行
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToToday();
+        if (mounted) _scrollToToday(animate: animate);
       });
     }
   }
