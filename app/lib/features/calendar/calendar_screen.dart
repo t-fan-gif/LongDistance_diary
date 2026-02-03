@@ -47,24 +47,35 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFE64A19), // Deep Orange
-                Color(0xFFFFA000), // Amber/Orange
-              ],
-            ),
+            color: Color(0xFFE64A19),
           ),
           child: Stack(
+            fit: StackFit.expand,
             children: [
+              Image.asset(
+                'assets/bar.png',
+                fit: BoxFit.cover,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.3),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.4),
+                    ],
+                  ),
+                ),
+              ),
               Positioned(
                 right: -10,
                 bottom: -15,
                 child: Icon(
                   Icons.directions_run,
                   size: 110,
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.white.withOpacity(0.15),
                 ),
               ),
             ],

@@ -41,76 +41,95 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFE64A19), // Deep Orange
-              Color(0xFFFFA000), // Amber/Orange
-            ],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 背景画像
+          Image.asset(
+            'assets/bar.png',
+            fit: BoxFit.cover,
+            alignment: const Alignment(0.6, 0.0), // 右側（人の部分）に寄せる
           ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.directions_run,
-                      size: 80,
-                      color: Color(0xFFE64A19),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                const Text(
-                  'LONG DISTANCE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3.0,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 2),
-                        blurRadius: 4,
-                        color: Colors.black26,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Training Diary',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontStyle: FontStyle.italic,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ],
+          // オーバーレイグラデーション
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.4),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
+                ],
+              ),
             ),
           ),
-        ),
+          // コンテンツ
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Spacer(flex: 3),
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.directions_run,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'LONG DISTANCE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4.0,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(0, 4),
+                          blurRadius: 10,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text(
+                    'Training Diary',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontStyle: FontStyle.italic,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const Spacer(flex: 2),
+                  const Text(
+                    'LOADING...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4.0,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
