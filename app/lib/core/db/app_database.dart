@@ -36,7 +36,12 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             // Version 6: Sessions に load カラム追加
-            await m.addColumn(sessions, sessions.load);
+            // カラムがすでに存在する場合はスキップ
+            try {
+              await m.addColumn(sessions, sessions.load);
+            } catch (_) {
+              // カラムがすでに存在する場合は無視
+            }
           }
         },
         beforeOpen: (details) async {
