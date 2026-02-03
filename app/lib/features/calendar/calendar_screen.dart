@@ -105,6 +105,7 @@ class CalendarScreen extends ConsumerWidget {
           ),
         ),
         body: TabBarView(
+          physics: const NeverScrollableScrollPhysics(),
           children: [
             // 今日の予定タブ
             const _TodayView(),
