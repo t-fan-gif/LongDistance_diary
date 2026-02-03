@@ -7,6 +7,7 @@ import '../day_detail/day_detail_screen.dart';
 import '../../core/domain/enums.dart';
 import '../../core/db/app_database.dart';
 import '../plan_editor/weekly_plan_screen.dart';
+import '../settings/advanced_settings_screen.dart';
 
 class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
@@ -19,6 +20,7 @@ class CalendarScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        drawerEnableOpenDragGesture: false, // ナビゲーション衝突回避のためスワイプでのドロワー排除
         appBar: AppBar(
           title: Text(DateFormat('yyyy年MM月').format(selectedMonth)),
           bottom: const TabBar(
@@ -39,10 +41,7 @@ class CalendarScreen extends ConsumerWidget {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: Colors.teal),
-                child: const Text('メニュー', style: TextStyle(color: Colors.white, fontSize: 24)),
-              ),
+              _buildDrawerHeader(context),
               ListTile(
                 leading: const Icon(Icons.history),
                 title: const Text('トレーニング履歴'),
@@ -118,6 +117,54 @@ class CalendarScreen extends ConsumerWidget {
             const _TodayView(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerHeader(BuildContext context) {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.teal,
+        image: DecorationImage(
+          image: AssetImage('assets/drawer_bg.png'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Colors.black45, BlendMode.darken),
+        ),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(50),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.fitness_center, color: Colors.white, size: 32),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'LONG DISTANCE',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const Text(
+            'Training Diary',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -328,6 +375,7 @@ class _TodayView extends ConsumerWidget {
     final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
     final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
     final loadCalc = ref.watch(loadCalculatorProvider);
+    final loadMode = ref.watch(loadCalculationModeProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -368,7 +416,11 @@ class _TodayView extends ConsumerWidget {
             return Column(
               children: sessions.map((s) {
                 final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
-                final load = loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace);
+                final load = loadCalc.computeSessionRepresentativeLoad(
+                  s,
+                  thresholdPaceSecPerKm: tPace,
+                  mode: loadMode,
+                );
                 final rpeEmoji = s.rpeValue != null && s.rpeValue! < _emojis.length ? _emojis[s.rpeValue!] : '';
 
                 return Card(

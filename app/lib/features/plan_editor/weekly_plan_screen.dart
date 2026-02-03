@@ -9,12 +9,13 @@ import '../../core/repos/plan_repository.dart';
 import '../day_detail/day_detail_screen.dart';
 import '../calendar/calendar_providers.dart';
 
-final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTime>((ref, startDate) async {
+final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTimeRange>((ref, range) async {
   final repo = ref.watch(planRepositoryProvider);
   final results = <DailyPlanData>[];
   
-  for (int i = 0; i < 7; i++) {
-    final date = startDate.add(Duration(days: i));
+  final daysCount = range.end.difference(range.start).inDays + 1;
+  for (int i = 0; i < daysCount; i++) {
+    final date = range.start.add(Duration(days: i));
     final plans = await repo.listPlansByDate(date);
     final memo = await repo.getDailyMemo(date);
     results.add(DailyPlanData(date, plans, memo?.note));
@@ -29,38 +30,68 @@ class DailyPlanData {
   DailyPlanData(this.date, this.plans, this.memo);
 }
 
-class WeeklyPlanScreen extends ConsumerWidget {
+class WeeklyPlanScreen extends ConsumerStatefulWidget {
   const WeeklyPlanScreen({super.key, this.isTab = true});
   final bool isTab;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // 今週の月曜日を取得
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final monday = today.subtract(Duration(days: today.weekday - 1));
+  ConsumerState<WeeklyPlanScreen> createState() => _WeeklyPlanScreenState();
+}
+
+class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
+  late ScrollController _scrollController;
+  static const double _itemHeight = 80.0; // およその高さ
+  static const int _todayIndex = 14;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController(
+      initialScrollOffset: _todayIndex * _itemHeight,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 今日を起点に前後14日、計28日分を表示
+    final today = DateUtils.dateOnly(DateTime.now());
+    final startDate = today.subtract(const Duration(days: 14));
+    final endDate = today.add(const Duration(days: 30));
     
-    final weeklyAsync = ref.watch(weeklyPlansProvider(monday));
+    final weeklyAsync = ref.watch(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)));
 
     final content = weeklyAsync.when(
-      data: (days) => ListView.builder(
-        itemCount: days.length,
-        itemBuilder: (context, index) {
-          final day = days[index];
-          return _WeeklyDayTile(day: day);
-        },
-      ),
+      data: (days) {
+        return ListView.builder(
+          controller: _scrollController,
+          itemCount: days.length,
+          itemBuilder: (context, index) {
+            final day = days[index];
+            return _WeeklyDayTile(day: day);
+          },
+        );
+      },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('エラー: $e')),
     );
 
-    if (isTab) {
+    if (widget.isTab) {
       return content;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('トレーニング予定 (月〜日)'),
+        title: const Text('トレーニングフロー'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: content,
       floatingActionButton: FloatingActionButton(

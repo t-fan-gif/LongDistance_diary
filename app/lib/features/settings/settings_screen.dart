@@ -39,6 +39,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('設定'),
+        leading: const BackButton(),
       ),
       body: ListView(
         children: [
@@ -67,6 +68,14 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('エクスポート、インポート、初期化'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/data'),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.tune),
+            title: const Text('詳細設定'),
+            subtitle: const Text('負荷計算方式の確認と選択'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/advanced'),
           ),
           const Divider(),
           _buildSectionHeader(context, 'アプリについて'),

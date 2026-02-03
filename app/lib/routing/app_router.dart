@@ -12,6 +12,7 @@ import '../features/settings/data_settings_page.dart';
 import '../features/history/history_list_screen.dart';
 import '../features/analysis/analysis_screen.dart';
 import '../features/plan_editor/weekly_plan_screen.dart';
+import '../features/settings/advanced_settings_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
@@ -93,6 +94,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'data',
           builder: (context, state) => const DataSettingsPage(),
+        ),
+        GoRoute(
+          path: 'advanced',
+          builder: (context, state) => const AdvancedSettingsScreen(),
         ),
       ],
     ),

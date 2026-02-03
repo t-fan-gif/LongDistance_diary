@@ -5,6 +5,7 @@ import '../../core/domain/enums.dart';
 import '../../core/services/load_calculator.dart';
 import '../calendar/calendar_providers.dart';
 import '../history/history_list_screen.dart';
+import '../settings/advanced_settings_screen.dart';
 
 class AnalysisScreen extends ConsumerWidget {
   const AnalysisScreen({super.key});
@@ -15,10 +16,12 @@ class AnalysisScreen extends ConsumerWidget {
     final loadCalc = ref.watch(loadCalculatorProvider);
     final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
     final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+    final loadMode = ref.watch(loadCalculationModeProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('トレーニング分析'),
+        leading: const BackButton(),
       ),
       body: sessionsAsync.when(
         data: (sessions) {
@@ -34,7 +37,11 @@ class AnalysisScreen extends ConsumerWidget {
 
           for (final s in sessions) {
             final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
-            final load = loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0;
+            final load = loadCalc.computeSessionRepresentativeLoad(
+              s,
+              thresholdPaceSecPerKm: tPace,
+              mode: loadMode,
+            ) ?? 0;
             final distKm = (s.distanceMainM ?? 0) / 1000.0;
             
             // 月キー: yyyy-MM

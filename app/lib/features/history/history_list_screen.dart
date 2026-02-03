@@ -9,6 +9,7 @@ import '../../core/db/db_providers.dart';
 import '../../core/domain/enums.dart';
 import '../../core/services/load_calculator.dart';
 import '../calendar/calendar_providers.dart';
+import '../settings/advanced_settings_screen.dart';
 
 final allSessionsProvider = FutureProvider<List<Session>>((ref) async {
   final db = ref.watch(appDatabaseProvider);
@@ -24,10 +25,12 @@ class HistoryListScreen extends ConsumerWidget {
     final loadCalc = ref.watch(loadCalculatorProvider);
     final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
     final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+    final loadMode = ref.watch(loadCalculationModeProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('トレーニング履歴'),
+        leading: const BackButton(),
       ),
       body: sessionsAsync.when(
         data: (sessions) {
@@ -50,8 +53,12 @@ class HistoryListScreen extends ConsumerWidget {
                   children: [
                     Builder(builder: (context) {
                        final tPace = session.activityType == ActivityType.walking ? wTpace : rTpace;
-                       final load = loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace);
-                       return Text('負荷: ${load ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold));
+                        final load = loadCalc.computeSessionRepresentativeLoad(
+                          session,
+                          thresholdPaceSecPerKm: tPace,
+                          mode: loadMode,
+                        );
+                        return Text('負荷: ${load ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold));
                     }),
                     if (session.paceSecPerKm != null)
                        Text(_formatPace(session.paceSecPerKm!), style: const TextStyle(fontSize: 12, color: Colors.grey)),

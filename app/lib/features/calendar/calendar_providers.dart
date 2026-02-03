@@ -10,7 +10,8 @@ import '../../core/services/heatmap_scaler.dart';
 import '../../core/services/load_calculator.dart';
 import '../../core/services/vdot_calculator.dart';
 import '../../core/repos/personal_best_repository.dart';
-import '../settings/settings_screen.dart'; // personalBestRepositoryProvider is here? No, check where it is.
+import '../settings/settings_screen.dart';
+import '../settings/advanced_settings_screen.dart';
 
 /// 現在表示中の年月
 final selectedMonthProvider = StateProvider<DateTime>((ref) {
@@ -136,6 +137,7 @@ final monthCalendarDataProvider =
   final loadCalc = ref.watch(loadCalculatorProvider);
   final capacityEst = ref.watch(capacityEstimatorProvider);
   final heatmapScaler = ref.watch(heatmapScalerProvider);
+  final loadMode = ref.watch(loadCalculationModeProvider);
   
   final runningTpace = (await ref.watch(runningThresholdPaceProvider.future));
   final walkingTpace = (await ref.watch(walkingThresholdPaceProvider.future));
@@ -159,7 +161,11 @@ final monthCalendarDataProvider =
       load = session.load!;
     } else {
       final tPace = session.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-      load = (loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace) ?? 0).toDouble();
+      load = (loadCalc.computeSessionRepresentativeLoad(
+        session,
+        thresholdPaceSecPerKm: tPace,
+        mode: loadMode,
+      ) ?? 0).toDouble();
     }
     dailyLoads[date] = (dailyLoads[date] ?? 0) + load;
   }
@@ -188,7 +194,11 @@ final monthCalendarDataProvider =
         dayLoad += s.load!;
       } else {
         final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-        dayLoad += (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0).toDouble();
+        dayLoad += (loadCalc.computeSessionRepresentativeLoad(
+          s,
+          thresholdPaceSecPerKm: tPace,
+          mode: loadMode,
+        ) ?? 0).toDouble();
       }
     }
 

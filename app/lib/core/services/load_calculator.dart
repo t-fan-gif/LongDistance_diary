@@ -1,6 +1,7 @@
 import 'dart:math';
 import '../db/app_database.dart';
 import '../domain/enums.dart';
+import '../../features/settings/advanced_settings_screen.dart';
 
 /// セッションの負荷計算を行うサービス
 class LoadCalculator {
@@ -95,42 +96,58 @@ class LoadCalculator {
 
   /// 代表負荷を計算（優先順位に従う）
   /// 
-  /// 優先順位:
-  /// 1. ペース由来負荷（距離+ペースがある場合）
-  /// 2. sRPE（RPE+時間がある場合）
-  /// 3. ゾーン負荷（ゾーン+時間がある場合）
-  int? computeSessionRepresentativeLoad(Session session, {int? thresholdPaceSecPerKm}) {
-    // 1. ペース由来負荷を試す
-    final paceLoad = computePaceLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm);
-    if (paceLoad != null) {
-      return paceLoad;
+  /// [mode]: 計算方式（デフォルトはペース優先）
+  int? computeSessionRepresentativeLoad(
+    Session session, {
+    int? thresholdPaceSecPerKm,
+    LoadCalculationMode mode = LoadCalculationMode.priorityPace,
+  }) {
+    switch (mode) {
+      case LoadCalculationMode.priorityPace:
+        // 1. ペース由来負荷を試す
+        final paceLoad = computePaceLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm);
+        if (paceLoad != null) return paceLoad;
+
+        // 2. sRPEを試す
+        final srpeLoad = computeSrpeLoad(session);
+        if (srpeLoad != null) return srpeLoad;
+
+        // 3. ゾーン負荷を試す
+        final zoneLoad = computeZoneLoad(session);
+        if (zoneLoad != null) return zoneLoad;
+        break;
+
+      case LoadCalculationMode.onlyPace:
+        return computePaceLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm);
+
+      case LoadCalculationMode.onlySrpe:
+        return computeSrpeLoad(session);
+
+      case LoadCalculationMode.onlyZone:
+        return computeZoneLoad(session);
     }
 
-    // 2. sRPEを試す
-    final srpeLoad = computeSrpeLoad(session);
-    if (srpeLoad != null) {
-      return srpeLoad;
-    }
-
-    // 3. ゾーン負荷を試す
-    final zoneLoad = computeZoneLoad(session);
-    if (zoneLoad != null) {
-      return zoneLoad;
-    }
-
-    // いずれも計算できない場合はnull
+    // いずれも計算できない、または該当なしの場合はnull
     return null;
   }
 
   /// 日単位の代表負荷（その日の全セッションの合計）
-  int computeDayLoad(List<Session> sessions, {int? thresholdPaceSecPerKm}) {
+  int computeDayLoad(
+    List<Session> sessions, {
+    int? thresholdPaceSecPerKm,
+    LoadCalculationMode mode = LoadCalculationMode.priorityPace,
+  }) {
     int total = 0;
     for (final session in sessions) {
       // statusがskippedの場合は負荷0
       if (session.status == SessionStatus.skipped) {
         continue;
       }
-      final load = computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm);
+      final load = computeSessionRepresentativeLoad(
+        session,
+        thresholdPaceSecPerKm: thresholdPaceSecPerKm,
+        mode: mode,
+      );
       if (load != null) {
         total += load;
       }

@@ -6,6 +6,7 @@ import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 import '../../core/services/load_calculator.dart';
 import '../calendar/calendar_providers.dart';
+import '../settings/advanced_settings_screen.dart';
 
 /// 選択された日付のプロバイダ
 final selectedDateProvider = StateProvider<DateTime?>((ref) => null);
@@ -44,10 +45,12 @@ class DayDetailScreen extends ConsumerWidget {
     final runningTpaceAsync = ref.watch(runningThresholdPaceProvider);
     final walkingTpaceAsync = ref.watch(walkingThresholdPaceProvider);
     final loadCalc = ref.watch(loadCalculatorProvider);
+    final loadMode = ref.watch(loadCalculationModeProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_formatDate(date)),
+        leading: const BackButton(),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +68,7 @@ class DayDetailScreen extends ConsumerWidget {
                   dayLoad += s.load!;
                 } else {
                   final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
-                  dayLoad += (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace) ?? 0).toDouble();
+                  dayLoad += (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace, mode: loadMode) ?? 0).toDouble();
                 }
               }
 
