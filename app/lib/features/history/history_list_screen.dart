@@ -28,6 +28,7 @@ class HistoryListScreen extends ConsumerWidget {
     final loadMode = ref.watch(loadCalculationModeProvider);
 
     return Scaffold(
+      drawerEnableOpenDragGesture: false,
       appBar: AppBar(
         title: const Text('トレーニング履歴'),
         leading: const BackButton(),

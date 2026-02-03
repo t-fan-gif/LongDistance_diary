@@ -15,6 +15,7 @@ class PersonalBestSettingsPage extends ConsumerWidget {
     final pbsAsync = ref.watch(personalBestsProvider);
 
     return Scaffold(
+      drawerEnableOpenDragGesture: false,
       appBar: AppBar(
         title: const Text('自己ベスト管理'),
       ),

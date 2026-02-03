@@ -19,6 +19,7 @@ class AnalysisScreen extends ConsumerWidget {
     final loadMode = ref.watch(loadCalculationModeProvider);
 
     return Scaffold(
+      drawerEnableOpenDragGesture: false,
       appBar: AppBar(
         title: const Text('トレーニング分析'),
         leading: const BackButton(),

@@ -46,25 +46,35 @@ class CalendarScreen extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.history),
                 title: const Text('トレーニング履歴'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go('/history');
+                onTap: () async {
+                  Navigator.pop(context); // ドロワーを閉じる
+                  // 閉じアニメーションを少し待ってから遷移することで、戻り時の不具合を防止
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/history');
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.analytics),
                 title: const Text('トレーニング分析'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  context.go('/analysis');
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/analysis');
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.timer),
                 title: const Text('自己ベスト入力'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  context.go('/settings/pb');
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/settings/pb');
+                  }
                 },
               ),
               const Divider(),
@@ -72,17 +82,23 @@ class CalendarScreen extends ConsumerWidget {
                 leading: const Icon(Icons.school),
                 title: const Text('トレーニング計画サポート'),
                 subtitle: const Text('ゾーン・VDOT・負荷について'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  context.go('/training-support');
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/training-support');
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('設定'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  context.go('/settings');
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/settings');
+                  }
                 },
               ),
             ],

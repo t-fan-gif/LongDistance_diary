@@ -37,6 +37,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      drawerEnableOpenDragGesture: false,
       appBar: AppBar(
         title: const Text('設定'),
         leading: const BackButton(),

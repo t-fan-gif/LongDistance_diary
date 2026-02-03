@@ -7,6 +7,7 @@ class TrainingSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawerEnableOpenDragGesture: false,
       appBar: AppBar(
         title: const Text('トレーニング計画サポート'),
         leading: const BackButton(),
