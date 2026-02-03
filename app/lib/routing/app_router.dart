@@ -17,6 +17,7 @@ import '../features/settings/advanced_settings_screen.dart';
 import '../features/settings/training_support_screen.dart';
 
 final GoRouter appRouter = GoRouter(
+  initialLocation: '/splash',
   routes: <RouteBase>[
     // スプラッシュ画面
     GoRoute(
