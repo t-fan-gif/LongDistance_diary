@@ -47,9 +47,10 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
   @override
   void initState() {
     super.initState();
-    // 14日前から今日までに月境界があるかを考慮してオフセットを計算
-    // 今日が画面上部に来るように調整（少し上にスクロール）
-    final offset = (_todayIndex * _itemHeight) - _monthHeaderHeight;
+    // 14日前から今日までの高さを計算。
+    // 今日が画面上部に来るように調整。
+    // 月ヘッダーが少なくとも1つは入るため、その分も考慮。
+    final offset = (_todayIndex * _itemHeight);
     _scrollController = ScrollController(
       initialScrollOffset: offset > 0 ? offset : 0,
     );

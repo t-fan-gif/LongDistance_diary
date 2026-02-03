@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/splash/splash_screen.dart';
 import '../features/calendar/calendar_screen.dart';
 import '../features/day_detail/day_detail_screen.dart';
 import '../features/plan_editor/plan_editor_screen.dart';
@@ -17,6 +18,14 @@ import '../features/settings/training_support_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
+    // スプラッシュ画面
+    GoRoute(
+      path: '/splash',
+      builder: (BuildContext context, GoRouterState state) {
+        return const SplashScreen();
+      },
+    ),
+
     // カレンダー（ホーム）
     GoRoute(
       path: '/',

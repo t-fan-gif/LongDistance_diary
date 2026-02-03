@@ -20,11 +20,12 @@
   - `services/`（負荷計算、EWMA等）
   - `repos/`（Plan/Session/PBのリポジトリ）
 - `lib/features/`
-  - `calendar/`（月表示、濃淡、日詳細導線）
+  - `calendar/`（月表示、濃淡、日詳細導線。タブ切り替え状態管理を含む）
   - `day_detail/`（日単位の一覧と合計）
-  - `plan_editor/`（予定作成/編集）
+  - `plan_editor/`（予定作成/編集、週単位リスト表示）
   - `session_editor/`（実績入力/編集）
   - `settings/`（PB、表示設定、エクスポート）
+  - `splash/`（起動時スプラッシュ画面）
 
 ## 主要データモデル（概要）
 詳細なテーブル/制約は `SOFTWARE_DETAILED_DESIGN.md` に記載する。

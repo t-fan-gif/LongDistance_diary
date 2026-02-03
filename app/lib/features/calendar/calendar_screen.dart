@@ -9,36 +9,69 @@ import '../../core/db/app_database.dart';
 import '../plan_editor/weekly_plan_screen.dart';
 import '../settings/advanced_settings_screen.dart';
 
-class CalendarScreen extends ConsumerWidget {
+class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
+}
+
+class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _currentTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+    _tabController.addListener(() {
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedMonth = ref.watch(selectedMonthProvider);
     final calendarDataAsync = ref.watch(monthCalendarDataProvider(selectedMonth));
 
-    return DefaultTabController(
-      length: 3,
-      initialIndex: 0, // 「今日」タブをデフォルトに
-      child: Scaffold(
-        drawerEnableOpenDragGesture: false, // ナビゲーション衝突回避のためスワイプでのドロワー排除
-        appBar: AppBar(
-          title: Text(DateFormat('yyyy年MM月').format(selectedMonth)),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: '今日', icon: Icon(Icons.today)),
-              Tab(text: 'リスト', icon: Icon(Icons.view_list)),
-              Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () => context.push('/settings'),
-            ),
+    return Scaffold(
+      drawerEnableOpenDragGesture: false,
+      appBar: AppBar(
+        title: _currentTabIndex == 2
+            ? Text(DateFormat('yyyy年MM月').format(selectedMonth))
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.directions_run, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'Long Distance Diary',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: '今日', icon: Icon(Icons.today)),
+            Tab(text: 'リスト', icon: Icon(Icons.view_list)),
+            Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
           ],
         ),
-        drawer: Drawer(
+      ),
+      drawer: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -105,6 +138,7 @@ class CalendarScreen extends ConsumerWidget {
           ),
         ),
         body: TabBarView(
+          controller: _tabController,
           children: [
             // 今日の予定タブ
             const _TodayView(),
@@ -143,7 +177,6 @@ class CalendarScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -406,7 +439,7 @@ class _TodayView extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSectionHeader(context, '今日の予定'),
+        _buildSectionHeader(context, '今日の予定 (${DateFormat('M月d日').format(dateKey)})'),
         plansAsync.when(
           data: (plans) {
             if (plans.isEmpty) return const Card(child: ListTile(title: Text('予定はありません')));
@@ -434,8 +467,14 @@ class _TodayView extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('エラー: $e'),
         ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () => context.push('/plan/edit?date=${dateKey.toIso8601String().split('T')[0]}'),
+          icon: const Icon(Icons.event_note),
+          label: const Text('予定を追加する'),
+        ),
         const SizedBox(height: 24),
-        _buildSectionHeader(context, '今日の実績'),
+        _buildSectionHeader(context, '今日の実績 (${DateFormat('M月d日').format(dateKey)})'),
         sessionsAsync.when(
           data: (sessions) {
             if (sessions.isEmpty) return const Card(child: ListTile(title: Text('実績はありません')));
@@ -466,18 +505,12 @@ class _TodayView extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('エラー: $e'),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
         ElevatedButton.icon(
           onPressed: () => context.push('/session/new?date=${dateKey.toIso8601String().split('T')[0]}'),
           icon: const Icon(Icons.add),
           label: const Text('実績を入力する'),
           style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
-        ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: () => context.push('/plan/edit?date=${dateKey.toIso8601String().split('T')[0]}'),
-          icon: const Icon(Icons.event_note),
-          label: const Text('予定を追加する'),
         ),
       ],
     );
