@@ -1,0 +1,25 @@
+{
+    "name": "Long Distance Diary",
+    "short_name": "Diary",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/icon2.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon2.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
