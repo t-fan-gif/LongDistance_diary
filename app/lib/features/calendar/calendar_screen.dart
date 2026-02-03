@@ -19,6 +19,7 @@ class CalendarScreen extends ConsumerWidget {
 
     return DefaultTabController(
       length: 3,
+      initialIndex: 2, // 「今日」タブをデフォルトに
       child: Scaffold(
         drawerEnableOpenDragGesture: false, // ナビゲーション衝突回避のためスワイプでのドロワー排除
         appBar: AppBar(
@@ -26,7 +27,7 @@ class CalendarScreen extends ConsumerWidget {
           bottom: const TabBar(
             tabs: [
               Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
-              Tab(text: '1週間', icon: Icon(Icons.view_week)),
+              Tab(text: 'リスト', icon: Icon(Icons.view_list)),
               Tab(text: '今日', icon: Icon(Icons.today)),
             ],
           ),
@@ -47,15 +48,7 @@ class CalendarScreen extends ConsumerWidget {
                 title: const Text('トレーニング履歴'),
                 onTap: () {
                   Navigator.pop(context);
-                  context.push('/history');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.event_note),
-                title: const Text('トレーニング予定'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/plan/weekly');
+                  context.go('/history');
                 },
               ),
               ListTile(
@@ -63,7 +56,15 @@ class CalendarScreen extends ConsumerWidget {
                 title: const Text('トレーニング分析'),
                 onTap: () {
                   Navigator.pop(context);
-                  context.push('/analysis');
+                  context.go('/analysis');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.timer),
+                title: const Text('自己ベスト入力'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/settings/pb');
                 },
               ),
               const Divider(),
@@ -72,7 +73,7 @@ class CalendarScreen extends ConsumerWidget {
                 title: const Text('設定'),
                 onTap: () {
                   Navigator.pop(context);
-                  context.push('/settings');
+                  context.go('/settings');
                 },
               ),
             ],

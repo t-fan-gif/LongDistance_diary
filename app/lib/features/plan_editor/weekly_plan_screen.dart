@@ -73,7 +73,30 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
           itemCount: days.length,
           itemBuilder: (context, index) {
             final day = days[index];
-            return _WeeklyDayTile(day: day);
+            // 月が変わる時に月ヘッダーを表示
+            final showMonthHeader = index == 0 || 
+                days[index - 1].date.month != day.date.month;
+            
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showMonthHeader)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: Colors.teal.shade100,
+                    child: Text(
+                      '${day.date.month}月',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ),
+                _WeeklyDayTile(day: day),
+              ],
+            );
           },
         );
       },

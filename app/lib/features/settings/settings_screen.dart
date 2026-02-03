@@ -43,15 +43,6 @@ class SettingsScreen extends ConsumerWidget {
       ),
       body: ListView(
         children: [
-          _buildSectionHeader(context, '基本データ'),
-          ListTile(
-            leading: const Icon(Icons.fitness_center),
-            title: const Text('自己ベスト管理'),
-            subtitle: const Text('VDOTの計算とトレーニングペースの設定'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/pb'),
-          ),
-          const Divider(),
           _buildSectionHeader(context, '入力補助'),
           ListTile(
             leading: const Icon(Icons.label_outline),
