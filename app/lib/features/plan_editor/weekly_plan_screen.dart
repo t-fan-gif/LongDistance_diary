@@ -55,11 +55,16 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
 
   void _handleTabSelection() {
     if (widget.tabController?.index == 1 && mounted) {
-      _scrollToToday(animate: false); // アニメーションなしで即座にジャンプ
+      // タブ切り替え直後はレイアウトが確定していない場合があるため、フレーム終了を待つ
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _scrollToToday(animate: false);
+        }
+      });
     }
   }
 
-  void _scrollToToday({bool animate = true}) {
+  void _scrollToToday({bool animate = true, int retryCount = 0}) {
     final context = _todayKey.currentContext;
     if (context != null) {
       if (animate) {
@@ -75,10 +80,14 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
           alignment: 0.0,
         );
       }
-    } else {
-      // コンテキストがまだ無い場合は待機（データロード待ちなど）
-      // addPostFrameCallbackでの継続的なリトライは行わず、
-      // データのロード完了（build内でのref.listen）を待つ
+    } else if (retryCount < 10) {
+      // コンテキストがまだ無い場合は待機（データロード待ちやビルド待ち）
+      // 特に初回は時間がかかることがあるため、少し間隔を置いてリトライする
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && widget.tabController?.index == 1) {
+          _scrollToToday(animate: animate, retryCount: retryCount + 1);
+        }
+      });
     }
   }
 
@@ -98,11 +107,23 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     
     final weeklyAsync = ref.watch(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)));
 
+    // データのロードが完了した瞬間に、リストタブが表示されていればジャンプする
+    ref.listen(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)), (previous, next) {
+      if (next is AsyncData && widget.tabController?.index == 1) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollToToday(animate: false);
+          }
+        });
+      }
+    });
+
     final content = weeklyAsync.when(
       data: (days) {
         return ListView.builder(
           controller: _scrollController,
           itemCount: days.length,
+          cacheExtent: 5000, // 今日(14日目)が確実に出現するようにキャッシュ範囲を多めに確保
           itemBuilder: (context, index) {
             final day = days[index];
             // 月が変わる時に月ヘッダーを表示
@@ -127,10 +148,7 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
                     ),
                   ),
                 _WeeklyDayTile(
-                  key: day.date.year == DateTime.now().year && 
-                       day.date.month == DateTime.now().month && 
-                       day.date.day == DateTime.now().day 
-                       ? _todayKey : null,
+                  key: DateUtils.isSameDay(day.date, today) ? _todayKey : null,
                   day: day,
                 ),
               ],
