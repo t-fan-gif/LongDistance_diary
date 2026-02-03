@@ -182,18 +182,31 @@ flowchart TD
   G --> H
 ```
 
-## エクスポート（設計方針）
-- DBスキーマバージョンを持ち、JSONに `schema_version` を含める。
-- MVPは「読み出し（エクスポート）」から着手できるようにする。
+## エクスポート・インポート（データ同期）設計
 
-### JSONスキーマ（案）
+### 設計方針
+- DBスキーマバージョンを持ち、JSONに `schema_version` を含める。
+- インポート時は「マージ方式」を採用する。
+  - 既存データを削除せず、ID（UUID or Date）が一致するもののみを上書き更新し、それ以外は維持する。
+  - `insertOnConflictUpdate` (ON CONFLICT DO UPDATE) を活用。
+
+### 同期対象テーブル
+- `plans` (予定)
+- `sessions` (実績)
+- `personal_bests` (自己ベスト)
+- `menu_presets` (メニュープリセット)
+- `daily_plan_memos` (日毎のメモ)
+
+### JSONスキーマ (Version 2)
 ```json
 {
-  "schema_version": 1,
-  "exported_at": "2026-01-27T00:00:00Z",
+  "schema_version": 2,
+  "exported_at": "2026-02-03T00:00:00Z",
   "plans": [],
   "sessions": [],
   "personal_bests": [],
+  "menu_presets": [],
+  "daily_plan_memos": [],
   "settings": {}
 }
 ```

@@ -42,6 +42,7 @@ class WeeklyPlanScreen extends ConsumerStatefulWidget {
 class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
   late ScrollController _scrollController;
   final GlobalKey _todayKey = GlobalKey();
+  bool _isInitialized = false;
 
 
   @override
@@ -51,11 +52,6 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     
     // タブコントローラーのリスナー登録
     widget.tabController?.addListener(_handleTabSelection);
-
-    // 初回表示時に即座に位置を合わせる試み
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _scrollToToday(animate: false);
-    });
   }
 
   void _handleTabSelection() {
@@ -81,10 +77,9 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
         );
       }
     } else {
-      // コンテキストがまだ無い場合は次フレームで再試行
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _scrollToToday(animate: animate);
-      });
+      // コンテキストがまだ無い場合は待機（データロード待ちなど）
+      // addPostFrameCallbackでの継続的なリトライは行わず、
+      // データのロード完了（build内でのref.listen）を待つ
     }
   }
 
@@ -103,6 +98,18 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     final endDate = today.add(const Duration(days: 30));
     
     final weeklyAsync = ref.watch(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)));
+
+    // 初回ロード完了時にバックグラウンドで位置を合わせる
+    ref.listen(weeklyPlansProvider(DateTimeRange(start: startDate, end: endDate)), (previous, next) {
+      if (next is AsyncData && !_isInitialized) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollToToday(animate: false);
+            _isInitialized = true;
+          }
+        });
+      }
+    });
 
     final content = weeklyAsync.when(
       data: (days) {
