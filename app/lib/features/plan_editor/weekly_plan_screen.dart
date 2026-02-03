@@ -31,8 +31,9 @@ class DailyPlanData {
 }
 
 class WeeklyPlanScreen extends ConsumerStatefulWidget {
-  const WeeklyPlanScreen({super.key, this.isTab = true});
+  const WeeklyPlanScreen({super.key, this.isTab = true, this.tabController});
   final bool isTab;
+  final TabController? tabController;
 
   @override
   ConsumerState<WeeklyPlanScreen> createState() => _WeeklyPlanScreenState();
@@ -48,12 +49,20 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
     super.initState();
     _scrollController = ScrollController();
     
-    // ウィジェットの描画完了後に「今日」までスクロール
+    // タブコントローラーのリスナー登録
+    widget.tabController?.addListener(_handleTabSelection);
+
+    // 初回描画完了後にも一度実行
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // 少し待機してから実行することで、レイアウト確定を確実にする
       await Future.delayed(const Duration(milliseconds: 100));
-      _scrollToToday();
+      if (mounted) _scrollToToday();
     });
+  }
+
+  void _handleTabSelection() {
+    if (widget.tabController?.index == 1 && mounted) {
+      _scrollToToday();
+    }
   }
 
   void _scrollToToday() {
@@ -75,6 +84,7 @@ class _WeeklyPlanScreenState extends ConsumerState<WeeklyPlanScreen> {
 
   @override
   void dispose() {
+    widget.tabController?.removeListener(_handleTabSelection);
     _scrollController.dispose();
     super.dispose();
   }

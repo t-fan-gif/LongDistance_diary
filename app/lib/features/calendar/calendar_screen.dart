@@ -73,20 +73,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white), // Drawerアイコンなどを白に
-        title: const Text(
-          'Long Distance Diary',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                offset: Offset(0, 2),
-                blurRadius: 4,
-                color: Colors.black45,
-              ),
-            ],
+        toolbarHeight: 80, // 少し高さを広げて余白を確保
+        title: const Padding(
+          padding: EdgeInsets.only(top: 24), // 上部に余白を追加
+          child: Text(
+            'Long Distance Diary',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  offset: Offset(0, 2),
+                  blurRadius: 4,
+                  color: Colors.black45,
+                ),
+              ],
+            ),
           ),
         ),
         elevation: 0,
@@ -101,9 +105,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
               unselectedLabelColor: Colors.white70,
               indicatorColor: Colors.white,
               tabs: const [
-                Tab(text: '今日', icon: Icon(Icons.today)),
-                Tab(text: 'リスト', icon: Icon(Icons.view_list)),
-                Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month)),
+                Tab(text: '今日', icon: Icon(Icons.today, size: 18)),
+                Tab(text: 'リスト', icon: Icon(Icons.view_list, size: 18)),
+                Tab(text: 'カレンダー', icon: Icon(Icons.calendar_month, size: 18)),
               ],
             ),
           ),
@@ -181,7 +185,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
             // 今日の予定タブ
             const _TodayView(),
             // リストタブ
-            const WeeklyPlanScreen(),
+            WeeklyPlanScreen(tabController: _tabController),
             // カレンダータブ
             Column(
               children: [
