@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'export_usecase.dart';
 import 'import_usecase.dart';
 import 'settings_screen.dart';
-import '../../core/repos/export_repository.dart';
-import '../../core/services/service_providers.dart';
 
 class DataSettingsPage extends ConsumerStatefulWidget {
   const DataSettingsPage({super.key});
@@ -71,14 +69,8 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
               ListTile(
                 leading: const Icon(Icons.event_note, color: Colors.teal),
                 title: const Text('練習予定をエクスポート'),
-                subtitle: const Text('指定期間の予定のみをファイルに出力します'),
+                subtitle: const Text('指定期間の予定のみをファイルに出力します（ペースは除去されます）'),
                 onTap: _isProcessing ? null : () => _handlePlansOnlyExport(),
-              ),
-              ListTile(
-                leading: const Icon(Icons.download_for_offline, color: Colors.teal),
-                title: const Text('練習予定を読み込む'),
-                subtitle: const Text('予定ファイルを読み込みます。PBや実績は上書きされません'),
-                onTap: _isProcessing ? null : () => _handlePlansOnlyImport(),
               ),
             ],
           ),
@@ -192,40 +184,6 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
     setState(() => _isProcessing = true);
     try {
       await ref.read(exportUseCaseProvider).executePlansOnly(range.start, range.end);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('失敗しました: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
-    }
-  }
-
-  Future<void> _handlePlansOnlyImport() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('予定の読み込み'),
-        content: const Text('ファイルから練習予定を読み込みます。\n\n• 自己ベストや実績は影響を受けません\n• ゾーン指定の予定は、あなたPBに合わせてペースが自動計算されます'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('キャンセル')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('読み込む')),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    setState(() => _isProcessing = true);
-    try {
-      await ref.read(importUseCaseProvider).executePlansOnly();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('予定を読み込みました')),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

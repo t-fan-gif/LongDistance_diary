@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
-import '../services/training_pace_service.dart';
 
 /// データエクスポートのためのリポジトリ
 class ExportRepository {
@@ -82,7 +81,7 @@ class ExportRepository {
     });
   }
 
-  /// 予定のみをエクスポート（日付範囲指定）
+  /// 予定のみをエクスポート（日付範囲指定、ペースは除去しゾーンのみ保持）
   Future<String> exportPlansOnly(DateTime startDate, DateTime endDate) async {
     final start = DateTime(startDate.year, startDate.month, startDate.day);
     final end = DateTime(endDate.year, endDate.month, endDate.day).add(const Duration(days: 1));
@@ -95,6 +94,13 @@ class ExportRepository {
       ..where((t) => t.date.isBiggerOrEqualValue(start) & t.date.isSmallerThanValue(end)))
       .get();
 
+    // ペースを除去してゾーンのみ保持（選手PBで再計算させるため）
+    final strippedPlans = plans.map((e) {
+      final json = e.toJson();
+      json.remove('pace_sec_per_km'); // ペースを削除
+      return json;
+    }).toList();
+
     final data = {
       'schema_version': 2,
       'type': 'plans_only',
@@ -103,56 +109,11 @@ class ExportRepository {
         'start': startDate.toIso8601String(),
         'end': endDate.toIso8601String(),
       },
-      'plans': plans.map((e) => e.toJson()).toList(),
+      'plans': strippedPlans,
       'daily_plan_memos': memos.map((e) => e.toJson()).toList(),
     };
 
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert(data);
-  }
-
-  /// 予定のみをインポート（PB/セッションは上書きしない、ゾーンからペースを自動計算）
-  Future<void> importPlansOnly(String jsonString, TrainingPaceService paceService) async {
-    final Map<String, dynamic> data = json.decode(jsonString);
-
-    await _db.transaction(() async {
-      if (data['plans'] != null) {
-        for (final item in data['plans']) {
-          final plan = Plan.fromJson(item);
-          
-          // ゾーンが指定されている場合は、インポート先のPBに基づいてペースを計算
-          int? newPace = plan.pace;
-          if (plan.zone != null) {
-            final suggestedPace = await paceService.getSuggestedPaceForZone(
-              plan.zone!,
-              plan.activityType,
-            );
-            if (suggestedPace != null) {
-              newPace = suggestedPace;
-            }
-          }
-          
-          // ペースを更新した新しいPlanを作成して挿入
-          final updatedPlan = Plan(
-            id: plan.id,
-            date: plan.date,
-            menuName: plan.menuName,
-            distance: plan.distance,
-            pace: newPace,
-            zone: plan.zone,
-            reps: plan.reps,
-            note: plan.note,
-            activityType: plan.activityType,
-          );
-          
-          await _db.into(_db.plans).insertOnConflictUpdate(updatedPlan);
-        }
-      }
-      if (data['daily_plan_memos'] != null) {
-        for (final item in data['daily_plan_memos']) {
-          await _db.into(_db.dailyPlanMemos).insertOnConflictUpdate(DailyPlanMemo.fromJson(item));
-        }
-      }
-    });
   }
 }
