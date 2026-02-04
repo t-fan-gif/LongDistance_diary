@@ -156,17 +156,14 @@ final monthCalendarDataProvider =
   final Map<DateTime, double> dailyLoads = {};
   for (final session in [...pastSessions, ...sessions]) {
     final date = _normalizeDate(session.startedAt);
-    double load = 0;
-    if (session.load != null) {
-      load = session.load!;
-    } else {
-      final tPace = session.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-      load = (loadCalc.computeSessionRepresentativeLoad(
-        session,
-        thresholdPaceSecPerKm: tPace,
-        mode: loadMode,
-      ) ?? 0).toDouble();
-    }
+    final tPace = session.activityType == ActivityType.walking ? walkingTpace : runningTpace;
+    // 常に計算モードに応じて再計算（計算できない場合は保存値を使用）
+    final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
+      session,
+      thresholdPaceSecPerKm: tPace,
+      mode: loadMode,
+    );
+    final load = calculatedLoad?.toDouble() ?? session.load ?? 0;
     dailyLoads[date] = (dailyLoads[date] ?? 0) + load;
   }
 
@@ -190,16 +187,14 @@ final monthCalendarDataProvider =
     double dayLoad = 0;
     for (final s in daySessions) {
       if (s.status == SessionStatus.skipped) continue;
-      if (s.load != null) {
-        dayLoad += s.load!;
-      } else {
-        final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-        dayLoad += (loadCalc.computeSessionRepresentativeLoad(
-          s,
-          thresholdPaceSecPerKm: tPace,
-          mode: loadMode,
-        ) ?? 0).toDouble();
-      }
+      final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
+      // 常に計算モードに応じて再計算（計算できない場合は保存値を使用）
+      final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
+        s,
+        thresholdPaceSecPerKm: tPace,
+        mode: loadMode,
+      );
+      dayLoad += calculatedLoad?.toDouble() ?? s.load ?? 0;
     }
 
     // 日合計距離
