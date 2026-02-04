@@ -9,6 +9,7 @@ import '../../core/db/app_database.dart';
 import '../plan_editor/weekly_plan_screen.dart';
 import '../settings/advanced_settings_screen.dart';
 import '../settings/target_race_settings_screen.dart';
+import '../../core/services/vdot_calculator.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -650,12 +651,19 @@ class _TodayView extends ConsumerWidget {
                               final isWalking = race.raceType != null && 
                                 [PbEvent.w3000, PbEvent.w5000, PbEvent.w10000, PbEvent.w20km, PbEvent.w35km, PbEvent.w50km, PbEvent.wHalf, PbEvent.wFull]
                                   .contains(race.raceType);
+                              
+                              // 種目から距離を取得
+                              int? distanceM = race.distance;
+                              if (distanceM == null && race.raceType != null && race.raceType != PbEvent.other) {
+                                distanceM = VdotCalculator().getDistanceForEvent(race.raceType!);
+                              }
+                              
                               final dateString = race.date.toIso8601String().split('T')[0];
                               final query = <String, String>{
                                 'date': dateString,
                                 'menuName': race.name,
                                 'isRace': 'true',
-                                if (race.distance != null) 'distance': race.distance.toString(),
+                                if (distanceM != null && distanceM > 0) 'distance': distanceM.toString(),
                                 'activityType': isWalking ? 'walking' : 'running',
                               };
                               final uri = Uri(path: '/session/new', queryParameters: query);

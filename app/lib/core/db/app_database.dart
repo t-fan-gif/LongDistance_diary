@@ -36,9 +36,15 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(targetRaces);
           }
           if (from < 8) {
-            await m.addColumn(targetRaces, targetRaces.raceType);
-            await m.addColumn(targetRaces, targetRaces.distance);
-            await m.addColumn(sessions, sessions.isRace);
+            try {
+              await m.addColumn(targetRaces, targetRaces.raceType);
+            } catch (_) {}
+            try {
+              await m.addColumn(targetRaces, targetRaces.distance);
+            } catch (_) {}
+            try {
+              await m.addColumn(sessions, sessions.isRace);
+            } catch (_) {}
           }
           if (from < 9) {
             await m.addColumn(plans, plans.isRace);

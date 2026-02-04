@@ -147,7 +147,11 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
       await ref.read(loadCalculationModeProvider.notifier).setMode(_pendingMode!);
 
       // カレンダーデータをすべて無効化して再計算を促す
-      ref.invalidate(selectedMonthProvider);
+      final currentMonth = ref.read(selectedMonthProvider);
+      ref.invalidate(monthCalendarDataProvider(currentMonth));
+      // 前後の月も無効化（閲覧済みの場合のため）
+      ref.invalidate(monthCalendarDataProvider(DateTime(currentMonth.year, currentMonth.month - 1)));
+      ref.invalidate(monthCalendarDataProvider(DateTime(currentMonth.year, currentMonth.month + 1)));
 
       // 確認メッセージ
       if (mounted) {

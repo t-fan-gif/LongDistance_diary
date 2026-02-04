@@ -9,6 +9,7 @@ import '../calendar/calendar_providers.dart';
 import '../settings/advanced_settings_screen.dart';
 import '../../core/repos/target_race_repository.dart';
 import '../../core/db/db_providers.dart';
+import '../../core/services/vdot_calculator.dart';
 
 /// 選択された日付のプロバイダ
 final selectedDateProvider = StateProvider<DateTime?>((ref) => null);
@@ -226,11 +227,18 @@ class DayDetailScreen extends ConsumerWidget {
             final isWalking = race.raceType != null && 
               [PbEvent.w3000, PbEvent.w5000, PbEvent.w10000, PbEvent.w20km, PbEvent.w35km, PbEvent.w50km, PbEvent.wHalf, PbEvent.wFull]
                 .contains(race.raceType);
+            
+            // 種目から距離を取得（race.distanceがなければraceTypeから推定）
+            int? distanceM = race.distance;
+            if (distanceM == null && race.raceType != null && race.raceType != PbEvent.other) {
+              distanceM = VdotCalculator().getDistanceForEvent(race.raceType!);
+            }
+            
             final query = <String, String>{
               'date': dateString,
               'menuName': race.name,
               'isRace': 'true',
-              if (race.distance != null) 'distance': race.distance.toString(),
+              if (distanceM != null && distanceM > 0) 'distance': distanceM.toString(),
               'activityType': isWalking ? 'walking' : 'running',
             };
             final uri = Uri(path: '/session/new', queryParameters: query);
