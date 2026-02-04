@@ -51,6 +51,13 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   final _durationController = TextEditingController();
   final _restDurationController = TextEditingController();
   final _noteController = TextEditingController();
+
+  // レース詳細タイム用
+  final _hourController = TextEditingController();
+  final _minuteController = TextEditingController();
+  final _secondController = TextEditingController();
+  final _msController = TextEditingController();
+
   late FocusNode _paceFocusNode;
   late FocusNode _durationFocusNode;
   late FocusNode _distanceFocusNode;
@@ -168,6 +175,17 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           _status = session.status;
           _activityType = session.activityType;
           _isRace = session.isRace;
+
+          if (_isRace && session.durationMainSec != null) {
+            final totalSec = session.durationMainSec!;
+            final h = totalSec ~/ 3600;
+            final m = (totalSec % 3600) ~/ 60;
+            final s = totalSec % 60;
+            _hourController.text = h > 0 ? h.toString() : '';
+            _minuteController.text = m.toString();
+            _secondController.text = s.toString();
+            _msController.text = ''; // 保存されていないため空欄か0
+          }
         });
       }
     } finally {
@@ -230,6 +248,10 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     _durationController.dispose();
     _restDurationController.dispose();
     _noteController.dispose();
+    _hourController.dispose();
+    _minuteController.dispose();
+    _secondController.dispose();
+    _msController.dispose();
     _paceFocusNode.dispose();
     _durationFocusNode.dispose();
     _distanceFocusNode.dispose();
@@ -298,24 +320,6 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                     selected: {_activityType},
                     onSelectionChanged: (selected) {
                       setState(() => _activityType = selected.first);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // レース結果フラグ
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('レース結果として記録'),
-                    subtitle: const Text('ONにするとレース実績として集計されます'),
-                    secondary: const Icon(Icons.emoji_events),
-                    value: _isRace,
-                    onChanged: (val) {
-                      setState(() {
-                        _isRace = val;
-                        if (_isRace) {
-                          _templateController.text = 'レース'; // デフォルトで入れる
-                        }
-                      });
                     },
                   ),
                   const SizedBox(height: 16),
@@ -421,7 +425,54 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   ],
                   const SizedBox(height: 16),
                   
-                  // 平均ペース（ここに移動）
+                  const SizedBox(height: 16),
+                  
+                  // レース用：詳細タイム入力
+                  if (_isRace) ...[
+                    _buildSectionTitle('レースタイム (時:分:秒.ミリ秒)'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _hourController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: '時', border: OutlineInputBorder()),
+                            onChanged: (_) => _calculateFromRaceTime(),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _minuteController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: '分', border: OutlineInputBorder()),
+                            onChanged: (_) => _calculateFromRaceTime(),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _secondController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: '秒', border: OutlineInputBorder()),
+                            onChanged: (_) => _calculateFromRaceTime(),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _msController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: 'ms', border: OutlineInputBorder()),
+                            onChanged: (_) => _calculateFromRaceTime(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 平均ペース
                   _buildSectionTitle('平均ペース'),
                   Row(
                     children: [
@@ -430,25 +481,31 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                           controller: _paceController,
                           focusNode: _paceFocusNode,
                           keyboardType: TextInputType.datetime,
-                          decoration: const InputDecoration(
+                          readOnly: _isRace, // レース時は自動計算のみ
+                          decoration: InputDecoration(
                             labelText: 'ペース',
                             hintText: '4:00',
                             suffixText: '/km',
-                            helperText: '例: 430 -> 4:30',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            helperText: _isRace ? 'タイムと距離から自動計算されます' : '例: 430 -> 4:30',
+                            border: const OutlineInputBorder(),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
+                          onChanged: (_) {
+                            if (!_isRace) _estimateZoneAction();
+                          },
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        onPressed: () => _adjustPace(-5),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () => _adjustPace(5),
-                      ),
+                      if (!_isRace) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: () => _adjustPace(-5),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () => _adjustPace(5),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -515,19 +572,23 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 時間（分）
-                  _buildSectionTitle('時間（分）'),
-                  TextFormField(
-                    controller: _durationController,
-                    focusNode: _durationFocusNode,
-                    decoration: const InputDecoration(
-                      hintText: '例: 60',
-                      border: OutlineInputBorder(),
-                      suffixText: '分',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
                   const SizedBox(height: 16),
+
+                  // 時間（分） - レース以外で表示
+                  if (!_isRace) ...[
+                    _buildSectionTitle('時間（分）'),
+                    TextFormField(
+                      controller: _durationController,
+                      focusNode: _durationFocusNode,
+                      decoration: const InputDecoration(
+                        hintText: '例: 60',
+                        border: OutlineInputBorder(),
+                        suffixText: '分',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // レスト
                   _buildSectionTitle('レスト'),
@@ -604,6 +665,33 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     );
   }
 
+  void _calculateFromRaceTime() {
+    final h = int.tryParse(_hourController.text) ?? 0;
+    final m = int.tryParse(_minuteController.text) ?? 0;
+    final s = int.tryParse(_secondController.text) ?? 0;
+    final ms = int.tryParse(_msController.text) ?? 0;
+
+    final totalSec = h * 3600 + m * 60 + s + ms / 1000.0;
+    final distKm = double.tryParse(_distanceController.text) ?? 0;
+
+    if (distKm > 0 && totalSec > 0) {
+      final paceSecPerKm = (totalSec / distKm).round();
+      _paceController.text = _formatPaceForInput(paceSecPerKm);
+      _estimateZoneAction();
+    }
+  }
+
+  Future<void> _estimateZoneAction() async {
+    final paceSec = _parsePaceInput(_paceController.text);
+    if (paceSec != null) {
+      final service = ref.read(trainingPaceServiceProvider);
+      final zone = await service.estimateZoneFromPace(paceSec, _activityType);
+      if (zone != null) {
+        setState(() => _selectedZone = zone);
+      }
+    }
+  }
+
   void _adjustPace(int deltaSec) {
     final current = _parsePaceInput(_paceController.text);
     if (current != null) {
@@ -646,7 +734,13 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
       // 時間を秒に変換
       int? durationSec;
-      if (_durationController.text.isNotEmpty) {
+      if (_isRace) {
+        final h = int.tryParse(_hourController.text) ?? 0;
+        final m = int.tryParse(_minuteController.text) ?? 0;
+        final s = int.tryParse(_secondController.text) ?? 0;
+        final ms = int.tryParse(_msController.text) ?? 0;
+        durationSec = (h * 3600 + m * 60 + s + ms / 1000.0).round();
+      } else if (_durationController.text.isNotEmpty) {
         durationSec = int.parse(_durationController.text) * 60;
       }
 

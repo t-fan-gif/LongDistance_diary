@@ -147,12 +147,33 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
               distance = vdotCalc.getDistanceForEvent(target.raceType!);
             }
           }
+          
+          // 種目からペースを推定（任意だが、あったほうが親切）
+          int? pace;
+          // if (distance != null) { ... }
+
           _addNewRow(
             menuName: target.name,
             distance: distance,
+            pace: pace,
             isRace: true,
             note: target.note,
           );
+
+          // 【新規追加】自動生成されたレース予定をその場で保存する
+          final input = PlanInput(
+            menuName: target.name,
+            distance: distance,
+            pace: pace,
+            isRace: true,
+            note: target.note,
+          );
+          await repo.updatePlansForDate(widget.date, [input]);
+          
+          // カレンダー等を更新
+          final monthDate = DateTime(widget.date.year, widget.date.month);
+          ref.invalidate(monthCalendarDataProvider(monthDate));
+          ref.invalidate(dayPlansProvider(widget.date));
         } else {
           _addNewRow();
         }
@@ -595,31 +616,28 @@ class _PlanRowItem extends StatelessWidget {
                 onChanged: (_) => onChanged(),
               ),
             ),
+            const Spacer(),
             if (!row.isRace)
-              SizedBox(
-                width: 80, // 固定幅にして入力を安定させる
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('レスト', style: TextStyle(fontSize: 12)),
-                    Checkbox(
-                      value: row.isRest,
-                      visualDensity: VisualDensity.compact,
-                      onChanged: (v) {
-                        row.isRest = v ?? false;
-                        if (row.isRest) {
-                          row.menuController.text = 'レスト';
-                          row.isRace = false;
-                        } else {
-                          row.menuController.text = '';
-                        }
-                        onChanged();
-                      },
-                    ),
-                  ],
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('レスト', style: TextStyle(fontSize: 12)),
+                  Checkbox(
+                    value: row.isRest,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (v) {
+                      row.isRest = v ?? false;
+                      if (row.isRest) {
+                        row.menuController.text = 'レスト';
+                        row.isRace = false;
+                      } else {
+                        row.menuController.text = '';
+                      }
+                      onChanged();
+                    },
+                  ),
+                ],
               ),
-            const SizedBox(width: 4),
             // レース項目
             if (row.isRace)
               Container(
@@ -630,7 +648,6 @@ class _PlanRowItem extends StatelessWidget {
                 ),
                 child: const Text('レース', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange)),
               ),
-            const Spacer(),
             IconButton(
               onPressed: onDelete,
               icon: const Icon(Icons.delete_outline, color: Colors.grey),

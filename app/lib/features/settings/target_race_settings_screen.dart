@@ -298,7 +298,7 @@ class _RaceEditDialogState extends State<_RaceEditDialog> {
     _nameController = TextEditingController(text: widget.race?.name ?? '');
     _noteController = TextEditingController(text: widget.race?.note ?? '');
     _distanceController = TextEditingController(text: widget.race?.distance?.toString() ?? '');
-    _selectedDate = widget.race?.date ?? DateTime.now().add(const Duration(days: 30));
+    _selectedDate = widget.race?.date ?? DateTime.now();
     _isMain = widget.isMain;
     _selectedType = widget.race?.raceType;
   }
@@ -357,7 +357,7 @@ class _RaceEditDialogState extends State<_RaceEditDialog> {
                  const DropdownMenuItem(value: null, child: Text('種目を選択')),
                  ...PbEvent.values.map((e) => DropdownMenuItem(
                    value: e,
-                   child: Text(e == PbEvent.other ? 'その他（距離入力）' : e.name.toUpperCase()),
+                   child: Text(e == PbEvent.other ? 'その他（距離入力）' : e.label),
                  )),
               ],
               onChanged: (val) {
