@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'routing/app_router.dart';
 
-void main() {
+void main() async {
+  await initializeDateFormatting('ja');
   runApp(const ProviderScope(child: LongDistanceDiaryApp()));
 }
 
