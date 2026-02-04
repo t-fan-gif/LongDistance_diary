@@ -38,11 +38,12 @@ class AnalysisScreen extends ConsumerWidget {
 
           for (final s in sessions) {
             final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
-            final load = loadCalc.computeSessionRepresentativeLoad(
+            final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
               s,
               thresholdPaceSecPerKm: tPace,
               mode: loadMode,
-            ) ?? 0;
+            );
+            final load = (calculatedLoad?.toDouble() ?? s.load ?? 0).round();
             final distKm = (s.distanceMainM ?? 0) / 1000.0;
             
             // 月キー: yyyy-MM

@@ -77,12 +77,10 @@ class DayDetailScreen extends ConsumerWidget {
               double dayLoad = 0;
               for (final s in sessions) {
                 if (s.status == SessionStatus.skipped) continue;
-                if (s.load != null) {
-                  dayLoad += s.load!;
-                } else {
-                  final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
-                  dayLoad += (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace, mode: loadMode) ?? 0).toDouble();
-                }
+                final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
+                // 常に計算モードに応じて再計算（計算できない場合は保存値を使用）
+                final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace, mode: loadMode);
+                dayLoad += calculatedLoad?.toDouble() ?? s.load ?? 0;
               }
 
               return Container(
@@ -345,7 +343,7 @@ class _SessionTile extends ConsumerWidget {
             Text('${(session.distanceMainM! / 1000).toStringAsFixed(1)}km '),
           if (session.paceSecPerKm != null) Text('${_formatPace(session.paceSecPerKm!)} '),
           if (session.zone != null) Text('@${session.zone!.name} '),
-          if ((session.load ?? load) != null) Text('負荷: ${(session.load ?? load)!.round()}'),
+          if ((load ?? session.load) != null) Text('負荷: ${(load ?? session.load)!.round()}'),
         ],
       ),
       trailing: const Icon(Icons.chevron_right),

@@ -59,7 +59,8 @@ class HistoryListScreen extends ConsumerWidget {
                           thresholdPaceSecPerKm: tPace,
                           mode: loadMode,
                         );
-                        return Text('負荷: ${load ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold));
+                        final displayLoad = load?.toDouble() ?? session.load ?? 0;
+                        return Text('負荷: ${displayLoad.round()}', style: const TextStyle(fontWeight: FontWeight.bold));
                     }),
                     if (session.paceSecPerKm != null)
                        Text(_formatPace(session.paceSecPerKm!), style: const TextStyle(fontSize: 12, color: Colors.grey)),

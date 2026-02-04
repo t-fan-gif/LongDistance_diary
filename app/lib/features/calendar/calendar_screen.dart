@@ -741,7 +741,7 @@ class _TodayView extends ConsumerWidget {
                     leading: Text(rpeEmoji, style: const TextStyle(fontSize: 24)),
                     title: Text(s.templateText),
                     subtitle: Text(
-                      '${(s.distanceMainM ?? 0) / 1000}km • ${_formatPace(s.paceSecPerKm)} • 負荷: ${(s.load ?? load ?? 0).round()}',
+                      '${(s.distanceMainM ?? 0) / 1000}km • ${_formatPace(s.paceSecPerKm)} • 負荷: ${(load ?? s.load ?? 0).round()}',
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/session/${s.id}'),
