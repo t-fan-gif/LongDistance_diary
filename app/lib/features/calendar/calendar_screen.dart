@@ -163,6 +163,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                   }
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('ターゲットレース'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/settings/target-race');
+                  }
+                },
+              ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.school),
