@@ -10,15 +10,17 @@ import '../day_detail/day_detail_screen.dart';
 import '../calendar/calendar_providers.dart';
 
 final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTimeRange>((ref, range) async {
-  final repo = ref.watch(planRepositoryProvider);
+  final planRepo = ref.watch(planRepositoryProvider);
+  final sessionRepo = ref.watch(sessionRepositoryProvider);
   final results = <DailyPlanData>[];
   
   final daysCount = range.end.difference(range.start).inDays + 1;
   for (int i = 0; i < daysCount; i++) {
     final date = range.start.add(Duration(days: i));
-    final plans = await repo.listPlansByDate(date);
-    final memo = await repo.getDailyMemo(date);
-    results.add(DailyPlanData(date, plans, memo?.note));
+    final plans = await planRepo.listPlansByDate(date);
+    final memo = await planRepo.getDailyMemo(date);
+    final sessions = await sessionRepo.listSessionsByDate(date);
+    results.add(DailyPlanData(date, plans, memo?.note, sessions));
   }
   return results;
 });
@@ -27,7 +29,11 @@ class DailyPlanData {
   final DateTime date;
   final List<Plan> plans;
   final String? memo;
-  DailyPlanData(this.date, this.plans, this.memo);
+  final List<Session> sessions;
+  DailyPlanData(this.date, this.plans, this.memo, this.sessions);
+  
+  bool get hasSessions => sessions.isNotEmpty;
+  bool get hasPlansOnly => plans.isNotEmpty && sessions.isEmpty;
 }
 
 class WeeklyPlanScreen extends ConsumerStatefulWidget {
@@ -230,10 +236,29 @@ class _WeeklyDayTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (day.plans.isEmpty && (day.memo == null || day.memo!.isEmpty))
+                  if (day.plans.isEmpty && day.sessions.isEmpty && (day.memo == null || day.memo!.isEmpty))
                     const Text('未定', style: TextStyle(color: Colors.grey, fontSize: 13))
                   else ...[
-                    ...day.plans.map((p) => Padding(
+                    // 実績（Session）を先に表示（濃い色）
+                    ...day.sessions.map((s) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle, size: 14, color: Colors.teal),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              _formatSessionText(s),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                    // 予定（Plan）を薄い色で表示（実績がない場合のみ）
+                    if (!day.hasSessions)
+                      ...day.plans.map((p) => Padding(
                       padding: const EdgeInsets.only(bottom: 2),
                       child: Row(
                         children: [
@@ -248,7 +273,11 @@ class _WeeklyDayTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               _formatPlanText(p),
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                fontSize: 13, 
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade600, // 予定は薄い色
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -285,6 +314,21 @@ class _WeeklyDayTile extends StatelessWidget {
       final m = p.pace! ~/ 60;
       final s = p.pace! % 60;
       parts.add('@$m:${s.toString().padLeft(2, '0')}');
+    }
+    return parts.join(' ');
+  }
+
+  String _formatSessionText(Session s) {
+    if (s.templateText == 'レスト') return 'レスト';
+    final parts = <String>[s.templateText];
+    if (s.distanceMainM != null && s.distanceMainM! > 0) {
+      final km = (s.distanceMainM! / 1000).toStringAsFixed(1);
+      parts.add('${km}km');
+    }
+    if (s.paceSecPerKm != null) {
+      final m = s.paceSecPerKm! ~/ 60;
+      final sec = s.paceSecPerKm! % 60;
+      parts.add('@$m:${sec.toString().padLeft(2, '0')}');
     }
     return parts.join(' ');
   }

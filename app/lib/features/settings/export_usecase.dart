@@ -29,4 +29,13 @@ class ExportUseCase {
     // プラットフォームに応じた保存・共有処理
     await FileHelper.saveAndShare(jsonString, fileName);
   }
+
+  /// 予定のみをエクスポート（日付範囲指定）
+  Future<void> executePlansOnly(DateTime startDate, DateTime endDate) async {
+    final jsonString = await _repo.exportPlansOnly(startDate, endDate);
+    final startStr = '${startDate.month}_${startDate.day}';
+    final endStr = '${endDate.month}_${endDate.day}';
+    final fileName = 'plans_${startStr}_to_${endStr}.json';
+    await FileHelper.saveAndShare(jsonString, fileName);
+  }
 }

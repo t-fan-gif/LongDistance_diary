@@ -85,9 +85,9 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
   int get _totalDistance {
     return _rows.fold(0, (sum, row) {
       if (row.isRest) return sum;
-      final dist = int.tryParse(row.distanceController.text) ?? 0;
+      final dist = double.tryParse(row.distanceController.text) ?? 0;
       final reps = int.tryParse(row.repsController.text) ?? 1;
-      final distM = row.isKm ? dist * 1000 : dist;
+      final distM = row.isKm ? (dist * 1000).round() : dist.round();
       return sum + (distM * reps);
     });
   }
@@ -252,6 +252,21 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
   }
 
   Future<void> _savePlans() async {
+    // 有効な行があるかチェック（メニュー名が入力されているか、レストが選択されているか）
+    final hasValidRow = _rows.any((row) => 
+      row.isRest || row.menuController.text.trim().isNotEmpty
+    );
+    
+    if (!hasValidRow) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('メニュー名を入力するか、レストを選択してください'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final inputs = <PlanInput>[];
@@ -262,8 +277,8 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
         }
         if (menuName.isEmpty) continue;
 
-        final distVal = int.tryParse(row.distanceController.text) ?? 0;
-        final distM = row.isKm ? distVal * 1000 : distVal;
+        final distVal = double.tryParse(row.distanceController.text) ?? 0;
+        final distM = row.isKm ? (distVal * 1000).round() : distVal.round();
         final paceSec = _parsePace(row.paceController.text);
         final reps = int.tryParse(row.repsController.text) ?? 1;
 
@@ -282,10 +297,40 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
       await repo.updatePlansForDate(widget.date, inputs);
       await repo.updateDailyMemo(widget.date, _dailyMemoController.text.trim());
 
+      // レストが含まれている場合は自動で実績（Session）を作成
+      final hasRest = _rows.any((row) => row.isRest);
+      if (hasRest) {
+        final sessionRepo = ref.read(sessionRepositoryProvider);
+        // 既存のレストセッションがあるかチェック
+        final existingSessions = await sessionRepo.listSessionsByDate(widget.date);
+        final hasRestSession = existingSessions.any((s) => s.templateText == 'レスト');
+        
+        if (!hasRestSession) {
+          await sessionRepo.createSession(
+            startedAt: widget.date,
+            templateText: 'レスト',
+            status: SessionStatus.done,
+            distanceMainM: 0,
+            rpeValue: 0,
+            note: 'レスト（自動作成）',
+          );
+        }
+      }
+
       final monthDate = DateTime(widget.date.year, widget.date.month);
       ref.invalidate(monthCalendarDataProvider(monthDate));
       ref.invalidate(dayPlansProvider(widget.date));
       ref.invalidate(daySessionsProvider(widget.date));
+      
+      // 保存成功時のフィードバック
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('予定を保存しました'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -516,7 +561,7 @@ class _PlanRowItem extends StatelessWidget {
                 flex: 3,
                 child: TextFormField(
                   controller: row.distanceController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: '距離',
                     border: OutlineInputBorder(),
