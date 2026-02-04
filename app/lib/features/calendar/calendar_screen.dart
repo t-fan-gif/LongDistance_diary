@@ -423,22 +423,37 @@ class _CalendarCell extends StatelessWidget {
             // レースデイマーカー
             Consumer(
               builder: (context, ref, child) {
-                final racesAsync = ref.watch(upcomingRacesProvider);
+                final racesAsync = ref.watch(allTargetRacesProvider);
+                final planRace = dayData.plans.where((p) => p.isRace).firstOrNull;
+
                 return racesAsync.maybeWhen(
                   data: (races) {
-                    final race = races.isEmpty ? null : races.firstWhere(
-                      (r) => r.date.year == dayData.date.year && r.date.month == dayData.date.month && r.date.day == dayData.date.day,
-                      orElse: () => races.first, // Dummy, will be checked by null
-                    );
-                    final exists = races.any((r) => r.date.year == dayData.date.year && r.date.month == dayData.date.month && r.date.day == dayData.date.day);
-                    if (!exists) return const SizedBox.shrink();
+                    final target = races.where((r) => 
+                      r.date.year == dayData.date.year && 
+                      r.date.month == dayData.date.month && 
+                      r.date.day == dayData.date.day
+                    ).firstOrNull;
+
+                    if (target == null && planRace == null) return const SizedBox.shrink();
+
+                    final displayName = target?.name ?? planRace!.menuName;
+                    final isMain = target?.isMain ?? false;
+                    final isPlanRace = target == null && planRace != null;
+                    
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(4), bottomRight: Radius.circular(4)),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: isMain ? Colors.orange : (isPlanRace ? Colors.orange.shade300 : Colors.teal.shade300),
+                        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(0), bottomRight: Radius.circular(0)),
                       ),
-                      child: const Text('🏁', style: TextStyle(fontSize: 8)),
+                      child: Text(
+                        displayName,
+                        style: const TextStyle(fontSize: 7, color: Colors.white, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
                     );
                   },
                   orElse: () => const SizedBox.shrink(),
@@ -583,96 +598,96 @@ class _TodayView extends ConsumerWidget {
 
         _buildSectionHeader(context, '今日の予定 (${DateFormat('M月d日').format(dateKey)})'),
         
-        // 今日のレースがあるかチェックして表示
-        racesAsync.maybeWhen(
-           data: (races) {
-             final todaysRace = races.isEmpty ? null : races.firstWhere(
-               (r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day,
-               orElse: () => races.first, // Dummy
-             );
-             final exists = races.any((r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day);
-             
-             if (!exists) return const SizedBox.shrink();
-             
-             // 実際のレースオブジェクト取得（firstWhereのダミー対策）
-             final race = races.firstWhere((r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day);
+        // レースと予定を統合して表示
+        Consumer(
+          builder: (context, ref, child) {
+            final plansAsync = ref.watch(dayPlansProvider(dateKey));
+            final racesAsync = ref.watch(allTargetRacesProvider);
 
-             return Card(
-               color: Colors.orange.shade50,
-               elevation: 2,
-               margin: const EdgeInsets.only(bottom: 8),
-               child: ListTile(
-                 leading: const Icon(Icons.emoji_events, color: Colors.orange, size: 32),
-                 title: Text(race.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                 subtitle: Text(
-                   race.raceType != null 
-                     ? (race.raceType == PbEvent.other && race.distance != null ? '${race.distance}m' : race.raceType!.name.toUpperCase())
-                     : 'レース当日',
-                 ),
-                 trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                       IconButton(
-                        icon: const Icon(Icons.directions_run),
-                        tooltip: 'レース結果を入力',
-                        onPressed: () {
-                          // レース結果入力へ遷移
-                          final dateString = race.date.toIso8601String().split('T')[0];
-                          final query = <String, String>{
-                            'date': dateString,
-                            'menuName': race.name,
-                            'isRace': 'true', // レースフラグ
-                            if (race.distance != null) 'distance': race.distance.toString(),
-                            'activityType': 'running', 
-                          };
-                          final uri = Uri(path: '/session/new', queryParameters: query);
-                          context.push(uri.toString());
-                        },
-                      ),
-                    ],
-                  ),
-               ),
-             );
-           },
-           orElse: () => const SizedBox.shrink(),
-        ),
+            return racesAsync.when(
+              data: (races) {
+                final race = races.isEmpty ? null : races.where(
+                  (r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day
+                ).firstOrNull;
 
-        plansAsync.when(
-          data: (plans) {
-            // レースがある場合は「予定はありません」を非表示にする
-            // racesAsyncのデータを確認（少し非効率だが簡便に実装）
-            final hasRace = racesAsync.maybeWhen(
-              data: (races) => races.any((r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day),
-              orElse: () => false,
-            );
+                return plansAsync.when(
+                  data: (plans) {
+                    final List<Widget> items = [];
 
-            if (plans.isEmpty) {
-              if (hasRace) return const SizedBox.shrink(); // レースがあるなら「予定なし」は出さない
-              return const Card(child: ListTile(title: Text('予定はありません')));
-            }
-            return Column(
-              children: plans.map((p) => Card(
-                child: ListTile(
-                  title: Text(p.menuName),
-                  subtitle: Text(_formatPlanSubtitle(p)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                       IconButton(
-                        icon: const Icon(Icons.directions_run),
-                        tooltip: '実績にする',
-                        onPressed: () => _copyToSession(context, p),
-                      ),
-                      const Icon(Icons.chevron_right),
-                    ],
-                  ),
-                  onTap: () => context.push('/plan/edit?date=${dateKey.toIso8601String().split('T')[0]}'),
-                ),
-              )).toList(),
+                    // 1. レースがあれば最初に出す
+                    if (race != null) {
+                      items.add(Card(
+                        color: Colors.orange.shade100,
+                        elevation: 3,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: const Text('🏁', style: TextStyle(fontSize: 28)),
+                          title: Text(race.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          subtitle: Text(
+                            race.raceType != null 
+                              ? '本日開催: ${race.raceType == PbEvent.other && race.distance != null ? '${race.distance}m' : race.raceType!.name.toUpperCase()}'
+                              : '本日開催: レース',
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.directions_run, size: 32, color: Colors.orange),
+                            tooltip: 'レース結果を入力',
+                            onPressed: () {
+                              final dateString = race.date.toIso8601String().split('T')[0];
+                              final query = <String, String>{
+                                'date': dateString,
+                                'menuName': race.name,
+                                'isRace': 'true',
+                                if (race.distance != null) 'distance': race.distance.toString(),
+                                'activityType': 'running',
+                              };
+                              final uri = Uri(path: '/session/new', queryParameters: query);
+                              context.push(uri.toString());
+                            },
+                          ),
+                        ),
+                      ));
+                    }
+
+                    // 2. 通常の予定
+                    if (plans.isEmpty && race == null) {
+                       items.add(const Card(child: ListTile(title: Text('予定はありません'))));
+                    } else {
+                       items.addAll(plans.map((p) {
+                         final isRacePlan = p.isRace;
+                         return Card(
+                           color: isRacePlan ? Colors.orange.shade50 : null,
+                           elevation: isRacePlan ? 2 : 1,
+                           child: ListTile(
+                             leading: isRacePlan ? const Text('🎯', style: TextStyle(fontSize: 24)) : null,
+                             title: Text(p.menuName, style: TextStyle(fontWeight: isRacePlan ? FontWeight.bold : FontWeight.normal)),
+                             subtitle: Text(_formatPlanSubtitle(p)),
+                             trailing: Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 IconButton(
+                                   icon: Icon(Icons.directions_run, color: isRacePlan ? Colors.orange : null),
+                                   tooltip: '実績にする',
+                                   onPressed: () => _copyToSession(context, p),
+                                 ),
+                                 const Icon(Icons.chevron_right),
+                               ],
+                             ),
+                             onTap: () => context.push('/plan/edit?date=${dateKey.toIso8601String().split('T')[0]}'),
+                           ),
+                         );
+                       }));
+                    }
+
+                    return Column(children: items);
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Text('予定エラー: $e'),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('レースエラー: $e'),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('エラー: $e'),
         ),
         const SizedBox(height: 12),
         TextButton.icon(
@@ -768,25 +783,25 @@ class _TodayView extends ConsumerWidget {
     return Card(
       color: isMain ? Colors.amber.shade50 : Colors.teal.shade50,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           children: [
-            Text(isMain ? '🏁' : '🎯', style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
+            Text(isMain ? '🏁' : '🎯', style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 12, color: isMain ? Colors.orange.shade900 : Colors.teal.shade900, fontWeight: FontWeight.bold)),
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                  Text(label, style: TextStyle(fontSize: 10, color: isMain ? Colors.orange.shade900 : Colors.teal.shade900, fontWeight: FontWeight.bold)),
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text('あと', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                Text('$days日', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: days == 0 ? Colors.red : (days <= 7 ? Colors.orange : Colors.teal))),
+                const Text('あと', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                Text('$days日', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: days == 0 ? Colors.red : (days <= 7 ? Colors.orange : Colors.teal))),
               ],
             ),
           ],

@@ -8,11 +8,6 @@ import '../../core/domain/enums.dart'; // 追加
 import '../../core/repos/target_race_repository.dart';
 import '../calendar/calendar_providers.dart';
 
-/// TargetRaceRepository プロバイダ
-final targetRaceRepositoryProvider = Provider<TargetRaceRepository>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return TargetRaceRepository(db);
-});
 
 /// 全ターゲットレース プロバイダ
 final allTargetRacesProvider = FutureProvider<List<TargetRace>>((ref) async {

@@ -29,6 +29,7 @@ class Plans extends Table {
   TextColumn get activityType => textEnum<ActivityType>().withDefault(const Constant('running'))();
   
   TextColumn get note => text().nullable()();
+  BoolColumn get isRace => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

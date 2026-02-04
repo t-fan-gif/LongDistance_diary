@@ -163,6 +163,8 @@ class VdotCalculator {
       case PbEvent.w20km: return 20000;
       case PbEvent.w35km: return 35000;
       case PbEvent.w50km: return 50000;
+      case PbEvent.wHalf: return 21097;
+      case PbEvent.wFull: return 42195;
       case PbEvent.other: return 0; // その他の場合はとりあえず0（VDOT計算には使えない）
     }
   }

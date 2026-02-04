@@ -37,11 +37,40 @@ class PersonalBestSettingsPage extends ConsumerWidget {
             separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               final pb = pbs[index];
-              return ListTile(
-                title: Text(_getEventName(pb.event)),
-                subtitle: Text(_formatTime(pb.timeMs)),
-                trailing: const Icon(Icons.edit),
-                onTap: () => _showPbEditor(context, pb),
+              return Dismissible(
+                key: Key('pb_${pb.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                confirmDismiss: (direction) async {
+                  return await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('削除の確認'),
+                      content: Text('${pb.event.label} の記録を削除しますか？'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('キャンセル')),
+                        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('削除', style: TextStyle(color: Colors.red))),
+                      ],
+                    ),
+                  ) ?? false;
+                },
+                onDismissed: (direction) async {
+                  await ref.read(personalBestRepositoryProvider).deletePersonalBest(pb.id);
+                  ref.invalidate(personalBestsProvider);
+                  ref.invalidate(runningThresholdPaceProvider);
+                  ref.invalidate(walkingThresholdPaceProvider);
+                },
+                child: ListTile(
+                  title: Text(pb.event.label),
+                  subtitle: Text(_formatTime(pb.timeMs)),
+                  trailing: const Icon(Icons.edit),
+                  onTap: () => _showPbEditor(context, pb),
+                ),
               );
             },
           );
@@ -62,26 +91,6 @@ class PersonalBestSettingsPage extends ConsumerWidget {
       isScrollControlled: true,
       builder: (context) => _PbEditorSheet(existingPb: pb),
     );
-  }
-
-  String _getEventName(PbEvent event) {
-    switch (event) {
-      case PbEvent.m800: return '800m';
-      case PbEvent.m1500: return '1500m';
-      case PbEvent.m3000: return '3000m';
-      case PbEvent.m3000sc: return '3000mSC';
-      case PbEvent.m5000: return '5000m';
-      case PbEvent.m10000: return '10000m';
-      case PbEvent.half: return 'ハーフマラソン';
-      case PbEvent.full: return 'フルマラソン';
-      case PbEvent.w3000: return '3000m競歩';
-      case PbEvent.w5000: return '5000m競歩';
-      case PbEvent.w10000: return '10000m競歩';
-      case PbEvent.w20km: return '20km競歩';
-      case PbEvent.w35km: return '35km競歩';
-      case PbEvent.w50km: return '50km競歩';
-      case PbEvent.other: return 'その他'; // 追加
-    }
   }
 
   String _formatTime(int ms) {
@@ -195,7 +204,7 @@ class _PbEditorSheetState extends ConsumerState<_PbEditorSheet> {
                 })
                 .map((e) => DropdownMenuItem(
                       value: e,
-                      child: Text(_getEventName(e)),
+                      child: Text(e.label),
                     ))
                 .toList(),
             onChanged: (value) {
@@ -261,27 +270,7 @@ class _PbEditorSheetState extends ConsumerState<_PbEditorSheet> {
   }
 
   bool _needsHour(PbEvent event) {
-    return event == PbEvent.half || event == PbEvent.full || event == PbEvent.w20km || event == PbEvent.w35km || event == PbEvent.w50km;
-  }
-
-  String _getEventName(PbEvent event) {
-    switch (event) {
-      case PbEvent.m800: return '800m';
-      case PbEvent.m1500: return '1500m';
-      case PbEvent.m3000: return '3000m';
-      case PbEvent.m3000sc: return '3000mSC';
-      case PbEvent.m5000: return '5000m';
-      case PbEvent.m10000: return '10000m';
-      case PbEvent.half: return 'ハーフ';
-      case PbEvent.full: return 'フル';
-      case PbEvent.w3000: return '3000m競歩';
-      case PbEvent.w5000: return '5000m競歩';
-      case PbEvent.w10000: return '10000m競歩';
-      case PbEvent.w20km: return '20km競歩';
-      case PbEvent.w35km: return '35km競歩';
-      case PbEvent.w50km: return '50km競歩';
-      case PbEvent.other: return 'その他'; // 追加
-    }
+    return event == PbEvent.half || event == PbEvent.full || event == PbEvent.w20km || event == PbEvent.w35km || event == PbEvent.w50km || event == PbEvent.wHalf || event == PbEvent.wFull;
   }
 
   Future<void> _savePb() async {

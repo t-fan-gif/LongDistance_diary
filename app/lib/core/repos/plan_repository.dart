@@ -45,6 +45,7 @@ class PlanRepository {
                   reps: Value(input.reps),
                   note: Value(input.note),
                   activityType: Value(input.activityType),
+                  isRace: Value(input.isRace),
                 ),
               );
         }
@@ -119,6 +120,7 @@ class PlanInput {
     this.reps = 1,
     this.note,
     this.activityType = ActivityType.running,
+    this.isRace = false,
   });
 
   final String menuName;
@@ -128,4 +130,5 @@ class PlanInput {
   final int reps;
   final String? note;
   final ActivityType activityType;
+  final bool isRace;
 }

@@ -52,6 +52,8 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   final _restDurationController = TextEditingController();
   final _noteController = TextEditingController();
   late FocusNode _paceFocusNode;
+  late FocusNode _durationFocusNode;
+  late FocusNode _distanceFocusNode;
 
   Zone? _selectedZone;
   int _rpeValue = 5;
@@ -69,6 +71,10 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     _isEditMode = widget.sessionId != null;
     _paceFocusNode = FocusNode();
     _paceFocusNode.addListener(_onPaceFocusChange);
+    _durationFocusNode = FocusNode();
+    _durationFocusNode.addListener(_onDurationFocusChange);
+    _distanceFocusNode = FocusNode();
+    _distanceFocusNode.addListener(_onDistanceFocusChange);
 
     if (widget.initialDate != null) {
       _selectedDateTime = DateTime.parse(widget.initialDate!);
@@ -169,6 +175,29 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     }
   }
 
+  void _onDistanceFocusChange() {
+    if (!_distanceFocusNode.hasFocus) {
+       _calculatePaceFromDuration();
+    }
+  }
+
+  void _onDurationFocusChange() {
+    if (!_durationFocusNode.hasFocus) {
+       _calculatePaceFromDuration();
+    }
+  }
+
+  void _calculatePaceFromDuration() {
+    final distKm = double.tryParse(_distanceController.text) ?? 0;
+    final durMin = double.tryParse(_durationController.text) ?? 0;
+    
+    if (distKm > 0 && durMin > 0) {
+      final totalSec = durMin * 60;
+      final paceSecPerKm = (totalSec / distKm).round();
+      _paceController.text = _formatPaceForInput(paceSecPerKm);
+    }
+  }
+
   void _onPaceFocusChange() {
     if (_paceFocusNode.hasFocus) {
       // Gain focus: remove : (e.g. 3:20 -> 320)
@@ -202,6 +231,8 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     _restDurationController.dispose();
     _noteController.dispose();
     _paceFocusNode.dispose();
+    _durationFocusNode.dispose();
+    _distanceFocusNode.dispose();
     super.dispose();
   }
 
@@ -373,6 +404,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                                _buildSectionTitle('Total距離 (km)'),
                                TextFormField(
                                  controller: _distanceController,
+                                 focusNode: _distanceFocusNode,
                                  decoration: const InputDecoration(
                                    hintText: '例: 12',
                                    suffixText: 'km',
@@ -487,6 +519,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   _buildSectionTitle('時間（分）'),
                   TextFormField(
                     controller: _durationController,
+                    focusNode: _durationFocusNode,
                     decoration: const InputDecoration(
                       hintText: '例: 60',
                       border: OutlineInputBorder(),

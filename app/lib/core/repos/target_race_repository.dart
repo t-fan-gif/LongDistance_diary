@@ -1,8 +1,15 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/app_database.dart';
+import '../db/db_providers.dart';
 import '../domain/enums.dart'; // 追加
+
+final targetRaceRepositoryProvider = Provider<TargetRaceRepository>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return TargetRaceRepository(db);
+});
 
 /// ターゲットレースのリポジトリ
 class TargetRaceRepository {

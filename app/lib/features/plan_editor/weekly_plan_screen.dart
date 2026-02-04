@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
+import '../../core/repos/target_race_repository.dart';
 import '../day_detail/day_detail_screen.dart';
 import '../calendar/calendar_providers.dart';
 import '../settings/target_race_settings_screen.dart';
@@ -13,6 +14,7 @@ import '../settings/target_race_settings_screen.dart';
 final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTimeRange>((ref, range) async {
   final planRepo = ref.watch(planRepositoryProvider);
   final sessionRepo = ref.watch(sessionRepositoryProvider);
+  final raceRepo = ref.watch(targetRaceRepositoryProvider);
   final results = <DailyPlanData>[];
   
   final daysCount = range.end.difference(range.start).inDays + 1;
@@ -21,7 +23,8 @@ final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTimeR
     final plans = await planRepo.listPlansByDate(date);
     final memo = await planRepo.getDailyMemo(date);
     final sessions = await sessionRepo.listSessionsByDate(date);
-    results.add(DailyPlanData(date, plans, memo?.note, sessions));
+    final races = await raceRepo.getRacesByDate(date);
+    results.add(DailyPlanData(date, plans, memo?.note, sessions, races.firstOrNull));
   }
   return results;
 });
@@ -31,10 +34,13 @@ class DailyPlanData {
   final List<Plan> plans;
   final String? memo;
   final List<Session> sessions;
-  DailyPlanData(this.date, this.plans, this.memo, this.sessions);
+  final TargetRace? race;
+
+  DailyPlanData(this.date, this.plans, this.memo, this.sessions, this.race);
   
   bool get hasSessions => sessions.isNotEmpty;
   bool get hasPlansOnly => plans.isNotEmpty && sessions.isEmpty;
+  bool get hasItems => plans.isNotEmpty || sessions.isNotEmpty || (memo != null && memo!.isNotEmpty) || race != null;
 }
 
 class WeeklyPlanScreen extends ConsumerStatefulWidget {
@@ -201,7 +207,7 @@ class _WeeklyDayTile extends StatelessWidget {
     final weekdayStr = ['月', '火', '水', '木', '金', '土', '日'][day.date.weekday - 1];
     
     return InkWell(
-      onTap: () => context.push('/plan/edit?date=${day.date.toIso8601String().split('T')[0]}'),
+      onTap: () => context.push('/day/${day.date.toIso8601String().split('T')[0]}'),
       child: Container(
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
@@ -229,25 +235,11 @@ class _WeeklyDayTile extends StatelessWidget {
                     style: TextStyle(fontSize: 12, color: _getDateColor(day.date)),
                   ),
                   // レースマーカー
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final racesAsync = ref.watch(upcomingRacesProvider);
-                      return racesAsync.maybeWhen(
-                        data: (races) {
-                          final isRaceDay = races.any((r) => 
-                            r.date.year == day.date.year && 
-                            r.date.month == day.date.month && 
-                            r.date.day == day.date.day);
-                          if (!isRaceDay) return const SizedBox.shrink();
-                          return const Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text('🏁', style: TextStyle(fontSize: 14)),
-                          );
-                        },
-                        orElse: () => const SizedBox.shrink(),
-                      );
-                    },
-                  ),
+                  if (day.race != null)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text('🏁', style: TextStyle(fontSize: 14)),
+                    ),
                 ],
               ),
             ),
@@ -257,10 +249,17 @@ class _WeeklyDayTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (day.plans.isEmpty && day.sessions.isEmpty && (day.memo == null || day.memo!.isEmpty))
+                  if (!day.hasItems)
                     const Text('未定', style: TextStyle(color: Colors.grey, fontSize: 13))
                   else ...[
-                    // 実績（Session）を先に表示（濃い色）
+                    // 1. レース (TargetRace または Plan.isRace)
+                    if (day.race != null) 
+                      _buildRaceBanner(day.race!.name, day.race!.isMain, day.race!.raceType, day.race!.distance),
+                    
+                    ...day.plans.where((p) => p.isRace).map((p) => 
+                      _buildRaceBanner(p.menuName, false, null, p.distance)),
+
+                    // 2. 実績 (Session)
                     ...day.sessions.map((s) => Padding(
                       padding: const EdgeInsets.only(bottom: 2),
                       child: Row(
@@ -277,9 +276,9 @@ class _WeeklyDayTile extends StatelessWidget {
                         ],
                       ),
                     )),
-                    // 予定（Plan）を薄い色で表示（実績がない場合のみ）
+                    // 予定（Plan）を薄い色で表示（実績がない場合のみ、かつレース以外）
                     if (!day.hasSessions)
-                      ...day.plans.map((p) => Padding(
+                      ...day.plans.where((p) => !p.isRace).map((p) => Padding(
                       padding: const EdgeInsets.only(bottom: 2),
                       child: Row(
                         children: [
@@ -352,6 +351,52 @@ class _WeeklyDayTile extends StatelessWidget {
       parts.add('@$m:${sec.toString().padLeft(2, '0')}');
     }
     return parts.join(' ');
+  }
+
+  Widget _buildRaceBanner(String name, bool isMain, PbEvent? raceType, int? distance) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isMain ? Colors.orange.shade100 : Colors.teal.shade50,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: isMain ? Colors.orange.shade300 : Colors.teal.shade200),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(isMain ? '🏁' : '🎯', style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isMain ? Colors.orange.shade900 : Colors.teal.shade900,
+                    ),
+                  ),
+                  if (raceType != null || distance != null)
+                    Text(
+                      raceType == PbEvent.other && distance != null 
+                        ? '${distance}m' 
+                        : (raceType?.name.toUpperCase() ?? '${(distance! / 1000.0).toStringAsFixed(1)}km'),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isMain ? Colors.orange.shade800 : Colors.teal.shade800,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Color _getDateColor(DateTime date) {

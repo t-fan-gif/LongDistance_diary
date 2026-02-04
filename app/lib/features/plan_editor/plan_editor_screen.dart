@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
+import '../../core/repos/target_race_repository.dart';
 import '../../core/services/service_providers.dart';
-import '../calendar/calendar_providers.dart';
+import '../calendar/calendar_providers.dart' hide vdotCalculatorProvider;
 import '../day_detail/day_detail_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -128,10 +130,32 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
             reps: plan.reps,
             note: plan.note,
             activityType: plan.activityType,
+            isRace: plan.isRace,
           );
         }
       } else {
-        _addNewRow();
+        // ターゲットレースがあるか確認
+        final targetRaces = await ref.read(targetRaceRepositoryProvider).getRacesByDate(widget.date);
+        if (targetRaces.isNotEmpty) {
+          final target = targetRaces.first;
+          final vdotCalc = ref.read(vdotCalculatorProvider);
+          int? distance;
+          if (target.raceType != null) {
+            if (target.raceType == PbEvent.other) {
+              distance = target.distance;
+            } else {
+              distance = vdotCalc.getDistanceForEvent(target.raceType!);
+            }
+          }
+          _addNewRow(
+            menuName: target.name,
+            distance: distance,
+            isRace: true,
+            note: target.note,
+          );
+        } else {
+          _addNewRow();
+        }
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -146,6 +170,7 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
     int? reps,
     String? note,
     ActivityType activityType = ActivityType.running,
+    bool isRace = false,
   }) {
     bool isKm = true;
     String distText = '';
@@ -172,6 +197,7 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
     row.selectedZone = zone;
     if (note != null) row.noteController.text = note;
     row.activityType = activityType;
+    row.isRace = isRace;
 
     row.distanceController.addListener(_onRowChanged);
     row.repsController.addListener(_onRowChanged);
@@ -251,6 +277,53 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
     });
   }
 
+  Future<void> _addRaceFromTarget() async {
+    final races = await ref.read(targetRaceRepositoryProvider).getRacesByDate(widget.date);
+    if (races.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('この日のターゲットレースが設定されていません。設定から追加してください。')),
+        );
+      }
+      return;
+    }
+
+    TargetRace? target;
+    if (races.length > 1) {
+      target = await showDialog<TargetRace>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: const Text('レースを選択'),
+          children: races.map((r) => SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, r),
+            child: Text(r.name),
+          )).toList(),
+        ),
+      );
+    } else {
+      target = races.first;
+    }
+
+    if (target != null) {
+      final vdotCalc = ref.read(vdotCalculatorProvider);
+      int? distance;
+      if (target.raceType != null) {
+        if (target.raceType == PbEvent.other) {
+          distance = target.distance;
+        } else {
+          distance = vdotCalc.getDistanceForEvent(target.raceType!);
+        }
+      }
+
+      _addNewRow(
+        menuName: target.name,
+        distance: distance,
+        isRace: true,
+        note: target.note,
+      );
+    }
+  }
+
   Future<void> _savePlans() async {
     // 有効な行があるかチェック（メニュー名が入力されているか、レストが選択されているか）
     final hasValidRow = _rows.any((row) => 
@@ -290,6 +363,7 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
           reps: row.isRest ? 1 : reps,
           note: row.noteController.text.isEmpty ? null : row.noteController.text,
           activityType: row.activityType,
+          isRace: row.isRace,
         ));
       }
 
@@ -413,11 +487,16 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
                   ],
                 ),
                 const Spacer(),
-                FloatingActionButton.extended(
-                  onPressed: () => _addNewRow(),
-                  icon: const Icon(Icons.add),
-                  label: const Text('行を追加'),
-                  elevation: 0,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FloatingActionButton.extended(
+                      onPressed: () => _addNewRow(),
+                      icon: const Icon(Icons.add),
+                      label: const Text('行を追加'),
+                      elevation: 0,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -440,6 +519,7 @@ class _PlanRowState {
   Zone? selectedZone;
   ActivityType activityType = ActivityType.running;
   bool isRest = false;
+  bool isRace = false;
 
   void init(VoidCallback onPaceFocusChange) {
     paceFocusNode = FocusNode();
@@ -480,7 +560,7 @@ class _PlanRowItem extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              flex: 4,
+              flex: 6, // さらに増やす
               child: TextFormField(
                 controller: row.menuController,
                 enabled: !row.isRest,
@@ -515,25 +595,42 @@ class _PlanRowItem extends StatelessWidget {
                 onChanged: (_) => onChanged(),
               ),
             ),
-            const SizedBox(width: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('レスト', style: TextStyle(fontSize: 12)),
-                Checkbox(
-                  value: row.isRest,
-                  onChanged: (v) {
-                    row.isRest = v ?? false;
-                    if (row.isRest) {
-                      row.menuController.text = 'レスト';
-                    } else {
-                      row.menuController.text = '';
-                    }
-                    onChanged();
-                  },
+            if (!row.isRace)
+              SizedBox(
+                width: 80, // 固定幅にして入力を安定させる
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('レスト', style: TextStyle(fontSize: 12)),
+                    Checkbox(
+                      value: row.isRest,
+                      visualDensity: VisualDensity.compact,
+                      onChanged: (v) {
+                        row.isRest = v ?? false;
+                        if (row.isRest) {
+                          row.menuController.text = 'レスト';
+                          row.isRace = false;
+                        } else {
+                          row.menuController.text = '';
+                        }
+                        onChanged();
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            const SizedBox(width: 4),
+            // レース項目
+            if (row.isRace)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text('レース', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange)),
+              ),
+            const Spacer(),
             IconButton(
               onPressed: onDelete,
               icon: const Icon(Icons.delete_outline, color: Colors.grey),
@@ -633,12 +730,12 @@ class _PlanRowItem extends StatelessWidget {
                   controller: row.paceController,
                   focusNode: row.paceFocusNode,
                   keyboardType: TextInputType.datetime,
-                  decoration: const InputDecoration(
-                    labelText: 'ペース',
+                  decoration: InputDecoration(
+                    labelText: row.isRace ? '目標ペース (任意)' : 'ペース',
                     hintText: '4:00',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    helperText: '入力後、枠外をタップでZone推定',
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    helperText: row.isRace ? '実績のタイムから自動計算されます' : '入力後、枠外をタップでZone推定',
                   ),
                 ),
               ),
