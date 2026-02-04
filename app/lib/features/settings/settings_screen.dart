@@ -79,6 +79,15 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push('/settings/target-race'),
           ),
           const Divider(),
+          _buildSectionHeader(context, 'パフォーマンス設定'),
+          ListTile(
+            leading: const Icon(Icons.timer),
+            title: const Text('自己ベスト管理'),
+            subtitle: const Text('VDOT・推奨ペースの算出基準'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/pb'),
+          ),
+          const Divider(),
           _buildSectionHeader(context, 'アプリについて'),
           const ListTile(
             leading: Icon(Icons.info_outline),
