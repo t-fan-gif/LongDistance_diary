@@ -195,13 +195,17 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
   void _onDistanceFocusChange() {
     if (!_distanceFocusNode.hasFocus) {
-       _calculatePaceFromDuration();
+       if (_isRace) {
+         _calculateFromRaceTime();
+       } else {
+         _calculatePaceFromDuration();
+       }
     }
   }
 
   void _onDurationFocusChange() {
     if (!_durationFocusNode.hasFocus) {
-       _calculatePaceFromDuration();
+       if (!_isRace) _calculatePaceFromDuration();
     }
   }
 
@@ -391,6 +395,9 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                   ),
                                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  onChanged: (_) {
+                                    if (_isRace) _calculateFromRaceTime();
+                                  },
                                 ),
                              ],
                           ),

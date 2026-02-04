@@ -7,6 +7,10 @@ import '../../core/db/db_providers.dart';
 import '../../core/domain/enums.dart'; // 追加
 import '../../core/repos/target_race_repository.dart';
 import '../calendar/calendar_providers.dart';
+import '../day_detail/day_detail_screen.dart'; // 加筆: dayPlansProviderのため
+import '../../core/services/vdot_calculator.dart'; // 加筆
+import '../../core/services/load_calculator.dart'; // 加筆
+import '../../core/repos/plan_repository.dart'; // 加筆: PlanInputのため
 
 
 /// 全ターゲットレース プロバイダ
@@ -274,17 +278,17 @@ class _RaceCard extends StatelessWidget {
   }
 }
 
-class _RaceEditDialog extends StatefulWidget {
+class _RaceEditDialog extends ConsumerStatefulWidget {
   const _RaceEditDialog({this.race, required this.isMain});
 
   final TargetRace? race;
   final bool isMain;
 
   @override
-  State<_RaceEditDialog> createState() => _RaceEditDialogState();
+  ConsumerState<_RaceEditDialog> createState() => _RaceEditDialogState();
 }
 
-class _RaceEditDialogState extends State<_RaceEditDialog> {
+class _RaceEditDialogState extends ConsumerState<_RaceEditDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _noteController;
   late final TextEditingController _distanceController;
@@ -420,6 +424,29 @@ class _RaceEditDialogState extends State<_RaceEditDialog> {
               'distance': _selectedType == PbEvent.other 
                   ? int.tryParse(_distanceController.text) 
                   : null,
+            });
+
+            // 予定への同期 (非同期で実行)
+            final repo = ref.read(planRepositoryProvider);
+            final vdotCalc = ref.read(vdotCalculatorProvider);
+            int? distanceM;
+            if (_selectedType != null) {
+              if (_selectedType == PbEvent.other) {
+                distanceM = int.tryParse(_distanceController.text);
+              } else {
+                distanceM = vdotCalc.getDistanceForEvent(_selectedType!);
+              }
+            }
+            final input = PlanInput(
+              menuName: _nameController.text,
+              distance: distanceM,
+              isRace: true,
+              note: _noteController.text.isEmpty ? null : _noteController.text,
+            );
+            repo.updatePlansForDate(_selectedDate, [input]).then((_) {
+              final monthDate = DateTime(_selectedDate.year, _selectedDate.month);
+              ref.invalidate(monthCalendarDataProvider(monthDate));
+              ref.invalidate(dayPlansProvider(_selectedDate));
             });
           },
           child: const Text('保存'),

@@ -384,7 +384,7 @@ class _WeeklyDayTile extends StatelessWidget {
                     Text(
                       raceType == PbEvent.other && distance != null 
                         ? '${distance}m' 
-                        : (raceType?.name.toUpperCase() ?? '${(distance! / 1000.0).toStringAsFixed(1)}km'),
+                        : (raceType?.label ?? '${(distance! / 1000.0).toStringAsFixed(1)}km'),
                       style: TextStyle(
                         fontSize: 10,
                         color: isMain ? Colors.orange.shade800 : Colors.teal.shade800,

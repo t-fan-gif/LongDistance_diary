@@ -625,7 +625,7 @@ class _TodayView extends ConsumerWidget {
                           title: Text(race.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                           subtitle: Text(
                             race.raceType != null 
-                              ? '本日開催: ${race.raceType == PbEvent.other && race.distance != null ? '${race.distance}m' : race.raceType!.name.toUpperCase()}'
+                              ? '本日開催: ${race.raceType == PbEvent.other && race.distance != null ? '${race.distance}m' : race.raceType!.label}'
                               : '本日開催: レース',
                           ),
                           trailing: IconButton(
@@ -748,6 +748,7 @@ class _TodayView extends ConsumerWidget {
       if (plan.zone != null) 'zone': plan.zone!.name,
       if (plan.reps > 1) 'reps': plan.reps.toString(),
       if (plan.note != null) 'note': plan.note!,
+      'isRace': plan.isRace.toString(),
     };
     final uri = Uri(path: '/session/new', queryParameters: query);
     context.push(uri.toString());

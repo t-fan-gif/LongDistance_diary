@@ -240,6 +240,7 @@ class _PlanTile extends ConsumerWidget {
       if (plan.note != null) 'note': plan.note!,
       if (dailyMemo != null && dailyMemo.note.isNotEmpty) 'dailyMemo': dailyMemo.note,
       'activityType': plan.activityType.name,
+      'isRace': plan.isRace.toString(),
     };
     final uri = Uri(path: '/session/new', queryParameters: query);
     if (context.mounted) {
