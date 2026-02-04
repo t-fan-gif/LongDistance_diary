@@ -41,7 +41,7 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
               ListTile(
                 leading: const Icon(Icons.upload),
                 title: const Text('データをインポート'),
-                subtitle: const Text('JSONファイルからデータを復元します。現在のデータは上書きされます'),
+                subtitle: const Text('JSONファイルからデータを復元します。同じIDのデータは上書きされ、新しいデータは追加されます'),
                 onTap: _isProcessing ? null : () => _handleImport(),
               ),
               const Divider(),
@@ -101,7 +101,7 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('インポートの確認'),
-        content: const Text('ファイルからデータを読み込みます。現在のアプリ内のデータは全て削除され、ファイルの内容で上書きされますがよろしいですか？'),
+        content: const Text('ファイルからデータを読み込みます。\n\n• 同じIDのデータは上書きされます\n• 未登録のデータは新しく追加されます\n• ファイルにない既存データはそのまま残ります'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('キャンセル')),
           TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('実行')),

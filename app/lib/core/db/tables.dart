@@ -83,3 +83,16 @@ class DailyPlanMemos extends Table {
   @override
   Set<Column<Object>> get primaryKey => {date};
 }
+
+/// ターゲットレース（メイン/サブ）
+class TargetRaces extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();           // レース名
+  DateTimeColumn get date => dateTime()();   // レース日
+  BoolColumn get isMain => boolean()();      // メインターゲットかどうか
+  TextColumn get note => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+

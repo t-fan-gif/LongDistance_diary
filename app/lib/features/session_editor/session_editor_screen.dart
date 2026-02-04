@@ -7,6 +7,7 @@ import '../../core/domain/enums.dart';
 import '../../core/services/service_providers.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
+import '../settings/advanced_settings_screen.dart';
 
 class SessionEditorScreen extends ConsumerStatefulWidget {
   const SessionEditorScreen({
@@ -619,7 +620,11 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         restDurationSec: restDurationSec,
         activityType: _activityType,
       );
-      final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(tempSession, thresholdPaceSecPerKm: tPace)?.toDouble();
+      final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
+        tempSession,
+        thresholdPaceSecPerKm: tPace,
+        mode: ref.read(loadCalculationModeProvider),
+      )?.toDouble();
 
       if (_isEditMode && widget.sessionId != null) {
         await repo.updateSession(

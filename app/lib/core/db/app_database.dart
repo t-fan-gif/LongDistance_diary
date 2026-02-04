@@ -6,12 +6,12 @@ import 'tables.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: <Type>[PersonalBests, Plans, Sessions, MenuPresets, DailyPlanMemos])
+@DriftDatabase(tables: <Type>[PersonalBests, Plans, Sessions, MenuPresets, DailyPlanMemos, TargetRaces])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,12 +36,15 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             // Version 6: Sessions に load カラム追加
-            // カラムがすでに存在する場合はスキップ
             try {
               await m.addColumn(sessions, sessions.load);
             } catch (_) {
               // カラムがすでに存在する場合は無視
             }
+          }
+          if (from < 7) {
+            // Version 7: TargetRaces テーブル作成
+            await m.createTable(targetRaces);
           }
         },
         beforeOpen: (details) async {

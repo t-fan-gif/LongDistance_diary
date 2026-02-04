@@ -18,6 +18,7 @@ class ExportRepository {
     final personalBests = await _db.select(_db.personalBests).get();
     final menuPresets = await _db.select(_db.menuPresets).get();
     final memos = await _db.select(_db.dailyPlanMemos).get();
+    final targetRaces = await _db.select(_db.targetRaces).get();
 
     // マップ化
     final data = {
@@ -28,6 +29,7 @@ class ExportRepository {
       'personal_bests': personalBests.map((e) => e.toJson()).toList(),
       'menu_presets': menuPresets.map((e) => e.toJson()).toList(),
       'daily_plan_memos': memos.map((e) => e.toJson()).toList(),
+      'target_races': targetRaces.map((e) => e.toJson()).toList(),
       'settings': {},
     };
 
@@ -66,6 +68,11 @@ class ExportRepository {
       if (data['daily_plan_memos'] != null) {
         for (final item in data['daily_plan_memos']) {
           await _db.into(_db.dailyPlanMemos).insertOnConflictUpdate(DailyPlanMemo.fromJson(item));
+        }
+      }
+      if (data['target_races'] != null) {
+        for (final item in data['target_races']) {
+          await _db.into(_db.targetRaces).insertOnConflictUpdate(TargetRace.fromJson(item));
         }
       }
     });

@@ -264,8 +264,9 @@ class _SessionTile extends ConsumerWidget {
     final loadCalc = ref.watch(loadCalculatorProvider);
     final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
     final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+    final loadMode = ref.watch(loadCalculationModeProvider);
     final tPace = session.activityType == ActivityType.walking ? wTpace : rTpace;
-    final load = loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace);
+    final load = loadCalc.computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: tPace, mode: loadMode);
     final rpeEmoji = session.rpeValue != null && session.rpeValue! < 11 ? ['😴','😌','🙂','😊','😐','😤','😰','😫','🥵','💀','☠️'][session.rpeValue!] : '';
 
     return ListTile(

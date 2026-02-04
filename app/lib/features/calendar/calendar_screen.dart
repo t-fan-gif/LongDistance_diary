@@ -8,6 +8,7 @@ import '../../core/domain/enums.dart';
 import '../../core/db/app_database.dart';
 import '../plan_editor/weekly_plan_screen.dart';
 import '../settings/advanced_settings_screen.dart';
+import '../settings/target_race_settings_screen.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -408,6 +409,31 @@ class _CalendarCell extends StatelessWidget {
         ),
         child: Column(
           children: [
+            // レースデイマーカー
+            Consumer(
+              builder: (context, ref, child) {
+                final racesAsync = ref.watch(upcomingRacesProvider);
+                return racesAsync.maybeWhen(
+                  data: (races) {
+                    final race = races.isEmpty ? null : races.firstWhere(
+                      (r) => r.date.year == dayData.date.year && r.date.month == dayData.date.month && r.date.day == dayData.date.day,
+                      orElse: () => races.first, // Dummy, will be checked by null
+                    );
+                    final exists = races.any((r) => r.date.year == dayData.date.year && r.date.month == dayData.date.month && r.date.day == dayData.date.day);
+                    if (!exists) return const SizedBox.shrink();
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(4), bottomRight: Radius.circular(4)),
+                      ),
+                      child: const Text('🏁', style: TextStyle(fontSize: 8)),
+                    );
+                  },
+                  orElse: () => const SizedBox.shrink(),
+                );
+              },
+            ),
             // 日付
             Container(
               width: double.infinity,
@@ -499,10 +525,51 @@ class _TodayView extends ConsumerWidget {
     final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
     final loadCalc = ref.watch(loadCalculatorProvider);
     final loadMode = ref.watch(loadCalculationModeProvider);
+    final racesAsync = ref.watch(upcomingRacesProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // ターゲットレース・カウントダウン
+        racesAsync.when(
+          data: (races) {
+            if (races.isEmpty) return const SizedBox.shrink();
+            
+            final mainRace = races.where((r) => r.isMain).toList();
+            final nearestSub = races.where((r) => !r.isMain).toList();
+            
+            final List<Widget> widgets = [];
+            
+            if (mainRace.isNotEmpty) {
+              for (final race in mainRace) {
+                final diff = DateTime(race.date.year, race.date.month, race.date.day).difference(dateKey).inDays;
+                if (diff >= 0) {
+                  widgets.add(_buildRaceCountdown(context, 'メインターゲット', race.name, diff, isMain: true));
+                }
+              }
+            }
+            
+            if (nearestSub.isNotEmpty) {
+              final race = nearestSub.first;
+              final diff = DateTime(race.date.year, race.date.month, race.date.day).difference(dateKey).inDays;
+              if (diff >= 0) {
+                widgets.add(_buildRaceCountdown(context, 'サブターゲット', race.name, diff, isMain: false));
+              }
+            }
+            
+            if (widgets.isEmpty) return const SizedBox.shrink();
+            
+            return Column(children: [
+              ...widgets,
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+            ]);
+          },
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+
         _buildSectionHeader(context, '今日の予定 (${DateFormat('M月d日').format(dateKey)})'),
         plansAsync.when(
           data: (plans) {
@@ -617,6 +684,37 @@ class _TodayView extends ConsumerWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildRaceCountdown(BuildContext context, String label, String name, int days, {required bool isMain}) {
+    return Card(
+      color: isMain ? Colors.amber.shade50 : Colors.teal.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Text(isMain ? '🏁' : '🎯', style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontSize: 12, color: isMain ? Colors.orange.shade900 : Colors.teal.shade900, fontWeight: FontWeight.bold)),
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text('あと', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text('$days日', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: days == 0 ? Colors.red : (days <= 7 ? Colors.orange : Colors.teal))),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

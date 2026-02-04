@@ -15,6 +15,7 @@ import '../features/analysis/analysis_screen.dart';
 import '../features/plan_editor/weekly_plan_screen.dart';
 import '../features/settings/advanced_settings_screen.dart';
 import '../features/settings/training_support_screen.dart';
+import '../features/settings/target_race_settings_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -109,6 +110,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'advanced',
           builder: (context, state) => const AdvancedSettingsScreen(),
+        ),
+        GoRoute(
+          path: 'target-race',
+          builder: (context, state) => const TargetRaceSettingsScreen(),
         ),
       ],
     ),

@@ -8,6 +8,7 @@ import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
 import '../day_detail/day_detail_screen.dart';
 import '../calendar/calendar_providers.dart';
+import '../settings/target_race_settings_screen.dart';
 
 final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTimeRange>((ref, range) async {
   final planRepo = ref.watch(planRepositoryProvider);
@@ -226,6 +227,26 @@ class _WeeklyDayTile extends StatelessWidget {
                   Text(
                     '($weekdayStr)',
                     style: TextStyle(fontSize: 12, color: _getDateColor(day.date)),
+                  ),
+                  // レースマーカー
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final racesAsync = ref.watch(upcomingRacesProvider);
+                      return racesAsync.maybeWhen(
+                        data: (races) {
+                          final isRaceDay = races.any((r) => 
+                            r.date.year == day.date.year && 
+                            r.date.month == day.date.month && 
+                            r.date.day == day.date.day);
+                          if (!isRaceDay) return const SizedBox.shrink();
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Text('🏁', style: TextStyle(fontSize: 14)),
+                          );
+                        },
+                        orElse: () => const SizedBox.shrink(),
+                      );
+                    },
                   ),
                 ],
               ),

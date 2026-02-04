@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../calendar/calendar_providers.dart';
 
 enum LoadCalculationMode {
   priorityPace('ペース優先', 'Pace > sRPE > Zone'),
@@ -10,16 +12,55 @@ enum LoadCalculationMode {
   final String label;
   final String description;
   const LoadCalculationMode(this.label, this.description);
+
+  static LoadCalculationMode fromName(String? name) {
+    return values.firstWhere(
+      (e) => e.name == name,
+      orElse: () => LoadCalculationMode.priorityPace,
+    );
+  }
 }
 
-final loadCalculationModeProvider = StateProvider<LoadCalculationMode>((ref) => LoadCalculationMode.priorityPace);
+/// SharedPreferencesからロードした負荷計算方式を管理するプロバイダ
+final loadCalculationModeProvider = StateNotifierProvider<LoadCalculationModeNotifier, LoadCalculationMode>(
+  (ref) => LoadCalculationModeNotifier(),
+);
 
-class AdvancedSettingsScreen extends ConsumerWidget {
+class LoadCalculationModeNotifier extends StateNotifier<LoadCalculationMode> {
+  LoadCalculationModeNotifier() : super(LoadCalculationMode.priorityPace) {
+    _loadFromPrefs();
+  }
+
+  static const _key = 'load_calculation_mode';
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString(_key);
+    state = LoadCalculationMode.fromName(name);
+  }
+
+  Future<void> setMode(LoadCalculationMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, mode.name);
+    state = mode;
+  }
+}
+
+class AdvancedSettingsScreen extends ConsumerStatefulWidget {
   const AdvancedSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdvancedSettingsScreen> createState() => _AdvancedSettingsScreenState();
+}
+
+class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen> {
+  LoadCalculationMode? _pendingMode;
+  bool _isSaving = false;
+
+  @override
+  Widget build(BuildContext context) {
     final currentMode = ref.watch(loadCalculationModeProvider);
+    final displayMode = _pendingMode ?? currentMode;
 
     return Scaffold(
       appBar: AppBar(
@@ -36,14 +77,32 @@ class AdvancedSettingsScreen extends ConsumerWidget {
                   title: Text(mode.label),
                   subtitle: Text(mode.description),
                   value: mode,
-                  groupValue: currentMode,
+                  groupValue: displayMode,
                   onChanged: (val) {
                     if (val != null) {
-                      ref.read(loadCalculationModeProvider.notifier).state = val;
+                      setState(() => _pendingMode = val);
                     }
                   },
                 );
               }).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // 保存ボタン
+          ElevatedButton.icon(
+            onPressed: _pendingMode != null && _pendingMode != currentMode && !_isSaving
+                ? _saveMode
+                : null,
+            icon: _isSaving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check),
+            label: Text(_isSaving ? '保存中...' : '保存して再計算'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
           const SizedBox(height: 24),
@@ -70,13 +129,36 @@ class AdvancedSettingsScreen extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              '※ 現在、計算の優先順位は [ペース > sRPE > ゾーン] となっています。データが存在する中で最も高い優先順位のものが採用されます。',
+              '※ 選択した方式で保存すると、カレンダーなどの負荷表示が再計算されます。',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _saveMode() async {
+    if (_pendingMode == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      // 方式を保存
+      await ref.read(loadCalculationModeProvider.notifier).setMode(_pendingMode!);
+
+      // カレンダーデータをすべて無効化して再計算を促す
+      ref.invalidate(selectedMonthProvider);
+
+      // 確認メッセージ
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('負荷計算方式を保存しました。カレンダーが再計算されます。')),
+        );
+        setState(() => _pendingMode = null);
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {

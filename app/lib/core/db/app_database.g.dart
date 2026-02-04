@@ -2208,6 +2208,312 @@ class DailyPlanMemosCompanion extends UpdateCompanion<DailyPlanMemo> {
   }
 }
 
+class $TargetRacesTable extends TargetRaces
+    with TableInfo<$TargetRacesTable, TargetRace> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TargetRacesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isMainMeta = const VerificationMeta('isMain');
+  @override
+  late final GeneratedColumn<bool> isMain = GeneratedColumn<bool>(
+      'is_main', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_main" IN (0, 1))'));
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [id, name, date, isMain, note];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'target_races';
+  @override
+  VerificationContext validateIntegrity(Insertable<TargetRace> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('is_main')) {
+      context.handle(_isMainMeta,
+          isMain.isAcceptableOrUnknown(data['is_main']!, _isMainMeta));
+    } else if (isInserting) {
+      context.missing(_isMainMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TargetRace map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TargetRace(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      isMain: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_main'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
+    );
+  }
+
+  @override
+  $TargetRacesTable createAlias(String alias) {
+    return $TargetRacesTable(attachedDatabase, alias);
+  }
+}
+
+class TargetRace extends DataClass implements Insertable<TargetRace> {
+  final String id;
+  final String name;
+  final DateTime date;
+  final bool isMain;
+  final String? note;
+  const TargetRace(
+      {required this.id,
+      required this.name,
+      required this.date,
+      required this.isMain,
+      this.note});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['date'] = Variable<DateTime>(date);
+    map['is_main'] = Variable<bool>(isMain);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    return map;
+  }
+
+  TargetRacesCompanion toCompanion(bool nullToAbsent) {
+    return TargetRacesCompanion(
+      id: Value(id),
+      name: Value(name),
+      date: Value(date),
+      isMain: Value(isMain),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+    );
+  }
+
+  factory TargetRace.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TargetRace(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      isMain: serializer.fromJson<bool>(json['isMain']),
+      note: serializer.fromJson<String?>(json['note']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'date': serializer.toJson<DateTime>(date),
+      'isMain': serializer.toJson<bool>(isMain),
+      'note': serializer.toJson<String?>(note),
+    };
+  }
+
+  TargetRace copyWith(
+          {String? id,
+          String? name,
+          DateTime? date,
+          bool? isMain,
+          Value<String?> note = const Value.absent()}) =>
+      TargetRace(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        date: date ?? this.date,
+        isMain: isMain ?? this.isMain,
+        note: note.present ? note.value : this.note,
+      );
+  TargetRace copyWithCompanion(TargetRacesCompanion data) {
+    return TargetRace(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      date: data.date.present ? data.date.value : this.date,
+      isMain: data.isMain.present ? data.isMain.value : this.isMain,
+      note: data.note.present ? data.note.value : this.note,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TargetRace(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('date: $date, ')
+          ..write('isMain: $isMain, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, date, isMain, note);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TargetRace &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.date == this.date &&
+          other.isMain == this.isMain &&
+          other.note == this.note);
+}
+
+class TargetRacesCompanion extends UpdateCompanion<TargetRace> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<DateTime> date;
+  final Value<bool> isMain;
+  final Value<String?> note;
+  final Value<int> rowid;
+  const TargetRacesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.date = const Value.absent(),
+    this.isMain = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TargetRacesCompanion.insert({
+    required String id,
+    required String name,
+    required DateTime date,
+    required bool isMain,
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        date = Value(date),
+        isMain = Value(isMain);
+  static Insertable<TargetRace> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<DateTime>? date,
+    Expression<bool>? isMain,
+    Expression<String>? note,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (date != null) 'date': date,
+      if (isMain != null) 'is_main': isMain,
+      if (note != null) 'note': note,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TargetRacesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<DateTime>? date,
+      Value<bool>? isMain,
+      Value<String?>? note,
+      Value<int>? rowid}) {
+    return TargetRacesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      date: date ?? this.date,
+      isMain: isMain ?? this.isMain,
+      note: note ?? this.note,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (isMain.present) {
+      map['is_main'] = Variable<bool>(isMain.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TargetRacesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('date: $date, ')
+          ..write('isMain: $isMain, ')
+          ..write('note: $note, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2216,12 +2522,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $MenuPresetsTable menuPresets = $MenuPresetsTable(this);
   late final $DailyPlanMemosTable dailyPlanMemos = $DailyPlanMemosTable(this);
+  late final $TargetRacesTable targetRaces = $TargetRacesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [personalBests, plans, sessions, menuPresets, dailyPlanMemos];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        personalBests,
+        plans,
+        sessions,
+        menuPresets,
+        dailyPlanMemos,
+        targetRaces
+      ];
 }
 
 typedef $$PersonalBestsTableCreateCompanionBuilder = PersonalBestsCompanion
@@ -3511,6 +3824,173 @@ typedef $$DailyPlanMemosTableProcessedTableManager = ProcessedTableManager<
     ),
     DailyPlanMemo,
     PrefetchHooks Function()>;
+typedef $$TargetRacesTableCreateCompanionBuilder = TargetRacesCompanion
+    Function({
+  required String id,
+  required String name,
+  required DateTime date,
+  required bool isMain,
+  Value<String?> note,
+  Value<int> rowid,
+});
+typedef $$TargetRacesTableUpdateCompanionBuilder = TargetRacesCompanion
+    Function({
+  Value<String> id,
+  Value<String> name,
+  Value<DateTime> date,
+  Value<bool> isMain,
+  Value<String?> note,
+  Value<int> rowid,
+});
+
+class $$TargetRacesTableFilterComposer
+    extends Composer<_$AppDatabase, $TargetRacesTable> {
+  $$TargetRacesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isMain => $composableBuilder(
+      column: $table.isMain, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
+}
+
+class $$TargetRacesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TargetRacesTable> {
+  $$TargetRacesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isMain => $composableBuilder(
+      column: $table.isMain, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+}
+
+class $$TargetRacesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TargetRacesTable> {
+  $$TargetRacesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<bool> get isMain =>
+      $composableBuilder(column: $table.isMain, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+}
+
+class $$TargetRacesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TargetRacesTable,
+    TargetRace,
+    $$TargetRacesTableFilterComposer,
+    $$TargetRacesTableOrderingComposer,
+    $$TargetRacesTableAnnotationComposer,
+    $$TargetRacesTableCreateCompanionBuilder,
+    $$TargetRacesTableUpdateCompanionBuilder,
+    (TargetRace, BaseReferences<_$AppDatabase, $TargetRacesTable, TargetRace>),
+    TargetRace,
+    PrefetchHooks Function()> {
+  $$TargetRacesTableTableManager(_$AppDatabase db, $TargetRacesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TargetRacesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TargetRacesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TargetRacesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<bool> isMain = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TargetRacesCompanion(
+            id: id,
+            name: name,
+            date: date,
+            isMain: isMain,
+            note: note,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required DateTime date,
+            required bool isMain,
+            Value<String?> note = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TargetRacesCompanion.insert(
+            id: id,
+            name: name,
+            date: date,
+            isMain: isMain,
+            note: note,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$TargetRacesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TargetRacesTable,
+    TargetRace,
+    $$TargetRacesTableFilterComposer,
+    $$TargetRacesTableOrderingComposer,
+    $$TargetRacesTableAnnotationComposer,
+    $$TargetRacesTableCreateCompanionBuilder,
+    $$TargetRacesTableUpdateCompanionBuilder,
+    (TargetRace, BaseReferences<_$AppDatabase, $TargetRacesTable, TargetRace>),
+    TargetRace,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3525,4 +4005,6 @@ class $AppDatabaseManager {
       $$MenuPresetsTableTableManager(_db, _db.menuPresets);
   $$DailyPlanMemosTableTableManager get dailyPlanMemos =>
       $$DailyPlanMemosTableTableManager(_db, _db.dailyPlanMemos);
+  $$TargetRacesTableTableManager get targetRaces =>
+      $$TargetRacesTableTableManager(_db, _db.targetRaces);
 }

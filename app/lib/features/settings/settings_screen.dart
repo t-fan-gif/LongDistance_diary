@@ -70,6 +70,15 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push('/settings/advanced'),
           ),
           const Divider(),
+          _buildSectionHeader(context, '目標設定'),
+          ListTile(
+            leading: const Icon(Icons.flag),
+            title: const Text('ターゲットレース'),
+            subtitle: const Text('メイン/サブレースの設定'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/target-race'),
+          ),
+          const Divider(),
           _buildSectionHeader(context, 'アプリについて'),
           const ListTile(
             leading: Icon(Icons.info_outline),
