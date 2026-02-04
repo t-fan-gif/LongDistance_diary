@@ -90,7 +90,7 @@ class _TargetRaceSettingsScreenState extends ConsumerState<TargetRaceSettingsScr
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showEditDialog(context, isMain: false),
         icon: const Icon(Icons.add),
-        label: const Text('サブターゲット追加'),
+        label: const Text('ターゲット追加'),
       ),
     );
   }
