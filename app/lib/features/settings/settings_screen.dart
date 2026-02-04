@@ -92,7 +92,7 @@ class SettingsScreen extends ConsumerWidget {
           const ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Long Distance Diary'),
-            subtitle: Text('Version 1.3.4 (Race Sync & UI Fix)'), // Target Sync + Japanese Labels Fixed
+            subtitle: Text('Version 1.3.5 (Race Display Fix)'), // Duplicate & Sync Issues Fixed
           ),
         ],
       ),

@@ -11,6 +11,7 @@ import '../day_detail/day_detail_screen.dart'; // 加筆: dayPlansProviderのた
 import '../../core/services/vdot_calculator.dart'; // 加筆
 import '../../core/services/load_calculator.dart'; // 加筆
 import '../../core/repos/plan_repository.dart'; // 加筆: PlanInputのため
+import '../plan_editor/weekly_plan_screen.dart'; // 加筆: weeklyPlansProviderのため
 
 
 /// 全ターゲットレース プロバイダ
@@ -146,6 +147,13 @@ class _TargetRaceSettingsScreenState extends ConsumerState<TargetRaceSettingsScr
       // リフレッシュ
       ref.invalidate(allTargetRacesProvider);
       ref.invalidate(upcomingRacesProvider);
+      
+      // 他の画面への通知
+      final date = result['date'] as DateTime;
+      final monthDate = DateTime(date.year, date.month);
+      ref.invalidate(monthCalendarDataProvider(monthDate));
+      ref.invalidate(dayPlansProvider(date));
+      ref.invalidate(weeklyPlansProvider);
     }
   }
 
@@ -173,6 +181,11 @@ class _TargetRaceSettingsScreenState extends ConsumerState<TargetRaceSettingsScr
       await repo.deleteRace(race.id);
       ref.invalidate(allTargetRacesProvider);
       ref.invalidate(upcomingRacesProvider);
+      
+      final monthDate = DateTime(race.date.year, race.date.month);
+      ref.invalidate(monthCalendarDataProvider(monthDate));
+      ref.invalidate(dayPlansProvider(race.date));
+      ref.invalidate(weeklyPlansProvider);
     }
   }
 }
@@ -424,29 +437,6 @@ class _RaceEditDialogState extends ConsumerState<_RaceEditDialog> {
               'distance': _selectedType == PbEvent.other 
                   ? int.tryParse(_distanceController.text) 
                   : null,
-            });
-
-            // 予定への同期 (非同期で実行)
-            final repo = ref.read(planRepositoryProvider);
-            final vdotCalc = ref.read(vdotCalculatorProvider);
-            int? distanceM;
-            if (_selectedType != null) {
-              if (_selectedType == PbEvent.other) {
-                distanceM = int.tryParse(_distanceController.text);
-              } else {
-                distanceM = vdotCalc.getDistanceForEvent(_selectedType!);
-              }
-            }
-            final input = PlanInput(
-              menuName: _nameController.text,
-              distance: distanceM,
-              isRace: true,
-              note: _noteController.text.isEmpty ? null : _noteController.text,
-            );
-            repo.updatePlansForDate(_selectedDate, [input]).then((_) {
-              final monthDate = DateTime(_selectedDate.year, _selectedDate.month);
-              ref.invalidate(monthCalendarDataProvider(monthDate));
-              ref.invalidate(dayPlansProvider(_selectedDate));
             });
           },
           child: const Text('保存'),

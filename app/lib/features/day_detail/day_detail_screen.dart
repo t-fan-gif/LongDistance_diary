@@ -7,6 +7,8 @@ import '../../core/domain/enums.dart';
 import '../../core/services/load_calculator.dart';
 import '../calendar/calendar_providers.dart';
 import '../settings/advanced_settings_screen.dart';
+import '../../core/repos/target_race_repository.dart';
+import '../../core/db/db_providers.dart';
 
 /// 選択された日付のプロバイダ
 final selectedDateProvider = StateProvider<DateTime?>((ref) => null);
@@ -32,6 +34,15 @@ final dayPlansProvider = FutureProvider.family<List<Plan>, DateTime>(
   },
 );
 
+/// 指定日のターゲットレース
+final dayRaceProvider = FutureProvider.family<TargetRace?, DateTime>(
+  (ref, date) async {
+    final repo = ref.watch(targetRaceRepositoryProvider);
+    final races = await repo.getRacesByDate(date);
+    return races.firstOrNull;
+  },
+);
+
 class DayDetailScreen extends ConsumerWidget {
   const DayDetailScreen({super.key, required this.dateString});
 
@@ -42,6 +53,7 @@ class DayDetailScreen extends ConsumerWidget {
     final date = DateTime.parse(dateString);
     final sessionsAsync = ref.watch(daySessionsProvider(date));
     final plansAsync = ref.watch(dayPlansProvider(date));
+    final raceAsync = ref.watch(dayRaceProvider(date));
     final runningTpaceAsync = ref.watch(runningThresholdPaceProvider);
     final walkingTpaceAsync = ref.watch(walkingThresholdPaceProvider);
     final loadCalc = ref.watch(loadCalculatorProvider);
@@ -118,15 +130,25 @@ class DayDetailScreen extends ConsumerWidget {
           ),
           plansAsync.when(
             data: (plans) {
-              if (plans.isEmpty) {
+              final race = raceAsync.valueOrNull;
+              if (plans.isEmpty && race == null) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text('予定はありません', style: TextStyle(color: Colors.grey)),
                 );
               }
-              return Column(
-                children: plans.map((plan) => _PlanTile(plan: plan, dateString: dateString)).toList(),
-              );
+              
+              final List<Widget> items = [];
+              if (race != null) {
+                items.add(_buildRaceTile(context, race, dateString));
+              }
+              
+              // day.race がある場合は Plan.isRace を表示しない (重複防止)
+              items.addAll(plans
+                .where((p) => !p.isRace || race == null)
+                .map((plan) => _PlanTile(plan: plan, dateString: dateString)));
+
+              return Column(children: items);
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Text('エラー: $e'),
@@ -183,6 +205,36 @@ class DayDetailScreen extends ConsumerWidget {
   String _formatDate(DateTime date) {
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
     return '${date.month}月${date.day}日（${weekdays[date.weekday % 7]}）';
+  }
+
+  Widget _buildRaceTile(BuildContext context, TargetRace race, String dateString) {
+    return Card(
+      color: Colors.orange.shade50,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ListTile(
+        leading: const Text('🏁', style: TextStyle(fontSize: 24)),
+        title: Text(race.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(
+          race.raceType != null 
+            ? (race.raceType == PbEvent.other && race.distance != null ? '${race.distance}m' : race.raceType!.label)
+            : 'レース',
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.directions_run, color: Colors.orange),
+          onPressed: () {
+            final query = <String, String>{
+              'date': dateString,
+              'menuName': race.name,
+              'isRace': 'true',
+              if (race.distance != null) 'distance': race.distance.toString(),
+              'activityType': 'running',
+            };
+            final uri = Uri(path: '/session/new', queryParameters: query);
+            context.push(uri.toString());
+          },
+        ),
+      ),
+    );
   }
 }
 

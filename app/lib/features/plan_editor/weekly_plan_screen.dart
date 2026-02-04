@@ -256,7 +256,7 @@ class _WeeklyDayTile extends StatelessWidget {
                     if (day.race != null) 
                       _buildRaceBanner(day.race!.name, day.race!.isMain, day.race!.raceType, day.race!.distance),
                     
-                    ...day.plans.where((p) => p.isRace).map((p) => 
+                    ...day.plans.where((p) => p.isRace && day.race == null).map((p) => 
                       _buildRaceBanner(p.menuName, false, null, p.distance)),
 
                     // 2. 実績 (Session)
