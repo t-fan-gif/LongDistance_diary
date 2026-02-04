@@ -22,6 +22,7 @@ class SessionEditorScreen extends ConsumerStatefulWidget {
     this.initialNote,
     this.initialActivityType,
     this.initialDailyMemo,
+    this.initialIsRace, // 追加
   });
 
   final String? sessionId;
@@ -35,6 +36,7 @@ class SessionEditorScreen extends ConsumerStatefulWidget {
   final String? initialNote;
   final String? initialActivityType;
   final String? initialDailyMemo;
+  final bool? initialIsRace; // 追加
 
   @override
   ConsumerState<SessionEditorScreen> createState() => _SessionEditorScreenState();
@@ -59,6 +61,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   ActivityType _activityType = ActivityType.running;
   bool _isLoading = false;
   bool _isEditMode = false;
+  bool _isRace = false;
 
   @override
   void initState() {
@@ -77,7 +80,12 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       _loadSession();
     } else {
       // 新規作成時、初期値があればセット
-      if (widget.initialMenuName != null) _templateController.text = widget.initialMenuName!;
+      if (widget.initialIsRace == true) { // 追加: Raceモード初期化
+        _isRace = true;
+        _templateController.text = widget.initialMenuName ?? 'レース';
+      } else if (widget.initialMenuName != null) {
+        _templateController.text = widget.initialMenuName!;
+      }
 
       if (widget.initialActivityType != null) {
         try {
@@ -88,9 +96,6 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       if (widget.initialDistance != null) {
         final dist = int.tryParse(widget.initialDistance!) ?? 0;
         final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
-        // km表示ではなくm単位で入れる仕様（？）
-        // 実際には distanceController は km 単位の入力を期待している場合があるが、
-        // 既存の _saveSession では double.parse(...) * 1000 しているので km 単位。
         _distanceController.text = ((dist * reps) / 1000.0).toString();
       }
 
@@ -156,6 +161,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           _restType = session.restType ?? RestType.stop;
           _status = session.status;
           _activityType = session.activityType;
+          _isRace = session.isRace;
         });
       }
     } finally {
@@ -261,6 +267,24 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                     selected: {_activityType},
                     onSelectionChanged: (selected) {
                       setState(() => _activityType = selected.first);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // レース結果フラグ
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('レース結果として記録'),
+                    subtitle: const Text('ONにするとレース実績として集計されます'),
+                    secondary: const Icon(Icons.emoji_events),
+                    value: _isRace,
+                    onChanged: (val) {
+                      setState(() {
+                        _isRace = val;
+                        if (_isRace) {
+                          _templateController.text = 'レース'; // デフォルトで入れる
+                        }
+                      });
                     },
                   ),
                   const SizedBox(height: 16),
@@ -619,6 +643,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         restType: _restType,
         restDurationSec: restDurationSec,
         activityType: _activityType,
+        isRace: _isRace, // 追加
       );
       final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
         tempSession,
@@ -642,6 +667,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           note: _noteController.text.isEmpty ? null : _noteController.text,
           load: calculatedLoad,
           activityType: _activityType,
+          isRace: _isRace, // 追加
         );
       } else {
         await repo.createSession(
@@ -658,6 +684,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           note: _noteController.text.isEmpty ? null : _noteController.text,
           load: calculatedLoad,
           activityType: _activityType,
+          isRace: _isRace, // 追加
         );
       }
 

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../db/app_database.dart';
+import '../domain/enums.dart'; // 追加
 
 /// ターゲットレースのリポジトリ
 class TargetRaceRepository {
@@ -58,6 +59,8 @@ class TargetRaceRepository {
     required DateTime date,
     required bool isMain,
     String? note,
+    PbEvent? raceType, // 追加
+    int? distance,     // 追加 (m)
   }) async {
     await _db.into(_db.targetRaces).insert(
           TargetRacesCompanion(
@@ -66,6 +69,8 @@ class TargetRaceRepository {
             date: Value(date),
             isMain: Value(isMain),
             note: Value(note),
+            raceType: Value(raceType),
+            distance: Value(distance),
           ),
         );
   }
@@ -77,6 +82,8 @@ class TargetRaceRepository {
     required DateTime date,
     required bool isMain,
     String? note,
+    PbEvent? raceType, // 追加
+    int? distance,     // 追加 (m)
   }) async {
     await (_db.update(_db.targetRaces)..where((t) => t.id.equals(id))).write(
       TargetRacesCompanion(
@@ -84,6 +91,8 @@ class TargetRaceRepository {
         date: Value(date),
         isMain: Value(isMain),
         note: Value(note),
+        raceType: Value(raceType),
+        distance: Value(distance),
       ),
     );
   }

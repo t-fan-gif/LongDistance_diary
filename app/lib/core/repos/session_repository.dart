@@ -33,6 +33,7 @@ class SessionRepository {
     double? load,
     int? repLoad,
     ActivityType activityType = ActivityType.running,
+    bool isRace = false, // 追加
   }) async {
     final id = _uuid.v4();
     await _db.into(_db.sessions).insert(
@@ -58,6 +59,7 @@ class SessionRepository {
         load: Value(load),
         repLoad: Value(repLoad),
         activityType: Value(activityType),
+        isRace: Value(isRace), // 追加
       ),
     );
     return id;
@@ -86,6 +88,7 @@ class SessionRepository {
     double? load,
     int? repLoad,
     ActivityType? activityType,
+    bool? isRace, // 追加
   }) async {
     await (_db.update(_db.sessions)..where((t) => t.id.equals(id))).write(
       SessionsCompanion(
@@ -122,6 +125,7 @@ class SessionRepository {
         load: load != null ? Value(load) : const Value.absent(),
         repLoad: repLoad != null ? Value(repLoad) : const Value.absent(),
         activityType: activityType != null ? Value(activityType) : const Value.absent(),
+        isRace: isRace != null ? Value(isRace) : const Value.absent(), // 追加
       ),
     );
   }

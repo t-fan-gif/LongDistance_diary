@@ -582,9 +582,74 @@ class _TodayView extends ConsumerWidget {
         ),
 
         _buildSectionHeader(context, '今日の予定 (${DateFormat('M月d日').format(dateKey)})'),
+        
+        // 今日のレースがあるかチェックして表示
+        racesAsync.maybeWhen(
+           data: (races) {
+             final todaysRace = races.isEmpty ? null : races.firstWhere(
+               (r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day,
+               orElse: () => races.first, // Dummy
+             );
+             final exists = races.any((r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day);
+             
+             if (!exists) return const SizedBox.shrink();
+             
+             // 実際のレースオブジェクト取得（firstWhereのダミー対策）
+             final race = races.firstWhere((r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day);
+
+             return Card(
+               color: Colors.orange.shade50,
+               elevation: 2,
+               margin: const EdgeInsets.only(bottom: 8),
+               child: ListTile(
+                 leading: const Icon(Icons.emoji_events, color: Colors.orange, size: 32),
+                 title: Text(race.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                 subtitle: Text(
+                   race.raceType != null 
+                     ? (race.raceType == PbEvent.other && race.distance != null ? '${race.distance}m' : race.raceType!.name.toUpperCase())
+                     : 'レース当日',
+                 ),
+                 trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                       IconButton(
+                        icon: const Icon(Icons.directions_run),
+                        tooltip: 'レース結果を入力',
+                        onPressed: () {
+                          // レース結果入力へ遷移
+                          final dateString = race.date.toIso8601String().split('T')[0];
+                          final query = <String, String>{
+                            'date': dateString,
+                            'menuName': race.name,
+                            'isRace': 'true', // レースフラグ
+                            if (race.distance != null) 'distance': race.distance.toString(),
+                            'activityType': 'running', 
+                          };
+                          final uri = Uri(path: '/session/new', queryParameters: query);
+                          context.push(uri.toString());
+                        },
+                      ),
+                    ],
+                  ),
+               ),
+             );
+           },
+           orElse: () => const SizedBox.shrink(),
+        ),
+
         plansAsync.when(
           data: (plans) {
-            if (plans.isEmpty) return const Card(child: ListTile(title: Text('予定はありません')));
+            // レースがある場合は「予定はありません」を非表示にする
+            // racesAsyncのデータを確認（少し非効率だが簡便に実装）
+            final hasRace = racesAsync.maybeWhen(
+              data: (races) => races.any((r) => r.date.year == dateKey.year && r.date.month == dateKey.month && r.date.day == dateKey.day),
+              orElse: () => false,
+            );
+
+            if (plans.isEmpty) {
+              if (hasRace) return const SizedBox.shrink(); // レースがあるなら「予定なし」は出さない
+              return const Card(child: ListTile(title: Text('予定はありません')));
+            }
             return Column(
               children: plans.map((p) => Card(
                 child: ListTile(

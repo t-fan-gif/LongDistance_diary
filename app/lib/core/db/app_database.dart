@@ -11,7 +11,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -45,6 +45,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             // Version 7: TargetRaces テーブル作成
             await m.createTable(targetRaces);
+          }
+          if (from < 8) {
+            // Version 8: TargetRaces に種目と距離、Sessions に isRace 追加
+            await m.addColumn(targetRaces, targetRaces.raceType);
+            await m.addColumn(targetRaces, targetRaces.distance);
+            await m.addColumn(sessions, sessions.isRace);
           }
         },
         beforeOpen: (details) async {

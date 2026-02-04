@@ -63,6 +63,7 @@ class Sessions extends Table {
   RealColumn get load => real().nullable()();
   IntColumn get repLoad => integer().nullable()();
   TextColumn get activityType => textEnum<ActivityType>().withDefault(const Constant('running'))();
+  BoolColumn get isRace => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -91,6 +92,8 @@ class TargetRaces extends Table {
   DateTimeColumn get date => dateTime()();   // レース日
   BoolColumn get isMain => boolean()();      // メインターゲットかどうか
   TextColumn get note => text().nullable()();
+  TextColumn get raceType => textEnum<PbEvent>().nullable()(); // 種目
+  IntColumn get distance => integer().nullable()(); // 距離(m) (その他種目の場合など)
 
   @override
   Set<Column<Object>> get primaryKey => {id};

@@ -80,6 +80,7 @@ class PersonalBestSettingsPage extends ConsumerWidget {
       case PbEvent.w20km: return '20km競歩';
       case PbEvent.w35km: return '35km競歩';
       case PbEvent.w50km: return '50km競歩';
+      case PbEvent.other: return 'その他'; // 追加
     }
   }
 
@@ -279,6 +280,7 @@ class _PbEditorSheetState extends ConsumerState<_PbEditorSheet> {
       case PbEvent.w20km: return '20km競歩';
       case PbEvent.w35km: return '35km競歩';
       case PbEvent.w50km: return '50km競歩';
+      case PbEvent.other: return 'その他'; // 追加
     }
   }
 

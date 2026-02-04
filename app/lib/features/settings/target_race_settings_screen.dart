@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
+import '../../core/domain/enums.dart'; // 追加
 import '../../core/repos/target_race_repository.dart';
 import '../calendar/calendar_providers.dart';
 
@@ -128,6 +129,8 @@ class _TargetRaceSettingsScreenState extends ConsumerState<TargetRaceSettingsScr
           date: result['date'],
           isMain: result['isMain'],
           note: result['note'],
+          raceType: result['raceType'],
+          distance: result['distance'],
         );
       } else {
         // 更新
@@ -137,6 +140,8 @@ class _TargetRaceSettingsScreenState extends ConsumerState<TargetRaceSettingsScr
           date: result['date'],
           isMain: result['isMain'],
           note: result['note'],
+          raceType: result['raceType'],
+          distance: result['distance'],
         );
       }
       // リフレッシュ
@@ -207,6 +212,21 @@ class _RaceCard extends StatelessWidget {
       countdownColor = daysUntil <= 7 ? Colors.orange : Colors.teal;
     }
 
+    // 種目表示
+    String typeText = '';
+    if (race.raceType != null) {
+      if (race.raceType == PbEvent.other) {
+        if (race.distance != null) {
+          typeText = '${race.distance}m';
+        } else {
+          typeText = 'その他';
+        }
+      } else {
+        typeText = race.raceType!.name.toUpperCase();
+        // 簡単な変換マップがあればより良いが、一旦enum名で
+      }
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -232,6 +252,8 @@ class _RaceCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(DateFormat('yyyy年M月d日（E）', 'ja').format(race.date)),
+            if (typeText.isNotEmpty)
+              Text(typeText, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             Text(
               countdownText,
               style: TextStyle(
@@ -270,22 +292,27 @@ class _RaceEditDialog extends StatefulWidget {
 class _RaceEditDialogState extends State<_RaceEditDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _noteController;
+  late final TextEditingController _distanceController;
   late DateTime _selectedDate;
   late bool _isMain;
+  PbEvent? _selectedType;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.race?.name ?? '');
     _noteController = TextEditingController(text: widget.race?.note ?? '');
+    _distanceController = TextEditingController(text: widget.race?.distance?.toString() ?? '');
     _selectedDate = widget.race?.date ?? DateTime.now().add(const Duration(days: 30));
     _isMain = widget.isMain;
+    _selectedType = widget.race?.raceType;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _noteController.dispose();
+    _distanceController.dispose();
     super.dispose();
   }
 
@@ -324,6 +351,38 @@ class _RaceEditDialogState extends State<_RaceEditDialog> {
               },
             ),
             const Divider(),
+            // 種目選択
+            DropdownButtonFormField<PbEvent>(
+              value: _selectedType,
+              decoration: const InputDecoration(
+                labelText: '種目（任意）',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                 const DropdownMenuItem(value: null, child: Text('種目を選択')),
+                 ...PbEvent.values.map((e) => DropdownMenuItem(
+                   value: e,
+                   child: Text(e == PbEvent.other ? 'その他（距離入力）' : e.name.toUpperCase()),
+                 )),
+              ],
+              onChanged: (val) {
+                setState(() => _selectedType = val);
+              },
+            ),
+            if (_selectedType == PbEvent.other) ...[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _distanceController,
+                decoration: const InputDecoration(
+                  labelText: '距離 (m)',
+                  hintText: '例: 3000',
+                  border: OutlineInputBorder(),
+                  suffixText: 'm',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+            const SizedBox(height: 16),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('メインターゲット'),
@@ -362,6 +421,10 @@ class _RaceEditDialogState extends State<_RaceEditDialog> {
               'date': _selectedDate,
               'isMain': _isMain,
               'note': _noteController.text.isEmpty ? null : _noteController.text,
+              'raceType': _selectedType,
+              'distance': _selectedType == PbEvent.other 
+                  ? int.tryParse(_distanceController.text) 
+                  : null,
             });
           },
           child: const Text('保存'),

@@ -14,6 +14,7 @@ enum PbEvent {
   w20km,
   w35km,
   w50km,
+  other, // その他（距離指定）
 }
 
 enum ActivityType { running, walking }

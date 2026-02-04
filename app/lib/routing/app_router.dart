@@ -75,6 +75,7 @@ final GoRouter appRouter = GoRouter(
           initialNote: q['note'],
           initialActivityType: q['activityType'],
           initialDailyMemo: q['dailyMemo'],
+          initialIsRace: q['isRace'] == 'true', // 追加
         );
       },
     ),
