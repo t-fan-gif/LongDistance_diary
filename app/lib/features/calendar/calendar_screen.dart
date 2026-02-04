@@ -502,11 +502,25 @@ class _CalendarCell extends StatelessWidget {
                             ),
                         ],
                       )
-                    : dayData.plans.isNotEmpty
-                        ? const Center(
-                            child: Icon(Icons.event_note, size: 12, color: Colors.orange),
-                          )
-                        : const SizedBox.shrink(),
+                    : Consumer(
+                        builder: (context, ref, child) {
+                          final racesAsync = ref.watch(allTargetRacesProvider);
+                          final hasRace = racesAsync.maybeWhen(
+                            data: (races) => races.any((r) =>
+                              r.date.year == dayData.date.year &&
+                              r.date.month == dayData.date.month &&
+                              r.date.day == dayData.date.day
+                            ),
+                            orElse: () => false,
+                          );
+                          if (dayData.plans.isNotEmpty || hasRace) {
+                            return const Center(
+                              child: Icon(Icons.event_note, size: 12, color: Colors.orange),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
               ),
             ),
           ],
@@ -632,13 +646,17 @@ class _TodayView extends ConsumerWidget {
                             icon: const Icon(Icons.directions_run, size: 32, color: Colors.orange),
                             tooltip: 'レース結果を入力',
                             onPressed: () {
+                              // 競歩種目かどうかを判定
+                              final isWalking = race.raceType != null && 
+                                [PbEvent.w3000, PbEvent.w5000, PbEvent.w10000, PbEvent.w20km, PbEvent.w35km, PbEvent.w50km, PbEvent.wHalf, PbEvent.wFull]
+                                  .contains(race.raceType);
                               final dateString = race.date.toIso8601String().split('T')[0];
                               final query = <String, String>{
                                 'date': dateString,
                                 'menuName': race.name,
                                 'isRace': 'true',
                                 if (race.distance != null) 'distance': race.distance.toString(),
-                                'activityType': 'running',
+                                'activityType': isWalking ? 'walking' : 'running',
                               };
                               final uri = Uri(path: '/session/new', queryParameters: query);
                               context.push(uri.toString());

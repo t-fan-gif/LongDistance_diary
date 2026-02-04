@@ -222,12 +222,16 @@ class DayDetailScreen extends ConsumerWidget {
         trailing: IconButton(
           icon: const Icon(Icons.directions_run, color: Colors.orange),
           onPressed: () {
+            // 競歩種目かどうかを判定
+            final isWalking = race.raceType != null && 
+              [PbEvent.w3000, PbEvent.w5000, PbEvent.w10000, PbEvent.w20km, PbEvent.w35km, PbEvent.w50km, PbEvent.wHalf, PbEvent.wFull]
+                .contains(race.raceType);
             final query = <String, String>{
               'date': dateString,
               'menuName': race.name,
               'isRace': 'true',
               if (race.distance != null) 'distance': race.distance.toString(),
-              'activityType': 'running',
+              'activityType': isWalking ? 'walking' : 'running',
             };
             final uri = Uri(path: '/session/new', queryParameters: query);
             context.push(uri.toString());
