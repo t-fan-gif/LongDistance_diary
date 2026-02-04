@@ -681,10 +681,15 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     final totalSec = h * 3600 + m * 60 + s + ms / 1000.0;
     final distKm = double.tryParse(_distanceController.text) ?? 0;
 
-    if (distKm > 0 && totalSec > 0) {
-      final paceSecPerKm = (totalSec / distKm).round();
-      _paceController.text = _formatPaceForInput(paceSecPerKm);
-      _estimateZoneAction();
+    if (totalSec > 0) {
+      // 時間（分）を更新（小数点以下も含めるためdoubleで。保存時はroundされる）
+      _durationController.text = (totalSec / 60.0).toStringAsFixed(2);
+
+      if (distKm > 0) {
+        final paceSecPerKm = (totalSec / distKm).round();
+        _paceController.text = _formatPaceForInput(paceSecPerKm);
+        _estimateZoneAction();
+      }
     }
   }
 
