@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' hide Column;
 import '../../core/domain/enums.dart';
+import '../../core/db/db_providers.dart';
 import '../../core/db/app_database.dart';
 import '../../core/services/vdot_calculator.dart';
 import '../../core/services/load_calculator.dart';
@@ -12,13 +15,38 @@ import '../calendar/calendar_providers.dart';
 import '../history/history_list_screen.dart';
 import '../settings/advanced_settings_screen.dart';
 
+final monthlyPlanDistanceProvider = FutureProvider<double>((ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month, 1);
+  final end = DateTime(now.year, now.month + 1, 1);
+  final plans = await (db.select(db.plans)
+    ..where((t) => t.date.isBiggerOrEqualValue(start) & t.date.isSmallerThanValue(end)))
+    .get();
+  return plans.fold<double>(0.0, (sum, e) => sum + (e.distance ?? 0) / 1000.0);
+});
+
+final weeklyPlanDistanceProvider = FutureProvider<double>((ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  final now = DateTime.now();
+  // 週の開始（月曜日）を計算
+  final start = now.subtract(Duration(days: now.weekday - 1));
+  final startDay = DateTime(start.year, start.month, start.day);
+  final endDay = startDay.add(const Duration(days: 7));
+  
+  final plans = await (db.select(db.plans)
+    ..where((t) => t.date.isBiggerOrEqualValue(startDay) & t.date.isSmallerThanValue(endDay)))
+    .get();
+  return plans.fold<double>(0.0, (sum, e) => sum + (e.distance ?? 0) / 1000.0);
+});
+
 class AnalysisScreen extends ConsumerWidget {
   const AnalysisScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         drawerEnableOpenDragGesture: false,
         appBar: AppBar(
@@ -27,7 +55,8 @@ class AnalysisScreen extends ConsumerWidget {
           bottom: const TabBar(
             tabs: [
               Tab(text: '集計'),
-              Tab(text: '分析 (CTL/ATL)'),
+              Tab(text: '解析'),
+              Tab(text: 'レース'),
             ],
           ),
         ),
@@ -35,6 +64,7 @@ class AnalysisScreen extends ConsumerWidget {
           children: [
             _SummaryTab(),
             _TrendsTab(),
+            _RaceHistoryTab(),
           ],
         ),
       ),
@@ -59,6 +89,8 @@ class _SummaryTab extends ConsumerWidget {
 
         final weeklyData = <String, double>{};
         final monthlyData = <String, double>{};
+        final weeklyPlanData = <String, double>{}; // 予定の走行距離
+        final monthlyPlanData = <String, double>{};
         final weeklyLoad = <String, int>{};
         final monthlyLoad = <String, int>{};
 
@@ -96,18 +128,59 @@ class _SummaryTab extends ConsumerWidget {
         final monthlyGoal = ref.watch(monthlyDistanceGoalProvider);
         final weeklyGoal = ref.watch(weeklyDistanceGoalProvider);
 
+        // 予定データの集計（別プロバイダから取得することを想定しているが、ここでは一旦簡易的にListViewの外部で計算）
+        // ※実際には FutureProvider.family<List<Plan>, DateTimeRange> などを watch するべきだが、
+        // 現状の実装に合わせて構成します。
+        
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildSectionTitle(context, '目標進捗'),
-            _buildGoalCard(context, '今月の走行距離', currentMonthDist, monthlyGoal),
-            _buildGoalCard(context, '今週の走行距離', currentWeekDist, weeklyGoal),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildSectionTitle(context, '目標進捗'),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvancedSettingsScreen())),
+                  icon: const Icon(Icons.settings, size: 16),
+                  label: const Text('目標設定', style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+            _buildGoalCard(
+              context, 
+              '今月の走行距離', 
+              currentMonthDist, 
+              monthlyGoal > 0 ? monthlyGoal : ref.watch(monthlyPlanDistanceProvider).valueOrNull ?? 0,
+              planTotal: ref.watch(monthlyPlanDistanceProvider).valueOrNull,
+            ),
+            _buildGoalCard(
+              context, 
+              '今週の走行距離', 
+              currentWeekDist, 
+              weeklyGoal > 0 ? weeklyGoal : ref.watch(weeklyPlanDistanceProvider).valueOrNull ?? 0,
+              planTotal: ref.watch(weeklyPlanDistanceProvider).valueOrNull,
+            ),
             const SizedBox(height: 24),
-            _buildSectionTitle(context, '月間サマリー'),
-            ...sortedMonths.take(6).map((month) => _buildStatCard(context, month, monthlyData[month]!, monthlyLoad[month]!)),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, '週間サマリー'),
-            ...sortedWeeks.take(8).map((week) => _buildStatCard(context, week, weeklyData[week]!, weeklyLoad[week]!)),
+            _buildSectionTitle(context, 'サマリー (直近)'),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: ListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(), // 親ListViewでスクロールさせる
+                children: [
+                  ...sortedMonths.take(3).map((month) => _buildStatCard(context, month, monthlyData[month]!, monthlyLoad[month]!)),
+                  const Divider(),
+                  ...sortedWeeks.take(4).map((week) => _buildStatCard(context, week, weeklyData[week]!, weeklyLoad[week]!)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: TextButton(
+                onPressed: () => context.push('/history'),
+                child: const Text('すべての履歴を見る'),
+              ),
+            ),
           ],
         );
       },
@@ -116,8 +189,8 @@ class _SummaryTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildGoalCard(BuildContext context, String title, double current, double goal) {
-    final progress = (current / goal).clamp(0.0, 1.0);
+  Widget _buildGoalCard(BuildContext context, String title, double current, double goal, {double? planTotal}) {
+    final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -144,12 +217,19 @@ class _SummaryTab extends ConsumerWidget {
               borderRadius: BorderRadius.circular(4),
             ),
             const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                '${(progress * 100).toInt()}% 達成',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${(progress * 100).toInt()}% 達成',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                if (planTotal != null && planTotal > 0)
+                  Text(
+                    '予定合計: ${planTotal.toStringAsFixed(1)}km',
+                    style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                  ),
+              ],
             ),
           ],
         ),
@@ -222,7 +302,9 @@ class _TrendsTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildPredictionSection(ref, sessions, vdotCalc, analysisService),
+            _buildPredictionSection(ref, sessions, vdotCalc, analysisService, ActivityType.running),
+            const SizedBox(height: 16),
+            _buildPredictionSection(ref, sessions, vdotCalc, analysisService, ActivityType.walking),
             const SizedBox(height: 24),
             _buildTrendSection(context, trends),
           ],
@@ -233,15 +315,20 @@ class _TrendsTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildPredictionSection(WidgetRef ref, List<Session> sessions, VdotCalculator vdotCalc, AnalysisService analysisService) {
+  Widget _buildPredictionSection(WidgetRef ref, List<Session> sessions, VdotCalculator vdotCalc, AnalysisService analysisService, ActivityType type) {
+    final typeSessions = sessions.where((s) => s.activityType == type).toList();
+    
     return FutureBuilder<double?>(
-      future: analysisService.estimateCurrentVdot(sessions),
+      future: analysisService.estimateCurrentVdot(typeSessions),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) {
-          return const Card(
+          return Card(
             child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('直近30日のポイント練習データからパフォーマンスを推定します。'),
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                '${type.label}: 直近30日のポイント練習データからパフォーマンスを推定します。',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             ),
           );
         }
@@ -258,15 +345,24 @@ class _TrendsTab extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('推定パフォーマンス(VDOT)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('${type.label} 推定パフォーマンス', style: const TextStyle(fontWeight: FontWeight.bold)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(color: Colors.teal.shade100, borderRadius: BorderRadius.circular(12)),
-                      child: Text(currentVdot.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
+                      child: Text('VDOT ${currentVdot.toStringAsFixed(1)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal, fontSize: 13)),
                     ),
                   ],
                 ),
-                const Text('直近の強度の高い練習から推定されるレース予測タイム', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                const Row(
+                  children: [
+                    Text('※試験実装中: レース予測タイム', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    SizedBox(width: 4),
+                    Tooltip(
+                      message: '直近の強度の高い練習から推定される目安です。',
+                      child: Icon(Icons.info_outline, size: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
                 const Divider(),
                 ...predictions.entries.map((e) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -325,13 +421,13 @@ class _TrendsTab extends ConsumerWidget {
               borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
               lineBarsData: [
                 LineChartBarData(
-                  spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.ctl)).toList(),
+                  spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), double.parse(e.value.ctl.toStringAsFixed(1)))).toList(),
                   color: Colors.blue,
                   dotData: const FlDotData(show: false),
                   belowBarData: BarAreaData(show: true, color: Colors.blue.withValues(alpha: 0.1)),
                 ),
                 LineChartBarData(
-                  spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.atl)).toList(),
+                  spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), double.parse(e.value.atl.toStringAsFixed(1)))).toList(),
                   color: Colors.red,
                   dotData: const FlDotData(show: false),
                 ),
@@ -341,5 +437,79 @@ class _TrendsTab extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+class _RaceHistoryTab extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionsAsync = ref.watch(allSessionsProvider);
+
+    return sessionsAsync.when(
+      data: (sessions) {
+        final races = sessions.where((s) => s.isRace).toList()..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+
+        if (races.isEmpty) {
+          return const Center(child: Text('レースの記録がありません'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: races.length,
+          itemBuilder: (context, index) {
+            final race = races[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: const Icon(Icons.emoji_events, color: Colors.amber),
+                title: Text(race.templateText, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(DateFormat('yyyy/MM/dd').format(race.startedAt)),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${(race.distanceMainM ?? 0) / 1000}km',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    if (race.durationMainSec != null)
+                      Text(
+                        _formatDuration(race.durationMainSec!),
+                        style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                      ),
+                  ],
+                ),
+                onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(race.templateText),
+                        content: Text('${DateFormat('yyyy/MM/dd').format(race.startedAt)}\n距離: ${(race.distanceMainM ?? 0) / 1000}km\nタイム: ${race.durationMainSec != null ? _formatDuration(race.durationMainSec!) : "-"}'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる')),
+                          TextButton(onPressed: () { 
+                            Navigator.pop(context);
+                            context.push('/session/${race.id}');
+                          }, child: const Text('編集')),
+                        ],
+                      ),
+                    );
+                },
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('エラー: $e')),
+    );
+  }
+
+  String _formatDuration(int totalSec) {
+    final h = totalSec ~/ 3600;
+    final m = (totalSec % 3600) ~/ 60;
+    final s = totalSec % 60;
+    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 }

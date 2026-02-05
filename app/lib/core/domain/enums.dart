@@ -45,6 +45,15 @@ extension PbEventLabels on PbEvent {
 
 enum ActivityType { running, walking }
 
+extension ActivityTypeLabels on ActivityType {
+  String get label {
+    switch (this) {
+      case ActivityType.running: return 'ランニング';
+      case ActivityType.walking: return '競歩';
+    }
+  }
+}
+
 enum Zone { E, M, T, I, R }
 
 enum RestType { stop, jog }

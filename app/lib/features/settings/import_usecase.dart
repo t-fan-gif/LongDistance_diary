@@ -56,10 +56,10 @@ class ImportUseCase {
           if (plan['pace'] == null && plan['zone'] != null) {
             try {
               final zone = Zone.values.firstWhere((z) => z.name == plan['zone']);
-              final activityType = ActivityType.values.firstWhere(
-                (a) => a.name == (plan['activity_type'] ?? 'running'),
-                orElse: () => ActivityType.running,
-              );
+              // プランに設定されている種目を優先し、なければデフォルトでランニング
+              final activityType = plan['activity_type'] != null 
+                ? ActivityType.values.firstWhere((a) => a.name == plan['activity_type'], orElse: () => ActivityType.running)
+                : ActivityType.running;
               
               final suggestedPace = await paceService.getSuggestedPaceForZone(zone, activityType);
               if (suggestedPace != null) {
