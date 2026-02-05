@@ -146,6 +146,24 @@ class VdotCalculator {
     };
   }
 
+  /// 指定されたVDOTで主要距離の予測タイムを計算する
+  Map<PbEvent, int> predictTimes(double vdot) {
+    final results = <PbEvent, int>{};
+    final events = [
+      PbEvent.m5000,
+      PbEvent.m10000,
+      PbEvent.half,
+      PbEvent.full,
+    ];
+
+    for (final event in events) {
+      final dist = getDistanceForEvent(event);
+      final timeMin = _calculateTimeForDistance(dist.toDouble(), vdot);
+      results[event] = (timeMin * 60).round();
+    }
+    return results;
+  }
+
   /// PbEventに対応する距離(m)を返す
   int getDistanceForEvent(PbEvent event) {
     switch (event) {

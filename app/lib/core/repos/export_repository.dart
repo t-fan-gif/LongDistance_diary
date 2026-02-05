@@ -104,7 +104,7 @@ class ExportRepository {
     // ペースを除去してゾーンのみ保持（選手PBで再計算させるため）
     final strippedPlans = plans.map((e) {
       final json = e.toJson();
-      json.remove('pace_sec_per_km'); // ペースを削除
+      json.remove('pace'); // 'pace_sec_per_km' ではなく 'pace' が正解
       return json;
     }).toList();
 

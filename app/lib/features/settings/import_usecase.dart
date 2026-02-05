@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/domain/enums.dart';
+import '../../core/services/service_providers.dart';
 import '../../core/repos/export_repository.dart';
 import '../calendar/calendar_providers.dart';
 import 'export_usecase.dart';
@@ -41,6 +43,34 @@ class ImportUseCase {
         final file = File(path);
         jsonString = await file.readAsString();
       }
+
+      // 予定のみインポート（コーチ配布用）の場合のペース自動調整
+      final Map<String, dynamic> data = json.decode(jsonString);
+      if (data['type'] == 'plans_only' && data['plans'] != null) {
+        final paceService = _ref.read(trainingPaceServiceProvider);
+        final plans = data['plans'] as List;
+        
+        for (final plan in plans) {
+          // ペースが未設定かつゾーンが設定されている場合、選手のPBから逆算
+          if (plan['pace'] == null && plan['zone'] != null) {
+            try {
+              final zone = Zone.values.firstWhere((z) => z.name == plan['zone']);
+              final activityType = ActivityType.values.firstWhere(
+                (a) => a.name == (plan['activity_type'] ?? 'running'),
+                orElse: () => ActivityType.running,
+              );
+              
+              final suggestedPace = await paceService.getSuggestedPaceForZone(zone, activityType);
+              if (suggestedPace != null) {
+                plan['pace'] = suggestedPace;
+              }
+            } catch (_) {
+              // 変換エラー等はスキップ
+            }
+          }
+        }
+        jsonString = json.encode(data);
+      }
       
       await _repo.importFromJson(jsonString);
 
@@ -51,6 +81,7 @@ class ImportUseCase {
       _ref.invalidate(personalBestsProvider);
       _ref.invalidate(menuPresetsProvider);
       _ref.invalidate(selectedMonthProvider); // カレンダー一式
+      _ref.invalidate(weeklyPlansProvider);   // 週間リストも更新
     }
   }
 }

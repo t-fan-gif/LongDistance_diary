@@ -8,9 +8,6 @@ import '../../core/domain/enums.dart'; // 追加
 import '../../core/repos/target_race_repository.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart'; // 加筆: dayPlansProviderのため
-import '../../core/services/vdot_calculator.dart'; // 加筆
-import '../../core/services/load_calculator.dart'; // 加筆
-import '../../core/repos/plan_repository.dart'; // 加筆: PlanInputのため
 import '../plan_editor/weekly_plan_screen.dart'; // 加筆: weeklyPlansProviderのため
 
 

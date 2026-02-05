@@ -832,8 +832,9 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       ref.invalidate(monthCalendarDataProvider(monthKey));
 
       // 日詳細を更新（該当法）
-      final dayKey = DateTime(_selectedDateTime.year, _selectedDateTime.month, _selectedDateTime.day);
-      ref.invalidate(daySessionsProvider(dayKey));
+    final dayKey = DateTime(_selectedDateTime.year, _selectedDateTime.month, _selectedDateTime.day);
+    ref.invalidate(daySessionsProvider(dayKey));
+    ref.invalidate(weeklyPlansProvider);
       
       // 前後の月も念のため更新（月跨ぎなどを考慮してシンプルに全カレンダーデータをリセットでも良いが、ProviderFamily全体を無効化できないため）
       // 一旦、現在の閲覧月が再取得されるように monthCalendarDataProvider 全体を無効にするには、
@@ -877,8 +878,9 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       await repo.deleteSession(widget.sessionId!);
       
       // 削除した月・日のデータを無効化
-      ref.invalidate(monthCalendarDataProvider(monthKey));
-      ref.invalidate(daySessionsProvider(dayKey));
+    ref.invalidate(monthCalendarDataProvider(monthKey));
+    ref.invalidate(daySessionsProvider(dayKey));
+    ref.invalidate(weeklyPlansProvider);
       
       if (mounted) {
         context.pop();

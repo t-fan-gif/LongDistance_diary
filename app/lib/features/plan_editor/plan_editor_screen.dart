@@ -416,6 +416,7 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
       ref.invalidate(monthCalendarDataProvider(monthDate));
       ref.invalidate(dayPlansProvider(widget.date));
       ref.invalidate(daySessionsProvider(widget.date));
+      ref.invalidate(weeklyPlansProvider);
       
       // 保存成功時のフィードバック
       if (mounted) {
