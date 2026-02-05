@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/domain/enums.dart';
+import '../../core/db/app_database.dart';
+import '../../core/services/vdot_calculator.dart';
 import '../../core/services/load_calculator.dart';
 import '../../core/services/service_providers.dart';
 import '../../core/services/analysis_service.dart';
 import '../calendar/calendar_providers.dart';
 import '../history/history_list_screen.dart';
+import '../settings/advanced_settings_screen.dart';
 
 class AnalysisScreen extends ConsumerWidget {
   const AnalysisScreen({super.key});

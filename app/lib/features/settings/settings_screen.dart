@@ -6,12 +6,7 @@ import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/repos/menu_preset_repository.dart';
 import '../../core/repos/personal_best_repository.dart';
-
-/// PersonalBestRepositoryのプロバイダ
-final personalBestRepositoryProvider = Provider<PersonalBestRepository>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return PersonalBestRepository(db);
-});
+import '../../core/services/service_providers.dart'; // personalBestRepositoryProvider はここから
 
 /// 全PBを取得
 final personalBestsProvider = FutureProvider<List<PersonalBest>>((ref) async {

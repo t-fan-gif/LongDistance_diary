@@ -12,6 +12,7 @@ import '../../core/services/vdot_calculator.dart';
 import '../../core/repos/personal_best_repository.dart';
 import '../settings/settings_screen.dart';
 import '../settings/advanced_settings_screen.dart';
+import '../../core/services/service_providers.dart'; // vdotCalculatorProvider, loadCalculatorProvider はここから取得
 
 /// 現在表示中の年月
 final selectedMonthProvider = StateProvider<DateTime>((ref) {
@@ -31,10 +32,7 @@ final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
   return SessionRepository(db);
 });
 
-/// LoadCalculatorのプロバイダ
-final loadCalculatorProvider = Provider<LoadCalculator>((ref) {
-  return LoadCalculator();
-});
+// LoadCalculatorのプロバイダは service_providers.dart で定義済み
 
 /// CapacityEstimatorのプロバイダ
 final capacityEstimatorProvider = Provider<CapacityEstimator>((ref) {
@@ -46,10 +44,7 @@ final heatmapScalerProvider = Provider<HeatmapScaler>((ref) {
   return HeatmapScaler();
 });
 
-/// VdotCalculatorのプロバイダ
-final vdotCalculatorProvider = Provider<VdotCalculator>((ref) {
-  return VdotCalculator();
-});
+// VdotCalculatorのプロバイダは service_providers.dart で定義済み
 
 /// ランニングの閾値ペース(s/km)
 final runningThresholdPaceProvider = FutureProvider<int?>((ref) async {

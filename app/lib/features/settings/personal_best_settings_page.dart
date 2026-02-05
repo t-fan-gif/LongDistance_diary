@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/db/app_database.dart';
 import '../calendar/calendar_providers.dart';
 import '../../core/domain/enums.dart';
+import '../../core/services/service_providers.dart'; // vdotCalculatorProviderのため
 import '../../core/services/vdot_calculator.dart';
 import 'settings_screen.dart';
 

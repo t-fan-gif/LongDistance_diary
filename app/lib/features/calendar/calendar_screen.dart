@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
+import '../../core/services/service_providers.dart'; // loadCalculatorProviderのため
 import '../../core/domain/enums.dart';
 import '../../core/db/app_database.dart';
 import '../plan_editor/weekly_plan_screen.dart';

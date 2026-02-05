@@ -7,9 +7,10 @@ import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
 import '../../core/repos/target_race_repository.dart';
 import '../../core/services/service_providers.dart';
-import '../calendar/calendar_providers.dart' hide vdotCalculatorProvider;
+import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
 import '../settings/settings_screen.dart';
+import 'weekly_plan_screen.dart'; // weeklyPlansProviderのため
 
 class PlanEditorScreen extends ConsumerStatefulWidget {
   const PlanEditorScreen({super.key, required this.dateString});

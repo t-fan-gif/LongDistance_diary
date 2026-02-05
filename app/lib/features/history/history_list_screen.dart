@@ -7,8 +7,9 @@ import 'package:intl/intl.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/domain/enums.dart';
-import '../../core/services/load_calculator.dart';
+import '../../core/repos/session_repository.dart';
 import '../calendar/calendar_providers.dart';
+import '../../core/services/service_providers.dart'; // loadCalculatorProviderのため
 import '../settings/advanced_settings_screen.dart';
 
 final allSessionsProvider = FutureProvider<List<Session>>((ref) async {

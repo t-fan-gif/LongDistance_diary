@@ -7,6 +7,7 @@ import '../../core/domain/enums.dart';
 import '../../core/services/service_providers.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
+import '../plan_editor/weekly_plan_screen.dart'; // weeklyPlansProviderのため
 import '../settings/advanced_settings_screen.dart';
 
 class SessionEditorScreen extends ConsumerStatefulWidget {

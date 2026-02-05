@@ -9,6 +9,7 @@ import '../../core/services/service_providers.dart';
 import '../../core/repos/export_repository.dart';
 import '../calendar/calendar_providers.dart';
 import 'export_usecase.dart';
+import '../plan_editor/weekly_plan_screen.dart'; // weeklyPlansProviderのため
 import 'settings_screen.dart';
 
 final importUseCaseProvider = Provider<ImportUseCase>((ref) {
