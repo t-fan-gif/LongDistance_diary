@@ -9,6 +9,9 @@ import '../../core/repos/target_race_repository.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart'; // 加筆: dayPlansProviderのため
 import '../plan_editor/weekly_plan_screen.dart'; // 加筆: weeklyPlansProviderのため
+import '../../core/services/service_providers.dart';
+import '../../core/repos/plan_repository.dart';
+import '../../core/services/vdot_calculator.dart';
 
 
 /// 全ターゲットレース プロバイダ
@@ -25,6 +28,7 @@ final upcomingRacesProvider = FutureProvider<List<TargetRace>>((ref) async {
 
 class TargetRaceSettingsScreen extends ConsumerStatefulWidget {
   const TargetRaceSettingsScreen({super.key});
+
 
   @override
   ConsumerState<TargetRaceSettingsScreen> createState() => _TargetRaceSettingsScreenState();
@@ -148,8 +152,57 @@ class _TargetRaceSettingsScreenState extends ConsumerState<TargetRaceSettingsScr
       // 他の画面への通知
       final date = result['date'] as DateTime;
       final monthDate = DateTime(date.year, date.month);
+      
+      // 同一日の予定（isRace == true）を自動更新
+      final planRepo = ref.read(planRepositoryProvider);
+      final plans = await planRepo.listPlansByDate(date);
+      final racePlans = plans.where((p) => p.isRace == true).toList();
+      if (racePlans.isNotEmpty) {
+        final updatedPlans = plans.map<PlanInput>((p) {
+          if (p.isRace == true) {
+            return PlanInput(
+              menuName: result['name'],
+              distance: result['distance'] ?? (result['raceType'] != null ? ref.read(vdotCalculatorProvider).getDistanceForEvent(result['raceType']) : null),
+              isRace: true,
+              activityType: p.activityType,
+              note: p.note,
+              reps: p.reps,
+              zone: p.zone,
+              pace: p.pace,
+            );
+          }
+          return PlanInput(
+            menuName: p.menuName,
+            distance: p.distance,
+            pace: p.pace,
+            zone: p.zone,
+            reps: p.reps,
+            note: p.note,
+            activityType: p.activityType,
+            isRace: p.isRace,
+          );
+        }).toList();
+        await planRepo.updatePlansForDate(date, updatedPlans);
+      }
+      
+      // 同一日の実績（isRace == true）も自動更新
+      final sessionRepo = ref.read(sessionRepositoryProvider);
+      final sessions = await sessionRepo.listSessionsByDate(date);
+      for (final s in sessions) {
+        if (s.isRace == true) {
+          final newDist = result['distance'] ?? (result['raceType'] != null ? ref.read(vdotCalculatorProvider).getDistanceForEvent(result['raceType']) : null);
+          await sessionRepo.updateSession(
+            id: s.id,
+            templateText: result['name'],
+            distanceMainM: newDist,
+          );
+        }
+      }
+
       ref.invalidate(monthCalendarDataProvider(monthDate));
       ref.invalidate(dayPlansProvider(date));
+      ref.invalidate(daySessionsProvider(date)); // 追加
+      ref.invalidate(dayRaceProvider(date)); // 追加
       ref.invalidate(weeklyPlansProvider);
     }
   }
@@ -375,7 +428,15 @@ class _RaceEditDialogState extends ConsumerState<_RaceEditDialog> {
                  )),
               ],
               onChanged: (val) {
-                setState(() => _selectedType = val);
+                setState(() {
+                  _selectedType = val;
+                  if (val != null && val != PbEvent.other) {
+                    final dist = ref.read(vdotCalculatorProvider).getDistanceForEvent(val);
+                    _distanceController.text = dist.toString();
+                  } else if (val == PbEvent.other) {
+                    _distanceController.text = '';
+                  }
+                });
               },
             ),
             if (_selectedType == PbEvent.other) ...[

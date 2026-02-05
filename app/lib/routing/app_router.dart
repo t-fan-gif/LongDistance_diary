@@ -13,6 +13,8 @@ import '../features/settings/data_settings_page.dart';
 import '../features/history/history_list_screen.dart';
 import '../features/analysis/analysis_screen.dart';
 import '../features/plan_editor/weekly_plan_screen.dart';
+import '../features/analysis/summary_history_screen.dart';
+import '../features/settings/goal_settings_page.dart';
 import '../features/settings/advanced_settings_screen.dart';
 import '../features/settings/training_support_screen.dart';
 import '../features/settings/target_race_settings_screen.dart';
@@ -111,6 +113,14 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'advanced',
           builder: (context, state) => const AdvancedSettingsScreen(),
+        ),
+        GoRoute(
+          path: 'goals',
+          builder: (context, state) => const GoalSettingsPage(),
+        ),
+        GoRoute(
+          path: 'goals_history',
+          builder: (context, state) => const SummaryHistoryScreen(),
         ),
         GoRoute(
           path: 'target-race',

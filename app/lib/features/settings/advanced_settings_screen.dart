@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../calendar/calendar_providers.dart';
+import 'goal_providers.dart';
 
 enum LoadCalculationMode {
   priorityPace('ペース優先', 'Pace > sRPE > Zone'),
@@ -26,16 +27,6 @@ final loadCalculationModeProvider = StateNotifierProvider<LoadCalculationModeNot
   (ref) => LoadCalculationModeNotifier(),
 );
 
-/// 月間走行距離目標を管理するプロバイダ
-final monthlyDistanceGoalProvider = StateNotifierProvider<DistanceGoalNotifier, double>(
-  (ref) => DistanceGoalNotifier('monthly_distance_goal', 200.0),
-);
-
-/// 週間走行距離目標を管理するプロバイダ
-final weeklyDistanceGoalProvider = StateNotifierProvider<DistanceGoalNotifier, double>(
-  (ref) => DistanceGoalNotifier('weekly_distance_goal', 50.0),
-);
-
 class LoadCalculationModeNotifier extends StateNotifier<LoadCalculationMode> {
   LoadCalculationModeNotifier() : super(LoadCalculationMode.priorityPace) {
     _loadFromPrefs();
@@ -53,26 +44,6 @@ class LoadCalculationModeNotifier extends StateNotifier<LoadCalculationMode> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, mode.name);
     state = mode;
-  }
-}
-
-class DistanceGoalNotifier extends StateNotifier<double> {
-  DistanceGoalNotifier(this.key, this.defaultValue) : super(defaultValue) {
-    _loadFromPrefs();
-  }
-
-  final String key;
-  final double defaultValue;
-
-  Future<void> _loadFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getDouble(key) ?? defaultValue;
-  }
-
-  Future<void> setGoal(double goal) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(key, goal);
-    state = goal;
   }
 }
 
@@ -135,29 +106,6 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
-          const SizedBox(height: 32),
-          _buildSectionHeader(context, 'トレーニング目標'),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _DistanceGoalInput(
-                    label: '月間走行距離目標',
-                    value: ref.watch(monthlyDistanceGoalProvider),
-                    onChanged: (val) => ref.read(monthlyDistanceGoalProvider.notifier).setGoal(val),
-                  ),
-                  const Divider(height: 32),
-                  _DistanceGoalInput(
-                    label: '週間走行距離目標',
-                    value: ref.watch(weeklyDistanceGoalProvider),
-                    onChanged: (val) => ref.read(weeklyDistanceGoalProvider.notifier).setGoal(val),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
           _buildSectionHeader(context, '計算式の確認'),
           _buildFormulaCard(
             context,
@@ -266,40 +214,3 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
   }
 }
 
-class _DistanceGoalInput extends StatelessWidget {
-  const _DistanceGoalInput({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
-        SizedBox(
-          width: 80,
-          child: TextFormField(
-            initialValue: value.toInt().toString(),
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.end,
-            decoration: const InputDecoration(
-              suffixText: ' km',
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
-            ),
-            onChanged: (val) {
-              final d = double.tryParse(val);
-              if (d != null) onChanged(d);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}

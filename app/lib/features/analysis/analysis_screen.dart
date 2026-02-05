@@ -12,8 +12,9 @@ import '../../core/services/load_calculator.dart';
 import '../../core/services/service_providers.dart';
 import '../../core/services/analysis_service.dart';
 import '../calendar/calendar_providers.dart';
-import '../history/history_list_screen.dart';
 import '../settings/advanced_settings_screen.dart';
+import '../settings/goal_providers.dart';
+import '../settings/target_race_settings_screen.dart';
 
 final monthlyPlanDistanceProvider = FutureProvider<double>((ref) async {
   final db = ref.watch(appDatabaseProvider);
@@ -87,14 +88,31 @@ class _SummaryTab extends ConsumerWidget {
           return const Center(child: Text('データがありません'));
         }
 
-        final weeklyData = <String, double>{};
-        final monthlyData = <String, double>{};
-        final weeklyPlanData = <String, double>{}; // 予定の走行距離
-        final monthlyPlanData = <String, double>{};
-        final weeklyLoad = <String, int>{};
-        final monthlyLoad = <String, int>{};
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final thirtyDaysAgo = today.subtract(const Duration(days: 30));
+
+        double last30DaysDist = 0;
+        int last30DaysLoad = 0;
+
+        // 週別集計用のMap (月曜日開始)
+        final weeklyStats = <String, (double, int)>{};
+        final last4WeeksKeys = <String>[];
+
+        // 直近4週間のキーを生成
+        final diffToMon = now.weekday - 1;
+        DateTime monday = today.subtract(Duration(days: diffToMon));
+        for (int i = 0; i < 4; i++) {
+          final weekStart = monday.subtract(Duration(days: 7 * i));
+          final weekEnd = weekStart.add(const Duration(days: 6));
+          final key = '${weekStart.year}-${weekStart.month.toString().padLeft(2, '0')}/${weekStart.day.toString().padLeft(2, '0')}~${weekEnd.month.toString().padLeft(2, '0')}/${weekEnd.day.toString().padLeft(2, '0')}';
+          last4WeeksKeys.add(key);
+          weeklyStats[key] = (0.0, 0);
+        }
 
         for (final s in sessions) {
+          if (s.status == SessionStatus.skipped) continue;
+
           final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
           final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
             s,
@@ -103,27 +121,43 @@ class _SummaryTab extends ConsumerWidget {
           );
           final load = (calculatedLoad?.toDouble() ?? s.load ?? 0).round();
           final distKm = (s.distanceMainM ?? 0) / 1000.0;
-          
-          final monthKey = '${s.startedAt.year}-${s.startedAt.month.toString().padLeft(2, '0')}';
-          monthlyData[monthKey] = (monthlyData[monthKey] ?? 0) + distKm;
-          monthlyLoad[monthKey] = (monthlyLoad[monthKey] ?? 0) + load;
 
-          final weekNum = _getWeekOfYear(s.startedAt);
-          final weekKey = '${s.startedAt.year}-W$weekNum';
-          weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + distKm;
-          weeklyLoad[weekKey] = (weeklyLoad[weekKey] ?? 0) + load;
+          // 直近30日間
+          if (s.startedAt.isAfter(thirtyDaysAgo)) {
+            last30DaysDist += distKm;
+            last30DaysLoad += load;
+          }
+
+          // 週別 (直近4週間に該当するか確認)
+          final sDate = s.startedAt;
+          final sMonday = DateTime(sDate.year, sDate.month, sDate.day).subtract(Duration(days: sDate.weekday - 1));
+          final sEnd = sMonday.add(const Duration(days: 6));
+          final sKey = '${sMonday.year}-${sMonday.month.toString().padLeft(2, '0')}/${sMonday.day.toString().padLeft(2, '0')}~${sEnd.month.toString().padLeft(2, '0')}/${sEnd.day.toString().padLeft(2, '0')}';
+
+          if (weeklyStats.containsKey(sKey)) {
+            final current = weeklyStats[sKey]!;
+            weeklyStats[sKey] = (current.$1 + distKm, current.$2 + load);
+          }
         }
 
-        final sortedWeeks = weeklyData.keys.toList()..sort((a, b) => b.compareTo(a));
-        final sortedMonths = monthlyData.keys.toList()..sort((a, b) => b.compareTo(a));
-
-        // 現在の月・週のデータを取得
-        final now = DateTime.now();
+        // 現在の月・週のデータを取得 (目標進捗用はカレンダー月/週で維持)
         final currentMonthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
-        final currentWeekKey = '${now.year}-W${_getWeekOfYear(now)}';
-        
-        final currentMonthDist = monthlyData[currentMonthKey] ?? 0;
-        final currentWeekDist = weeklyData[currentWeekKey] ?? 0;
+        final currentWeekNum = _getWeekOfYear(now);
+        final currentWeekKey = '${now.year}-W$currentWeekNum';
+
+        // 目標進捗用の今月・今週分を別途集計
+        double curMonthDist = 0;
+        double curWeekDist = 0;
+        for (final s in sessions) {
+          if (s.status == SessionStatus.skipped) continue;
+          final distKm = (s.distanceMainM ?? 0) / 1000.0;
+          if ('${s.startedAt.year}-${s.startedAt.month.toString().padLeft(2, '0')}' == currentMonthKey) {
+            curMonthDist += distKm;
+          }
+          if ('${s.startedAt.year}-W${_getWeekOfYear(s.startedAt)}' == currentWeekKey) {
+            curWeekDist += distKm;
+          }
+        }
         
         final monthlyGoal = ref.watch(monthlyDistanceGoalProvider);
         final weeklyGoal = ref.watch(weeklyDistanceGoalProvider);
@@ -140,7 +174,7 @@ class _SummaryTab extends ConsumerWidget {
               children: [
                 _buildSectionTitle(context, '目標進捗'),
                 TextButton.icon(
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdvancedSettingsScreen())),
+                  onPressed: () => context.push('/settings/goals'),
                   icon: const Icon(Icons.settings, size: 16),
                   label: const Text('目標設定', style: TextStyle(fontSize: 12)),
                 ),
@@ -149,36 +183,31 @@ class _SummaryTab extends ConsumerWidget {
             _buildGoalCard(
               context, 
               '今月の走行距離', 
-              currentMonthDist, 
+              curMonthDist, 
               monthlyGoal > 0 ? monthlyGoal : ref.watch(monthlyPlanDistanceProvider).valueOrNull ?? 0,
               planTotal: ref.watch(monthlyPlanDistanceProvider).valueOrNull,
             ),
             _buildGoalCard(
               context, 
               '今週の走行距離', 
-              currentWeekDist, 
+              curWeekDist, 
               weeklyGoal > 0 ? weeklyGoal : ref.watch(weeklyPlanDistanceProvider).valueOrNull ?? 0,
               planTotal: ref.watch(weeklyPlanDistanceProvider).valueOrNull,
             ),
             const SizedBox(height: 24),
-            _buildSectionTitle(context, 'サマリー (直近)'),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: ListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(), // 親ListViewでスクロールさせる
-                children: [
-                  ...sortedMonths.take(3).map((month) => _buildStatCard(context, month, monthlyData[month]!, monthlyLoad[month]!)),
-                  const Divider(),
-                  ...sortedWeeks.take(4).map((week) => _buildStatCard(context, week, weeklyData[week]!, weeklyLoad[week]!)),
-                ],
-              ),
-            ),
+            _buildSectionTitle(context, 'サマリー'),
+            _buildStatCard(context, '直近30日間', last30DaysDist, last30DaysLoad),
+            const Divider(),
+            ...last4WeeksKeys.map((key) {
+               final stats = weeklyStats[key]!;
+               return _buildStatCard(context, key, stats.$1, stats.$2);
+            }),
             const SizedBox(height: 12),
             Center(
-              child: TextButton(
-                onPressed: () => context.push('/history'),
-                child: const Text('すべての履歴を見る'),
+              child: TextButton.icon(
+                onPressed: () => context.push('/settings/goals_history'), // 後のステップでルート追加
+                icon: const Icon(Icons.history),
+                label: const Text('サマリー履歴（月別・週別）を見る'),
               ),
             ),
           ],

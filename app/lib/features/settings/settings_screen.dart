@@ -65,12 +65,19 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push('/settings/advanced'),
           ),
           const Divider(),
-          _buildSectionHeader(context, '目標設定'),
-          ListTile(
-            leading: const Icon(Icons.flag),
-            title: const Text('ターゲットレース'),
-            subtitle: const Text('メイン/サブレースの設定'),
-            trailing: const Icon(Icons.chevron_right),
+          _buildSectionHeader(context, '目標・レース設定'),
+          _buildSettingTile(
+            context,
+            icon: Icons.flag_outlined,
+            title: '走行距離目標',
+            subtitle: '月間・週間の目標距離を設定',
+            onTap: () => context.push('/settings/goals'),
+          ),
+          _buildSettingTile(
+            context,
+            icon: Icons.emoji_events_outlined,
+            title: 'ターゲットレース',
+            subtitle: '目標とするレースの管理',
             onTap: () => context.push('/settings/target-race'),
           ),
           const Divider(),
@@ -104,6 +111,22 @@ class SettingsScreen extends ConsumerWidget {
               fontWeight: FontWeight.bold,
             ),
       ),
+    );
+  }
+
+  Widget _buildSettingTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 }
