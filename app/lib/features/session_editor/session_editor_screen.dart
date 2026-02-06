@@ -917,8 +917,8 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
       // 負荷計算
       final loadCalc = ref.read(loadCalculatorProvider);
-      final rTpace = await ref.read(runningThresholdPaceProvider.future).catchError((_) => 0);
-      final wTpace = await ref.read(walkingThresholdPaceProvider.future).catchError((_) => 0);
+      final rTpace = await ref.read(runningThresholdPaceProvider.future).catchError((_) => 0) ?? 0;
+      final wTpace = await ref.read(walkingThresholdPaceProvider.future).catchError((_) => 0) ?? 0;
       final tPace = _activityType == ActivityType.walking ? (wTpace > 0 ? wTpace : null) : (rTpace > 0 ? rTpace : null);
       
       // 暫定的なSessionオブジェクトを作成して負荷計算に回す
