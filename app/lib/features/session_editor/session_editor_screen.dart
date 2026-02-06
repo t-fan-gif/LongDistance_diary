@@ -543,8 +543,6 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
                   // 実績入力：距離/時間 × セット
                   _buildSectionTitle('実績（距離/時間 × セット）'),
-                  // 実績入力：距離/時間 × セット
-                  _buildSectionTitle('実績（距離/時間 × セット）'),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -583,38 +581,39 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                       ),
                       
                       // 中央：単位切り替えと×記号
-                      Column(
-                        children: [
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                switch (_unit) {
-                                  case PlanUnit.km: _unit = PlanUnit.m; break;
-                                  case PlanUnit.m: _unit = PlanUnit.min; break;
-                                  case PlanUnit.min: _unit = PlanUnit.sec; break;
-                                  case PlanUnit.sec: _unit = PlanUnit.km; break;
-                                }
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(4),
-                                color: Colors.grey.shade100,
-                              ),
-                              child: Text(
-                                _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '分' : '秒')),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(8, 8, 8, 0), // 上マージンで入力欄と高さ合わせ
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  switch (_unit) {
+                                    case PlanUnit.km: _unit = PlanUnit.m; break;
+                                    case PlanUnit.m: _unit = PlanUnit.min; break;
+                                    case PlanUnit.min: _unit = PlanUnit.sec; break;
+                                    case PlanUnit.sec: _unit = PlanUnit.km; break;
+                                  }
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey),
+                                  borderRadius: BorderRadius.circular(4),
+                                  color: Colors.grey.shade100,
+                                ),
+                                child: Text(
+                                  _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '分' : '秒')),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text('×', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
+                            const SizedBox(width: 8),
+                            const Text('×', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          ],
+                        ),
                       ),
                       
                       // 右側：セット数
@@ -652,11 +651,6 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('（1セットあたり）', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   ),
                   const SizedBox(height: 16),
                   
