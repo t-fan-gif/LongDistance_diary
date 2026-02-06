@@ -221,7 +221,13 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
        if (_isRace) {
          _calculateFromRaceTime();
        } else {
-         _calculatePaceFromDuration();
+         // どちらか一方を計算。Durationが入っていればPaceを、なければ(あるいはPaceが既にあれば)Durationを？
+         // ユーザーの意図によるが、ここでは両方向対応
+         if (_durationController.text.isNotEmpty) {
+           _calculatePaceFromDuration();
+         } else if (_paceController.text.isNotEmpty) {
+           _calculateDurationFromPace();
+         }
        }
     }
   }
@@ -231,18 +237,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
        if (!_isRace) _calculatePaceFromDuration();
     }
   }
-
-  void _calculatePaceFromDuration() {
-    final distKm = double.tryParse(_distanceController.text) ?? 0;
-    final durMin = double.tryParse(_durationController.text) ?? 0;
-    
-    if (distKm > 0 && durMin > 0) {
-      final totalSec = durMin * 60;
-      final paceSecPerKm = (totalSec / distKm).round();
-      _paceController.text = _formatPaceForInput(paceSecPerKm);
-    }
-  }
-
+  
   void _onPaceFocusChange() {
     if (_paceFocusNode.hasFocus) {
       // Gain focus: remove : (e.g. 3:20 -> 320)
@@ -257,6 +252,35 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         final s = val.substring(val.length - 2);
         _paceController.text = '$m:$s';
       }
+      
+      // Calculate duration if pace is entered
+      if (!_isRace && _distanceController.text.isNotEmpty) {
+        _calculateDurationFromPace();
+      }
+    }
+  }
+
+  void _calculatePaceFromDuration() {
+    final distKm = double.tryParse(_distanceController.text) ?? 0;
+    final durMin = double.tryParse(_durationController.text) ?? 0;
+    
+    if (distKm > 0 && durMin > 0) {
+      final totalSec = durMin * 60;
+      final paceSecPerKm = (totalSec / distKm).round();
+      _paceController.text = _formatPaceForInput(paceSecPerKm);
+      _estimateZoneAction();
+    }
+  }
+
+  void _calculateDurationFromPace() {
+    final distKm = double.tryParse(_distanceController.text) ?? 0;
+    final paceSec = _parsePaceInput(_paceController.text);
+    
+    if (distKm > 0 && paceSec != null && paceSec > 0) {
+      final totalSec = distKm * paceSec;
+      final durMin = totalSec / 60;
+      // 小数点以下も少し残すが、基本は整数に近いほうが綺麗
+      _durationController.text = durMin.round().toString(); 
     }
   }
 

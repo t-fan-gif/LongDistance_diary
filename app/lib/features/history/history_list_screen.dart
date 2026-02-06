@@ -216,8 +216,32 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
           
           return ListTile(
             title: Text(session.templateText),
-            subtitle: Text(
-              '${DateFormat('MM/dd (E)', 'ja').format(session.startedAt)} • ${session.distanceMainM != null ? '${(session.distanceMainM! / 1000).toStringAsFixed(1)}km' : '-'}',
+            subtitle: Builder(
+              builder: (context) {
+                final dateStr = DateFormat('MM/dd (E)', 'ja').format(session.startedAt);
+                final distStr = session.distanceMainM != null ? '${(session.distanceMainM! / 1000).toStringAsFixed(1)}km' : '-';
+                
+                // プラン詳細の表示
+                String? planDetail;
+                if (session.planId != null) {
+                  final allPlans = ref.watch(allPlansProvider).valueOrNull ?? [];
+                  try {
+                    final plan = allPlans.firstWhere((p) => p.id == session.planId);
+                    if (plan.reps > 1 && plan.distance != null) {
+                      planDetail = '${plan.distance}m × ${plan.reps}';
+                    }
+                  } catch (_) {}
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$dateStr • $distStr'),
+                    if (planDetail != null)
+                      Text(planDetail, style: const TextStyle(fontSize: 12, color: Colors.teal)),
+                  ],
+                );
+              },
             ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,

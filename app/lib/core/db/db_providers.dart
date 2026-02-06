@@ -14,3 +14,8 @@ final allSessionsProvider = FutureProvider<List<Session>>((ref) async {
   return (db.select(db.sessions)..orderBy([(t) => OrderingTerm.desc(t.startedAt)])).get();
 });
 
+final allPlansProvider = FutureProvider<List<Plan>>((ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  return db.select(db.plans).get();
+});
+
