@@ -1,0 +1,206 @@
+﻿Compiling lib\main.dart for the Web...                          
+flutter : Target dart2js failed: ProcessException: Process exited abnormally with exit code 1:
+発生場所 行:1 文字:1
++ flutter build web --release --base-href /LongDistance_diary/ > build_ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Target dart2js ...th exit code 1::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+lib/features/session_editor/session_editor_screen.dart:63:3:
+Error: Type 'PlanUnit' not found.
+  PlanUnit _unit = PlanUnit.km;
+  ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:63:3:
+Error: 'PlanUnit' isn't a type.
+  PlanUnit _unit = PlanUnit.km;
+  ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:63:20:
+Error: Undefined name 'PlanUnit'.
+  PlanUnit _unit = PlanUnit.km;
+                   ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:123:19:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+          _unit = PlanUnit.km;
+                  ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:126:19:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+          _unit = PlanUnit.m;
+                  ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:132:19:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+          _unit = PlanUnit.min;
+                  ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:135:19:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+          _unit = PlanUnit.sec;
+                  ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:201:23:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+              _unit = PlanUnit.km;
+                      ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:204:23:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+              _unit = PlanUnit.m;
+                      ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:295:18:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+    if (_unit == PlanUnit.km) distKm = val * reps;
+                 ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:296:23:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+    else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
+                      ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:312:18:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+    if (_unit == PlanUnit.km) distKm = val * reps;
+                 ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:313:23:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+    else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
+                      ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:528:36:
+Error: Undefined name 'PlanUnit'.
+                              case PlanUnit.km: _unit = PlanUnit.m; break;
+                                   ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:529:36:
+Error: Undefined name 'PlanUnit'.
+                              case PlanUnit.m: _unit = PlanUnit.min; break;
+                                   ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:530:36:
+Error: Undefined name 'PlanUnit'.
+                              case PlanUnit.min: _unit = PlanUnit.sec; break;
+                                   ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:531:36:
+Error: Undefined name 'PlanUnit'.
+                              case PlanUnit.sec: _unit = PlanUnit.km; break;
+                                   ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:545:40:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '陋ｻ繝ｻ
+ : '驕倥・)),
+                                       ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:545:71:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '陋ｻ繝ｻ
+ : '驕倥・)),
+                                                                      ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:545:100:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '陋ｻ繝ｻ
+ : '驕倥・)),
+                                                                                          ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:528:57:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              case PlanUnit.km: _unit = PlanUnit.m; break;
+                                                        ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:529:56:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              case PlanUnit.m: _unit = PlanUnit.min; break;
+                                                       ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:530:58:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              case PlanUnit.min: _unit = PlanUnit.sec; break;
+                                                         ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:531:58:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+                              case PlanUnit.sec: _unit = PlanUnit.km; break;
+                                                         ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:842:22:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+        if (_unit == PlanUnit.km) {
+                     ^^^^^^^^
+lib/features/session_editor/session_editor_screen.dart:844:29:
+Error: The getter 'PlanUnit' isn't defined for the class '_SessionEditorScreenState'.
+ - '_SessionEditorScreenState' is from 'package:long_distance_diary/features/session_editor/session_editor_screen.dart'
+ ('lib/features/session_editor/session_editor_screen.dart').
+        } else if (_unit == PlanUnit.m) {
+                            ^^^^^^^^
+Error: Compilation failed.
+  Command: C:\Flutter\bin\cache\dart-sdk\bin\dart.exe compile js --platform-binaries=C:\Flutter\bin\cache\flutter_web_s
+dk\kernel --invoker=flutter_tool -Ddart.vm.product=true -DFLUTTER_VERSION=3.32.4 -DFLUTTER_CHANNEL=stable -DFLUTTER_GIT
+_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=6fba2447e9 -DFLUTTER_ENGINE_REVISION=8cd19e509
+d -DFLUTTER_DART_VERSION=3.8.1 -DFLUTTER_WEB_USE_SKIA=true -DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANVASKIT_URL=h
+ttps://www.gstatic.com/flutter-canvaskit/8cd19e509d6bece8ccd74aef027c4ca947363095/ --native-null-assertions --no-source
+-maps -o C:\Users\taijy\LongDistance_Dialy\LongDistance_diary\app\.dart_tool\flutter_build\df606a79511f0eb91e94081b736e
+3dba\app.dill --packages=C:\Users\taijy\LongDistance_Dialy\LongDistance_diary\app\.dart_tool\package_config.json --cfe-
+only C:\Users\taijy\LongDistance_Dialy\LongDistance_diary\app\.dart_tool\flutter_build\df606a79511f0eb91e94081b736e3dba
+\main.dart
+#0      RunResult.throwException (package:flutter_tools/src/base/process.dart:118:5)
+#1      _DefaultProcessUtils.run (package:flutter_tools/src/base/process.dart:344:19)
+<asynchronous suspension>
+#2      Dart2JSTarget.build (package:flutter_tools/src/build_system/targets/web.dart:201:5)
+Compiling lib\main.dart for the Web...                             15.0s
+<asynchronous suspension>
+#3      _BuildInstance._invokeInternal (package:flutter_tools/src/build_system/build_system.dart:873:9)
+<asynchronous suspension>
+#4      Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
+<asynchronous suspension>
+#5      _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
+<asynchronous suspension>
+#6      Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
+<asynchronous suspension>
+#7      _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
+<asynchronous suspension>
+#8      FlutterBuildSystem.build (package:flutter_tools/src/build_system/build_system.dart:629:16)
+<asynchronous suspension>
+#9      WebBuilder.buildWeb (package:flutter_tools/src/web/compile.dart:91:34)
+<asynchronous suspension>
+#10     BuildWebCommand.runCommand (package:flutter_tools/src/commands/build_web.dart:246:5)
+<asynchronous suspension>
+#11     FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1563:27)
+<asynchronous suspension>
+#12     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#13     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#14     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.da
+rt:494:9)
+<asynchronous suspension>
+#15     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#16     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:431:5)
+<asynchronous suspension>
+#17     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:98:11)
+<asynchronous suspension>
+#18     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#19     main (package:flutter_tools/executable.dart:102:3)
+<asynchronous suspension>
+
+Error: Failed to compile application for the Web.

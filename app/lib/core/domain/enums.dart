@@ -58,5 +58,8 @@ enum Zone { E, M, T, I, R }
 
 enum RestType { stop, jog }
 
+
 enum SessionStatus { done, partial, aborted, skipped }
 
+// 単位列挙型 (予定・実績入力共通)
+enum PlanUnit { km, m, min, sec }

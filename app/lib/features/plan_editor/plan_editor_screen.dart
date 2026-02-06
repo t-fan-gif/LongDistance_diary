@@ -607,8 +607,7 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
   }
 }
 
-// 単位列挙型
-enum PlanUnit { km, m, min, sec }
+// 単位列挙型は core/domain/enums.dart に移動しました
 
 class _PlanRowState {
   final menuController = TextEditingController();
