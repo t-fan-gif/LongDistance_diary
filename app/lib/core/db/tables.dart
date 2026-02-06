@@ -43,6 +43,7 @@ class Sessions extends Table {
 
   TextColumn get templateText => text()();
 
+  IntColumn get reps => integer().nullable()();
   IntColumn get distanceMainM => integer().nullable()();
   IntColumn get durationMainSec => integer().nullable()();
   IntColumn get paceSecPerKm => integer().nullable()();

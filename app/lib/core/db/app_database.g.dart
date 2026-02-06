@@ -931,6 +931,11 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   late final GeneratedColumn<String> templateText = GeneratedColumn<String>(
       'template_text', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
+  @override
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+      'reps', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _distanceMainMMeta =
       const VerificationMeta('distanceMainM');
   @override
@@ -1045,6 +1050,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         startedAt,
         planId,
         templateText,
+        reps,
         distanceMainM,
         durationMainSec,
         paceSecPerKm,
@@ -1096,6 +1102,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
               data['template_text']!, _templateTextMeta));
     } else if (isInserting) {
       context.missing(_templateTextMeta);
+    }
+    if (data.containsKey('reps')) {
+      context.handle(
+          _repsMeta, reps.isAcceptableOrUnknown(data['reps']!, _repsMeta));
     }
     if (data.containsKey('distance_main_m')) {
       context.handle(
@@ -1188,6 +1198,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
           .read(DriftSqlType.string, data['${effectivePrefix}plan_id']),
       templateText: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}template_text'])!,
+      reps: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reps']),
       distanceMainM: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}distance_main_m']),
       durationMainSec: attachedDatabase.typeMapping
@@ -1255,6 +1267,7 @@ class Session extends DataClass implements Insertable<Session> {
   final DateTime startedAt;
   final String? planId;
   final String templateText;
+  final int? reps;
   final int? distanceMainM;
   final int? durationMainSec;
   final int? paceSecPerKm;
@@ -1278,6 +1291,7 @@ class Session extends DataClass implements Insertable<Session> {
       required this.startedAt,
       this.planId,
       required this.templateText,
+      this.reps,
       this.distanceMainM,
       this.durationMainSec,
       this.paceSecPerKm,
@@ -1305,6 +1319,9 @@ class Session extends DataClass implements Insertable<Session> {
       map['plan_id'] = Variable<String>(planId);
     }
     map['template_text'] = Variable<String>(templateText);
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
     if (!nullToAbsent || distanceMainM != null) {
       map['distance_main_m'] = Variable<int>(distanceMainM);
     }
@@ -1371,6 +1388,7 @@ class Session extends DataClass implements Insertable<Session> {
       planId:
           planId == null && nullToAbsent ? const Value.absent() : Value(planId),
       templateText: Value(templateText),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
       distanceMainM: distanceMainM == null && nullToAbsent
           ? const Value.absent()
           : Value(distanceMainM),
@@ -1424,6 +1442,7 @@ class Session extends DataClass implements Insertable<Session> {
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       planId: serializer.fromJson<String?>(json['planId']),
       templateText: serializer.fromJson<String>(json['templateText']),
+      reps: serializer.fromJson<int?>(json['reps']),
       distanceMainM: serializer.fromJson<int?>(json['distanceMainM']),
       durationMainSec: serializer.fromJson<int?>(json['durationMainSec']),
       paceSecPerKm: serializer.fromJson<int?>(json['paceSecPerKm']),
@@ -1456,6 +1475,7 @@ class Session extends DataClass implements Insertable<Session> {
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'planId': serializer.toJson<String?>(planId),
       'templateText': serializer.toJson<String>(templateText),
+      'reps': serializer.toJson<int?>(reps),
       'distanceMainM': serializer.toJson<int?>(distanceMainM),
       'durationMainSec': serializer.toJson<int?>(durationMainSec),
       'paceSecPerKm': serializer.toJson<int?>(paceSecPerKm),
@@ -1486,6 +1506,7 @@ class Session extends DataClass implements Insertable<Session> {
           DateTime? startedAt,
           Value<String?> planId = const Value.absent(),
           String? templateText,
+          Value<int?> reps = const Value.absent(),
           Value<int?> distanceMainM = const Value.absent(),
           Value<int?> durationMainSec = const Value.absent(),
           Value<int?> paceSecPerKm = const Value.absent(),
@@ -1509,6 +1530,7 @@ class Session extends DataClass implements Insertable<Session> {
         startedAt: startedAt ?? this.startedAt,
         planId: planId.present ? planId.value : this.planId,
         templateText: templateText ?? this.templateText,
+        reps: reps.present ? reps.value : this.reps,
         distanceMainM:
             distanceMainM.present ? distanceMainM.value : this.distanceMainM,
         durationMainSec: durationMainSec.present
@@ -1545,6 +1567,7 @@ class Session extends DataClass implements Insertable<Session> {
       templateText: data.templateText.present
           ? data.templateText.value
           : this.templateText,
+      reps: data.reps.present ? data.reps.value : this.reps,
       distanceMainM: data.distanceMainM.present
           ? data.distanceMainM.value
           : this.distanceMainM,
@@ -1591,6 +1614,7 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('startedAt: $startedAt, ')
           ..write('planId: $planId, ')
           ..write('templateText: $templateText, ')
+          ..write('reps: $reps, ')
           ..write('distanceMainM: $distanceMainM, ')
           ..write('durationMainSec: $durationMainSec, ')
           ..write('paceSecPerKm: $paceSecPerKm, ')
@@ -1619,6 +1643,7 @@ class Session extends DataClass implements Insertable<Session> {
         startedAt,
         planId,
         templateText,
+        reps,
         distanceMainM,
         durationMainSec,
         paceSecPerKm,
@@ -1646,6 +1671,7 @@ class Session extends DataClass implements Insertable<Session> {
           other.startedAt == this.startedAt &&
           other.planId == this.planId &&
           other.templateText == this.templateText &&
+          other.reps == this.reps &&
           other.distanceMainM == this.distanceMainM &&
           other.durationMainSec == this.durationMainSec &&
           other.paceSecPerKm == this.paceSecPerKm &&
@@ -1671,6 +1697,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<DateTime> startedAt;
   final Value<String?> planId;
   final Value<String> templateText;
+  final Value<int?> reps;
   final Value<int?> distanceMainM;
   final Value<int?> durationMainSec;
   final Value<int?> paceSecPerKm;
@@ -1695,6 +1722,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.startedAt = const Value.absent(),
     this.planId = const Value.absent(),
     this.templateText = const Value.absent(),
+    this.reps = const Value.absent(),
     this.distanceMainM = const Value.absent(),
     this.durationMainSec = const Value.absent(),
     this.paceSecPerKm = const Value.absent(),
@@ -1720,6 +1748,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     required DateTime startedAt,
     this.planId = const Value.absent(),
     required String templateText,
+    this.reps = const Value.absent(),
     this.distanceMainM = const Value.absent(),
     this.durationMainSec = const Value.absent(),
     this.paceSecPerKm = const Value.absent(),
@@ -1748,6 +1777,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<DateTime>? startedAt,
     Expression<String>? planId,
     Expression<String>? templateText,
+    Expression<int>? reps,
     Expression<int>? distanceMainM,
     Expression<int>? durationMainSec,
     Expression<int>? paceSecPerKm,
@@ -1773,6 +1803,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (startedAt != null) 'date_time': startedAt,
       if (planId != null) 'plan_id': planId,
       if (templateText != null) 'template_text': templateText,
+      if (reps != null) 'reps': reps,
       if (distanceMainM != null) 'distance_main_m': distanceMainM,
       if (durationMainSec != null) 'duration_main_sec': durationMainSec,
       if (paceSecPerKm != null) 'pace_sec_per_km': paceSecPerKm,
@@ -1800,6 +1831,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       Value<DateTime>? startedAt,
       Value<String?>? planId,
       Value<String>? templateText,
+      Value<int?>? reps,
       Value<int?>? distanceMainM,
       Value<int?>? durationMainSec,
       Value<int?>? paceSecPerKm,
@@ -1824,6 +1856,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       startedAt: startedAt ?? this.startedAt,
       planId: planId ?? this.planId,
       templateText: templateText ?? this.templateText,
+      reps: reps ?? this.reps,
       distanceMainM: distanceMainM ?? this.distanceMainM,
       durationMainSec: durationMainSec ?? this.durationMainSec,
       paceSecPerKm: paceSecPerKm ?? this.paceSecPerKm,
@@ -1860,6 +1893,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     }
     if (templateText.present) {
       map['template_text'] = Variable<String>(templateText.value);
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
     }
     if (distanceMainM.present) {
       map['distance_main_m'] = Variable<int>(distanceMainM.value);
@@ -1932,6 +1968,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('startedAt: $startedAt, ')
           ..write('planId: $planId, ')
           ..write('templateText: $templateText, ')
+          ..write('reps: $reps, ')
           ..write('distanceMainM: $distanceMainM, ')
           ..write('durationMainSec: $durationMainSec, ')
           ..write('paceSecPerKm: $paceSecPerKm, ')
@@ -3287,6 +3324,7 @@ typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   required DateTime startedAt,
   Value<String?> planId,
   required String templateText,
+  Value<int?> reps,
   Value<int?> distanceMainM,
   Value<int?> durationMainSec,
   Value<int?> paceSecPerKm,
@@ -3312,6 +3350,7 @@ typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<DateTime> startedAt,
   Value<String?> planId,
   Value<String> templateText,
+  Value<int?> reps,
   Value<int?> distanceMainM,
   Value<int?> durationMainSec,
   Value<int?> paceSecPerKm,
@@ -3369,6 +3408,9 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get templateText => $composableBuilder(
       column: $table.templateText, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get reps => $composableBuilder(
+      column: $table.reps, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get distanceMainM => $composableBuilder(
       column: $table.distanceMainM, builder: (column) => ColumnFilters(column));
@@ -3474,6 +3516,9 @@ class $$SessionsTableOrderingComposer
       column: $table.templateText,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get reps => $composableBuilder(
+      column: $table.reps, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get distanceMainM => $composableBuilder(
       column: $table.distanceMainM,
       builder: (column) => ColumnOrderings(column));
@@ -3574,6 +3619,9 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<String> get templateText => $composableBuilder(
       column: $table.templateText, builder: (column) => column);
+
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
 
   GeneratedColumn<int> get distanceMainM => $composableBuilder(
       column: $table.distanceMainM, builder: (column) => column);
@@ -3678,6 +3726,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             Value<DateTime> startedAt = const Value.absent(),
             Value<String?> planId = const Value.absent(),
             Value<String> templateText = const Value.absent(),
+            Value<int?> reps = const Value.absent(),
             Value<int?> distanceMainM = const Value.absent(),
             Value<int?> durationMainSec = const Value.absent(),
             Value<int?> paceSecPerKm = const Value.absent(),
@@ -3703,6 +3752,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             startedAt: startedAt,
             planId: planId,
             templateText: templateText,
+            reps: reps,
             distanceMainM: distanceMainM,
             durationMainSec: durationMainSec,
             paceSecPerKm: paceSecPerKm,
@@ -3728,6 +3778,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             required DateTime startedAt,
             Value<String?> planId = const Value.absent(),
             required String templateText,
+            Value<int?> reps = const Value.absent(),
             Value<int?> distanceMainM = const Value.absent(),
             Value<int?> durationMainSec = const Value.absent(),
             Value<int?> paceSecPerKm = const Value.absent(),
@@ -3753,6 +3804,7 @@ class $$SessionsTableTableManager extends RootTableManager<
             startedAt: startedAt,
             planId: planId,
             templateText: templateText,
+            reps: reps,
             distanceMainM: distanceMainM,
             durationMainSec: durationMainSec,
             paceSecPerKm: paceSecPerKm,

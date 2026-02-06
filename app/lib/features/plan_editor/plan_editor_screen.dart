@@ -450,7 +450,8 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
         }
         
         final paceSec = _parsePace(row.paceController.text);
-        final reps = int.tryParse(row.repsController.text) ?? 1;
+        final repsStr = row.repsController.text.trim();
+        final reps = repsStr.isEmpty ? 1 : (int.tryParse(repsStr) ?? 1);
 
         inputs.add(PlanInput(
           menuName: menuName,
@@ -612,7 +613,7 @@ enum PlanUnit { km, m, min, sec }
 class _PlanRowState {
   final menuController = TextEditingController();
   final distanceController = TextEditingController(); // 数量（距離または時間）
-  final repsController = TextEditingController(text: '1');
+  final repsController = TextEditingController(); // 初期値を空に変更
   final paceController = TextEditingController();
   final noteController = TextEditingController();
 
@@ -855,7 +856,7 @@ class _PlanRowItem extends StatelessWidget {
                 child: TextFormField(
                   controller: row.paceController,
                   focusNode: row.paceFocusNode,
-                  keyboardType: TextInputType.datetime,
+                  keyboardType: TextInputType.number, // datetimeからnumberに変更
                   decoration: InputDecoration(
                     labelText: row.isRace ? '目標ペース (任意)' : 'ペース',
                     hintText: '4:00',

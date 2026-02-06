@@ -221,20 +221,31 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
                 final dateStr = DateFormat('MM/dd (E)', 'ja').format(session.startedAt);
                 final distStr = session.distanceMainM != null ? '${(session.distanceMainM! / 1000).toStringAsFixed(1)}km' : '-';
                 
-                // プラン詳細の表示
-                String? planDetail;
-                if (session.planId != null) {
+                // 表示ロジック: 実績(Session)のrepsを最優先、なければ予定(Plan)を参照
+                String? detailOverride;
+                if (session.reps != null && session.distanceMainM != null) {
+                  final reps = session.reps!;
+                  if (reps > 1) {
+                    final perDistM = session.distanceMainM! / reps;
+                    final perDistStr = perDistM >= 1000 ? '${(perDistM / 1000).toStringAsFixed(1)}km' : '${perDistM.round()}m';
+                    detailOverride = '$perDistStr × $reps';
+                  } else if (session.distanceMainM! > 0) {
+                     // 1本の場合でも距離が明確なら表示
+                     final d = session.distanceMainM!;
+                     detailOverride = d >= 1000 ? '${(d / 1000).toStringAsFixed(1)}km' : '${d}m';
+                  }
+                } else if (session.planId != null) {
+                  // 予定からのフォールバック（古いデータ用）
                   final allPlans = ref.watch(allPlansProvider).valueOrNull ?? [];
                   try {
                     final plan = allPlans.firstWhere((p) => p.id == session.planId);
                     if (plan.distance != null) {
                       final pDistM = plan.distance!;
-                      final pTotalDistM = pDistM * plan.reps;
                       final distText = pDistM >= 1000 ? '${(pDistM / 1000).toStringAsFixed(1)}km' : '${pDistM}m';
                       if (plan.reps > 1) {
-                        planDetail = '$distText × ${plan.reps} (計${(pTotalDistM / 1000).toStringAsFixed(1)}km)';
+                        detailOverride = '$distText × ${plan.reps}';
                       } else {
-                        planDetail = distText;
+                        detailOverride = distText;
                       }
                     }
                   } catch (_) {}
@@ -244,8 +255,8 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('$dateStr • $distStr'),
-                    if (planDetail != null)
-                      Text(planDetail, style: const TextStyle(fontSize: 12, color: Colors.teal)),
+                    if (detailOverride != null)
+                      Text(detailOverride, style: const TextStyle(fontSize: 12, color: Colors.teal)),
                   ],
                 );
               },

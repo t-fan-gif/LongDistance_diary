@@ -32,6 +32,7 @@ class SessionRepository {
     String? note,
     double? load,
     int? repLoad,
+    int? reps, // 追加
     ActivityType activityType = ActivityType.running,
     bool isRace = false, // 追加
   }) async {
@@ -58,6 +59,7 @@ class SessionRepository {
         note: Value(note),
         load: Value(load),
         repLoad: Value(repLoad),
+        reps: Value(reps), // 追加
         activityType: Value(activityType),
         isRace: Value(isRace), // 追加
       ),
@@ -87,6 +89,7 @@ class SessionRepository {
     String? note,
     double? load,
     int? repLoad,
+    int? reps, // 追加
     ActivityType? activityType,
     bool? isRace, // 追加
   }) async {
@@ -124,6 +127,7 @@ class SessionRepository {
         note: note != null ? Value(note) : const Value.absent(),
         load: load != null ? Value(load) : const Value.absent(),
         repLoad: repLoad != null ? Value(repLoad) : const Value.absent(),
+        reps: reps != null ? Value(reps) : const Value.absent(), // 追加
         activityType: activityType != null ? Value(activityType) : const Value.absent(),
         isRace: isRace != null ? Value(isRace) : const Value.absent(), // 追加
       ),

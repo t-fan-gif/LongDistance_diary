@@ -53,11 +53,14 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   final _formKey = GlobalKey<FormState>();
   late DateTime _selectedDateTime;
   final _templateController = TextEditingController();
-  final _distanceController = TextEditingController();
+  final _distanceController = TextEditingController(); // セットあたりの数値
+  final _repsController = TextEditingController();
   final _paceController = TextEditingController();
-  final _durationController = TextEditingController();
+  final _durationController = TextEditingController(); // 合計時間（分）
   final _restDurationController = TextEditingController();
   final _noteController = TextEditingController();
+  
+  PlanUnit _unit = PlanUnit.km;
 
   // レース詳細タイム用
   final _hourController = TextEditingController();
@@ -116,16 +119,39 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       
       if (widget.initialDistance != null) {
         final dist = int.tryParse(widget.initialDistance!) ?? 0;
-        final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
-        _distanceController.text = ((dist * reps) / 1000.0).toString();
+        if (dist % 1000 == 0) {
+          _unit = PlanUnit.km;
+          _distanceController.text = (dist / 1000).toString();
+        } else {
+          _unit = PlanUnit.m;
+          _distanceController.text = dist.toString();
+        }
+      } else if (widget.initialDuration != null) {
+        final dur = int.tryParse(widget.initialDuration!) ?? 0;
+        if (dur % 60 == 0) {
+          _unit = PlanUnit.min;
+          _distanceController.text = (dur / 60).toString();
+        } else {
+          _unit = PlanUnit.sec;
+          _distanceController.text = dur.toString();
+        }
       }
 
-      // 時間の初期化（Durationがあれば優先）
-      if (widget.initialDuration != null) {
-        final durSec = int.tryParse(widget.initialDuration!) ?? 0;
-        final totalSec = durSec * (int.tryParse(widget.initialReps ?? '1') ?? 1);
+      _repsController.text = widget.initialReps ?? '';
+
+      // 時間の初期化
+      if (widget.initialDuration != null || (widget.initialDistance != null && widget.initialPace != null)) {
+        final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
+        int totalSec = 0;
+        if (widget.initialDuration != null) {
+          totalSec = (int.tryParse(widget.initialDuration!) ?? 0) * reps;
+        } else {
+          final dist = int.tryParse(widget.initialDistance!) ?? 0;
+          final pace = int.tryParse(widget.initialPace!) ?? 0;
+          totalSec = ((dist * reps / 1000.0) * pace).round();
+        }
+
         if (_isRace) {
-            // レース時はHMSに展開
             final h = totalSec ~/ 3600;
             final m = (totalSec % 3600) ~/ 60;
             final s = totalSec % 60;
@@ -133,28 +159,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
             _minuteController.text = m.toString();
             _secondController.text = s.toString();
         } else {
-            // 通常時は分換算（四捨五入）
             _durationController.text = (totalSec / 60).round().toString();
-        }
-      }
-
-      if (widget.initialPace != null) {
-        final pace = int.tryParse(widget.initialPace!) ?? 0;
-        _paceController.text = _formatPace(pace);
-      }
-
-      if (widget.initialPlanId != null) {
-        _planId = widget.initialPlanId;
-      }
-
-      // 時間の予測 (DurationがなくてPaceとDistanceがある場合)
-      if (widget.initialDuration == null && widget.initialDistance != null && widget.initialPace != null) {
-        final dist = int.tryParse(widget.initialDistance!) ?? 0;
-        final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
-        final pace = int.tryParse(widget.initialPace!) ?? 0;
-        if (pace > 0) {
-          final totalSec = (dist * reps / 1000.0) * pace;
-          _durationController.text = (totalSec / 60).round().toString();
         }
       }
 
@@ -190,7 +195,18 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           _selectedDateTime = session.startedAt;
           _templateController.text = session.templateText;
           if (session.distanceMainM != null) {
-            _distanceController.text = (session.distanceMainM! / 1000).toString();
+            final reps = session.reps ?? 1;
+            final perDistM = session.distanceMainM! / reps;
+            if (perDistM % 1000 == 0) {
+              _unit = PlanUnit.km;
+              _distanceController.text = (perDistM / 1000).toStringAsFixed(0);
+            } else {
+              _unit = PlanUnit.m;
+              _distanceController.text = perDistM.toStringAsFixed(0);
+            }
+          }
+          if (session.reps != null) {
+            _repsController.text = session.reps.toString();
           }
           if (session.paceSecPerKm != null) {
             _paceController.text = _formatPaceForInput(session.paceSecPerKm!);
@@ -271,8 +287,13 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   }
 
   void _calculatePaceFromDuration() {
-    final distKm = double.tryParse(_distanceController.text) ?? 0;
+    final val = double.tryParse(_distanceController.text) ?? 0;
+    final reps = int.tryParse(_repsController.text) ?? 1;
     final durMin = double.tryParse(_durationController.text) ?? 0;
+    
+    double distKm = 0;
+    if (_unit == PlanUnit.km) distKm = val * reps;
+    else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
     
     if (distKm > 0 && durMin > 0) {
       final totalSec = durMin * 60;
@@ -283,13 +304,17 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   }
 
   void _calculateDurationFromPace() {
-    final distKm = double.tryParse(_distanceController.text) ?? 0;
+    final val = double.tryParse(_distanceController.text) ?? 0;
+    final reps = int.tryParse(_repsController.text) ?? 1;
     final paceSec = _parsePaceInput(_paceController.text);
+    
+    double distKm = 0;
+    if (_unit == PlanUnit.km) distKm = val * reps;
+    else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
     
     if (distKm > 0 && paceSec != null && paceSec > 0) {
       final totalSec = distKm * paceSec;
       final durMin = totalSec / 60;
-      // 小数点以下も少し残すが、基本は整数に近いほうが綺麗
       _durationController.text = durMin.round().toString(); 
     }
   }
@@ -313,6 +338,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     _minuteController.dispose();
     _secondController.dispose();
     _msController.dispose();
+    _repsController.dispose();
     _paceFocusNode.dispose();
     _durationFocusNode.dispose();
     _distanceFocusNode.dispose();
@@ -426,118 +452,140 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // メニュー内容とTotal距離
-                  if (widget.initialReps != null && (int.tryParse(widget.initialReps!) ?? 1) > 1) ...[
-                     // Planからの詳細表示（既存ロジック維持）
-                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Column(
+                  // 予定（計画）がある場合の表示エリアを追加
+                  if (_planId != null) ...[
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final allPlans = ref.watch(allPlansProvider).valueOrNull ?? [];
+                        try {
+                          final plan = allPlans.firstWhere((p) => p.id == _planId);
+                          String planDetailText = '';
+                          if (plan.distance != null) {
+                             final dist = plan.distance!;
+                             final dText = dist >= 1000 ? '${(dist/1000).toStringAsFixed(1)}km' : '${dist}m';
+                             planDetailText = '$dText × ${plan.reps}';
+                             if (plan.pace != null) {
+                               planDetailText += ' @${_formatPace(plan.pace!)}/km';
+                             }
+                          } else if (plan.duration != null) {
+                             final dur = plan.duration!;
+                             final dText = dur >= 60 ? '${dur~/60}分' : '${dur}秒';
+                             planDetailText = '$dText × ${plan.reps}';
+                             if (plan.pace != null) {
+                               planDetailText += ' @${_formatPace(plan.pace!)}/km';
+                             }
+                          }
+                          
+                          return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                                _buildSectionTitle('メニュー内容'),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.grey.shade300),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                       Text('${(int.tryParse(widget.initialDistance ?? '0') ?? 0)}m × ${widget.initialReps}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                       if (widget.initialPace != null)
-                                         Text('@${_formatPace(int.tryParse(widget.initialPace!) ?? 0)}/km', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                    ],
-                                  ),
+                              _buildSectionTitle('予定されていた内容'),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue.shade200),
                                 ),
+                                child: Text(
+                                  planDetailText,
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                                ),
+                              ),
                             ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                                _buildSectionTitle('Total距離'),
-                                TextFormField(
-                                  controller: _distanceController,
-                                  decoration: const InputDecoration(
-                                    hintText: '10',
-                                    suffixText: 'km',
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  ),
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  onChanged: (_) {
-                                    if (_isRace) _calculateFromRaceTime();
-                                    else _calculatePaceFromDuration();
-                                  },
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: () => _adjustDistance(-1.0),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: () => _adjustDistance(1.0),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ],
-                                ),
-                             ],
-                          ),
-                        ),
-                      ],
+                          );
+                        } catch (_) {
+                          return const SizedBox.shrink();
+                        }
+                      },
                     ),
-                  ] else ...[
-                     Row(
-                       children: [
-                         Expanded(
-                           child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               _buildSectionTitle('Total距離 (km)'),
-                               Row(
-                                 children: [
-                                   Expanded(
-                                      child: TextFormField(
-                                       controller: _distanceController,
-                                       focusNode: _distanceFocusNode,
-                                       decoration: const InputDecoration(
-                                         hintText: '例: 12',
-                                         suffixText: 'km',
-                                         border: OutlineInputBorder(),
-                                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                       ),
-                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                     ),
-                                   ),
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: () => _adjustDistance(-1.0),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: () => _adjustDistance(1.0),
-                                    ),
-                                 ],
-                               ),
-                             ],
-                           ),
-                         ),
-                       ],
-                     ),
                   ],
+
+                  // 実績入力：距離/時間 × セット
+                  _buildSectionTitle('実績（距離/時間 × セット）'),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextFormField(
+                          controller: _distanceController,
+                          focusNode: _distanceFocusNode,
+                          decoration: const InputDecoration(
+                            labelText: '距離/時間',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            switch (_unit) {
+                              case PlanUnit.km: _unit = PlanUnit.m; break;
+                              case PlanUnit.m: _unit = PlanUnit.min; break;
+                              case PlanUnit.min: _unit = PlanUnit.sec; break;
+                              case PlanUnit.sec: _unit = PlanUnit.km; break;
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
+                            color: Colors.grey.shade100,
+                          ),
+                          child: SizedBox(
+                            width: 32,
+                            child: Text(
+                              _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '分' : '秒')),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('×', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          controller: _repsController,
+                          decoration: const InputDecoration(
+                            labelText: 'セット',
+                            hintText: '1',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => _calculateDurationFromPace(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                       const Text('（1セットあたり）', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                       const Spacer(),
+                       IconButton(
+                         icon: const Icon(Icons.remove),
+                         onPressed: () => _adjustDistance(-1.0),
+                         visualDensity: VisualDensity.compact,
+                       ),
+                       IconButton(
+                         icon: const Icon(Icons.add),
+                         onPressed: () => _adjustDistance(1.0),
+                         visualDensity: VisualDensity.compact,
+                       ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   
                   // レース用：詳細タイム入力
@@ -785,10 +833,17 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     try {
       final repo = ref.read(sessionRepositoryProvider);
 
-      // 距離をメートルに変換
+      // 距離をメートルに変換 (トータル距離を計算)
       int? distanceM;
-      if (_distanceController.text.isNotEmpty) {
-        distanceM = (double.parse(_distanceController.text) * 1000).round();
+      final val = double.tryParse(_distanceController.text) ?? 0;
+      final reps = int.tryParse(_repsController.text) ?? 1;
+      
+      if (val > 0) {
+        if (_unit == PlanUnit.km) {
+          distanceM = (val * reps * 1000).round();
+        } else if (_unit == PlanUnit.m) {
+          distanceM = (val * reps).round();
+        }
       }
 
       // ペースを秒に変換
@@ -833,6 +888,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         restDurationSec: restDurationSec,
         activityType: _activityType,
         isRace: _isRace, // 追加
+        reps: reps, // 追加
       );
       final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
         tempSession,
@@ -858,6 +914,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           activityType: _activityType,
           isRace: _isRace, // 追加
           planId: _planId, // 追加
+          reps: reps, // 追加
         );
       } else {
         await repo.createSession(
@@ -876,6 +933,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           activityType: _activityType,
           isRace: _isRace, // 追加
           planId: _planId, // 追加
+          reps: reps, // 追加
         );
       }
 
