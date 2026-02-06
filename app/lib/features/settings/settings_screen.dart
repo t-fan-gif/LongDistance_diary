@@ -90,12 +90,19 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(),
           _buildSectionHeader(context, 'アプリについて'),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('Long Distance Diary'),
-            subtitle: Text(
-              'Version 1.3.9 (Round 9.9)',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Long Distance Diary'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // Align text to start
+              children: [
+                Text(
+                  'Version 1.3.10 (Round 9.10)',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey,
+                      ),
+                ),
+              ],
             ),
           ),
         ],
