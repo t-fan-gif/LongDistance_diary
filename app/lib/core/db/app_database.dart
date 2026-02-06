@@ -11,7 +11,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -53,8 +53,14 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(plans, plans.duration);
           }
           if (from < 11) {
-            await m.addColumn(plans, plans.reps);
-            await m.addColumn(sessions, sessions.reps);
+            await _addColumnIfNotExists(m, plans, plans.reps);
+            await _addColumnIfNotExists(m, sessions, sessions.reps);
+          }
+          if (from < 12) {
+             // No op for v12 as it was just a retry bump
+          }
+          if (from < 13) {
+             // No op for v13 as it's just ensuring migration logic runs with the new helper
           }
         },
         beforeOpen: (details) async {
@@ -63,4 +69,14 @@ class AppDatabase extends _$AppDatabase {
           }
         },
       );
+
+  Future<void> _addColumnIfNotExists(
+      Migrator m, TableInfo table, GeneratedColumn column) async {
+    final result =
+        await customSelect('PRAGMA table_info(${table.actualTableName})').get();
+    final exists = result.any((row) => row.read<String>('name') == column.name);
+    if (!exists) {
+      await m.addColumn(table, column);
+    }
+  }
 }
