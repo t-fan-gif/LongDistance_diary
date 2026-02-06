@@ -219,33 +219,55 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
             subtitle: Builder(
               builder: (context) {
                 final dateStr = DateFormat('MM/dd (E)', 'ja').format(session.startedAt);
-                final distStr = session.distanceMainM != null ? '${(session.distanceMainM! / 1000).toStringAsFixed(1)}km' : '-';
+                final distStr = session.distanceMainM != null && session.distanceMainM! > 0
+                    ? '${(session.distanceMainM! / 1000).toStringAsFixed(1)}km' 
+                    : (session.durationMainSec != null && session.durationMainSec! > 0
+                        ? (session.durationMainSec! % 60 == 0 ? '${session.durationMainSec! ~/ 60}分' : '${session.durationMainSec}秒')
+                        : '-');
                 
                 // 表示ロジック: 実績(Session)のrepsを最優先、なければ予定(Plan)を参照
                 String? detailOverride;
-                if (session.reps != null && session.distanceMainM != null) {
+                if (session.reps != null) {
                   final reps = session.reps!;
-                  if (reps > 1) {
-                    final perDistM = session.distanceMainM! / reps;
-                    final perDistStr = perDistM >= 1000 ? '${(perDistM / 1000).toStringAsFixed(1)}km' : '${perDistM.round()}m';
-                    detailOverride = '$perDistStr × $reps';
-                  } else if (session.distanceMainM! > 0) {
-                     // 1本の場合でも距離が明確なら表示
-                     final d = session.distanceMainM!;
-                     detailOverride = d >= 1000 ? '${(d / 1000).toStringAsFixed(1)}km' : '${d}m';
+                  if (session.distanceMainM != null && session.distanceMainM! > 0) {
+                      if (reps > 1) {
+                        final perDistM = session.distanceMainM! / reps;
+                        final perDistStr = perDistM >= 1000 ? '${(perDistM / 1000).toStringAsFixed(1)}km' : '${perDistM.round()}m';
+                        detailOverride = '$perDistStr × $reps';
+                      } else {
+                         final d = session.distanceMainM!;
+                         detailOverride = d >= 1000 ? '${(d / 1000).toStringAsFixed(1)}km' : '${d}m';
+                      }
+                  } else if (session.durationMainSec != null && session.durationMainSec! > 0) {
+                      if (reps > 1) {
+                        final perDur = session.durationMainSec! ~/ reps; // 割り切れない場合は切り捨て
+                        final perDurStr = perDur % 60 == 0 ? '${perDur ~/ 60}分' : '${perDur}秒';
+                        detailOverride = '$perDurStr × $reps';
+                      } else {
+                        final d = session.durationMainSec!;
+                        detailOverride = d % 60 == 0 ? '${d ~/ 60}分' : '${d}秒';
+                      }
                   }
                 } else if (session.planId != null) {
                   // 予定からのフォールバック（古いデータ用）
                   final allPlans = ref.watch(allPlansProvider).valueOrNull ?? [];
                   try {
                     final plan = allPlans.firstWhere((p) => p.id == session.planId);
-                    if (plan.distance != null) {
+                    if (plan.distance != null && plan.distance! > 0) {
                       final pDistM = plan.distance!;
                       final distText = pDistM >= 1000 ? '${(pDistM / 1000).toStringAsFixed(1)}km' : '${pDistM}m';
                       if (plan.reps > 1) {
                         detailOverride = '$distText × ${plan.reps}';
                       } else {
                         detailOverride = distText;
+                      }
+                    } else if (plan.duration != null && plan.duration! > 0) {
+                      final pDur = plan.duration!;
+                      final durText = pDur % 60 == 0 ? '${pDur ~/ 60}分' : '${pDur}秒';
+                      if (plan.reps > 1) {
+                        detailOverride = '$durText × ${plan.reps}';
+                      } else {
+                        detailOverride = durText;
                       }
                     }
                   } catch (_) {}
