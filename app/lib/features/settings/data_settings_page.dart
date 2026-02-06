@@ -114,6 +114,19 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
     setState(() => _isProcessing = true);
     try {
       await ref.read(importUseCaseProvider).execute();
+      
+      // プロバイダのリセット
+      ref.invalidate(personalBestsProvider);
+      ref.invalidate(menuPresetsProvider);
+      ref.invalidate(daySessionsProvider);
+      ref.invalidate(dayPlansProvider);
+      ref.invalidate(dayRaceProvider);
+      ref.invalidate(monthCalendarDataProvider);
+      ref.invalidate(allSessionsProvider);
+      ref.invalidate(allPlansProvider);
+      ref.invalidate(upcomingRacesProvider);
+      ref.invalidate(allTargetRacesProvider);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('インポートが完了しました')),
@@ -148,8 +161,18 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
     setState(() => _isProcessing = true);
     try {
       await ref.read(exportRepositoryProvider).resetData();
+      
+      // 全ての主要データを無効化
       ref.invalidate(personalBestsProvider);
       ref.invalidate(menuPresetsProvider);
+      ref.invalidate(daySessionsProvider);
+      ref.invalidate(dayPlansProvider);
+      ref.invalidate(dayRaceProvider);
+      ref.invalidate(monthCalendarDataProvider);
+      ref.invalidate(allSessionsProvider);
+      ref.invalidate(allPlansProvider);
+      ref.invalidate(upcomingRacesProvider);
+      ref.invalidate(allTargetRacesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('データを初期化しました')),

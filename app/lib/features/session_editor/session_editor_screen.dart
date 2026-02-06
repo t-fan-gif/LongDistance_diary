@@ -303,11 +303,20 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     final reps = int.tryParse(_repsController.text) ?? 1;
     final durMin = double.tryParse(_durationController.text) ?? 0;
     
+    if (durMin <= 0) return;
+
     double distKm = 0;
-    if (_unit == PlanUnit.km) distKm = val * reps;
-    else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
+    if (_unit == PlanUnit.km) {
+      distKm = val * reps;
+    } else if (_unit == PlanUnit.m) {
+      distKm = (val * reps) / 1000.0;
+    } else {
+      // 時間ベース（分・秒）の場合は、ここでの自力計算は難しい（距離が不明なため）
+      // ただし、もし距離などの別の情報があれば計算可能だが、現状は距離ベースの時のみペースを出す
+      return;
+    }
     
-    if (distKm > 0 && durMin > 0) {
+    if (distKm > 0) {
       final totalSec = durMin * 60;
       final paceSecPerKm = (totalSec / distKm).round();
       _paceController.text = _formatPaceForInput(paceSecPerKm);
@@ -320,13 +329,30 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     final reps = int.tryParse(_repsController.text) ?? 1;
     final paceSec = _parsePaceInput(_paceController.text);
     
+    if (_unit == PlanUnit.min || _unit == PlanUnit.sec) {
+      // 時間ベースの場合は、入力値そのものが時間
+      final unitFactor = (_unit == PlanUnit.min) ? 60 : 1;
+      final totalSec = val * reps * unitFactor;
+      _durationController.text = (totalSec / 60.0).round().toString();
+
+      // ペースがあれば距離を逆算
+      if (paceSec != null && paceSec > 0) {
+        // 距離(km) = 時間(s) / ペース(s/km)
+        final calculatedDistKm = totalSec / paceSec;
+        // 距離は直接UIに反映しないほうが混乱が少ないかもしれないが、
+        // 内部的に距離が必要なため、ここでは時間の反映のみに留める（保存時に計算される）
+      }
+      return;
+    }
+
+    // 距離ベースの場合
     double distKm = 0;
     if (_unit == PlanUnit.km) distKm = val * reps;
     else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
     
     if (distKm > 0 && paceSec != null && paceSec > 0) {
       final totalSec = distKm * paceSec;
-      final durMin = totalSec / 60;
+      final durMin = totalSec / 60.0;
       _durationController.text = durMin.round().toString(); 
     }
   }
@@ -850,40 +876,50 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       final val = double.tryParse(_distanceController.text) ?? 0;
       final reps = int.tryParse(_repsController.text) ?? 1;
       
+      // ペースを秒に変換
+      final paceSecPerKm = _parsePaceInput(_paceController.text);
+
       if (val > 0) {
         if (_unit == PlanUnit.km) {
           distanceM = (val * reps * 1000).round();
         } else if (_unit == PlanUnit.m) {
           distanceM = (val * reps).round();
+        } else if (paceSecPerKm != null && paceSecPerKm > 0) {
+          // 時間ベース（分・秒）の場合はペースを使って距離を逆算
+          final unitFactor = (_unit == PlanUnit.min) ? 60 : 1;
+          final totalSec = val * reps * unitFactor;
+          distanceM = (totalSec / paceSecPerKm * 1000).round();
         }
       }
-
-      // ペースを秒に変換
-      final paceSecPerKm = _parsePaceInput(_paceController.text);
 
       // 時間を秒に変換
       int? durationSec;
       if (_isRace) {
-        final h = int.tryParse(_hourController.text) ?? 0;
-        final m = int.tryParse(_minuteController.text) ?? 0;
-        final s = int.tryParse(_secondController.text) ?? 0;
-        final ms = int.tryParse(_msController.text) ?? 0;
+        final h = double.tryParse(_hourController.text) ?? 0;
+        final m = double.tryParse(_minuteController.text) ?? 0;
+        final s = double.tryParse(_secondController.text) ?? 0;
+        final ms = double.tryParse(_msController.text) ?? 0;
         durationSec = (h * 3600 + m * 60 + s + ms / 1000.0).round();
       } else if (_durationController.text.isNotEmpty) {
-        durationSec = int.parse(_durationController.text) * 60;
+        final durMin = double.tryParse(_durationController.text) ?? 0;
+        durationSec = (durMin * 60).round();
+      } else if (_unit == PlanUnit.min || _unit == PlanUnit.sec) {
+        // durationが空でも単位が時間のときはこちらから算出
+        final unitFactor = (_unit == PlanUnit.min) ? 60 : 1;
+        durationSec = (val * reps * unitFactor).round();
       }
 
       // レスト時間
       int? restDurationSec;
       if (_restDurationController.text.isNotEmpty) {
-        restDurationSec = int.parse(_restDurationController.text);
+        restDurationSec = (double.tryParse(_restDurationController.text) ?? 0).round();
       }
 
       // 負荷計算
       final loadCalc = ref.read(loadCalculatorProvider);
-      final rTpace = await ref.read(runningThresholdPaceProvider.future);
-      final wTpace = await ref.read(walkingThresholdPaceProvider.future);
-      final tPace = _activityType == ActivityType.walking ? wTpace : rTpace;
+      final rTpace = await ref.read(runningThresholdPaceProvider.future).catchError((_) => 0);
+      final wTpace = await ref.read(walkingThresholdPaceProvider.future).catchError((_) => 0);
+      final tPace = _activityType == ActivityType.walking ? (wTpace > 0 ? wTpace : null) : (rTpace > 0 ? rTpace : null);
       
       // 暫定的なSessionオブジェクトを作成して負荷計算に回す
       final tempSession = Session(
@@ -899,8 +935,8 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         restType: _restType,
         restDurationSec: restDurationSec,
         activityType: _activityType,
-        isRace: _isRace, // 追加
-        reps: reps, // 追加
+        isRace: _isRace, 
+        reps: reps, 
       );
       final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
         tempSession,
@@ -966,6 +1002,12 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
       if (mounted) {
         context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('保存に失敗しました: $e'), backgroundColor: Colors.red),
+        );
       }
     } finally {
       setState(() => _isLoading = false);

@@ -93,7 +93,7 @@ class SettingsScreen extends ConsumerWidget {
           const ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Long Distance Diary'),
-            subtitle: Text('Version 1.3.7 (Round 9.7)'),
+            subtitle: Text('Version 1.3.8 (Round 9.8)'),
           ),
         ],
       ),
