@@ -11,7 +11,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -51,6 +51,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 10) {
             await m.addColumn(plans, plans.duration);
+          }
+          if (from < 11) {
+            await m.addColumn(plans, plans.reps);
+            await m.addColumn(sessions, sessions.reps);
           }
         },
         beforeOpen: (details) async {
