@@ -407,21 +407,13 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
   }
 
   Future<void> _savePlans() async {
-    // 有効な行があるかチェック（メニュー名が入力されているか、レストが選択されているか）
+    // バリデーション緩和: 全て空の場合は「予定なし」として保存（削除）を許可
     final hasValidRow = _rows.any((row) => 
       row.isRest || row.menuController.text.trim().isNotEmpty
     );
     
-    if (!hasValidRow) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('メニュー名を入力するか、レストを選択してください'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
+    // 空でも処理を続行し、下のループでinputsが空になれば updatePlansForDate で削除扱いになる
+    
     setState(() => _isLoading = true);
     try {
       final inputs = <PlanInput>[];
@@ -430,6 +422,7 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
         if (row.isRest) {
           menuName = 'レスト';
         }
+        // メニュー名がない行はスキップ
         if (menuName.isEmpty) continue;
 
         final val = double.tryParse(row.distanceController.text) ?? 0;
@@ -788,7 +781,7 @@ class _PlanRowItem extends StatelessWidget {
                   controller: row.distanceController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: fieldLabel,
+                    labelText: '距離/時間',
                     border: const OutlineInputBorder(),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),

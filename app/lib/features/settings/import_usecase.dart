@@ -58,22 +58,14 @@ class ImportUseCase {
           if (plan['pace'] == null && plan['zone'] != null) {
             try {
               final zone = Zone.values.firstWhere((z) => z.name == plan['zone']);
-              // プランに設定されている種目を優先し、なければデフォルトでランニング
-              final activityType = plan['activity_type'] != null 
-                ? ActivityType.values.firstWhere((a) => a.name == plan['activity_type'], orElse: () => ActivityType.running)
-                : ActivityType.running;
               
-              // 種目に応じた閾値ペースをサービスに渡す必要があるが、
-              // TrainingPaceService.getSuggestedPaceForZone は内部でPBを見に行っているわけではなく
-              // 単にZoneから強度係数を返すだけなら、ここで計算が必要。
-              // 既存実装: getSuggestedPaceForZone(zone, activityType) は
-              // リポジトリからPBを取得して計算してくれるはず。
-              
-              // しかし、importUseCaseはProvider内なので、refから直接最新のPB値を渡して計算させたほうが確実か、
-              // あるいはService側がrefを持っているか。
-              // TrainingPaceServiceはProviderで提供されているので、内部でRefを持っている。
-              // ですが、ここでは async での取得が必要かもしれない。
-              
+              // プランに設定されている種目を優先、なければデフォルトでランニング
+              // JSONの activity_type 値が "walking" (大小文字区別なし) か確認
+              final activityTypeName = plan['activity_type'] as String?;
+              final activityType = (activityTypeName != null && activityTypeName.toLowerCase() == 'walking')
+                   ? ActivityType.walking
+                   : ActivityType.running;
+
               final suggestedPace = await paceService.getSuggestedPaceForZone(zone, activityType);
               if (suggestedPace != null) {
                 plan['pace'] = suggestedPace;
@@ -83,8 +75,38 @@ class ImportUseCase {
             }
           }
         }
+
+        // ターゲットレースの重複チェックと統合
+        // target_racesリスト内の重複、および既存DBとの重複をチェック
+        if (data['target_races'] != null) {
+          final importedRaces = data['target_races'] as List;
+          final existingRaces = await _ref.read(allTargetRacesProvider.future);
+          final validRaces = <dynamic>[];
+
+          for (final race in importedRaces) {
+            final name = race['name'];
+            final dateStr = race['date'];
+            // 既存に同名かつ同日のレースがあるか確認
+            final isDuplicate = existingRaces.any((e) {
+               try {
+                 final raceDate = DateTime.parse(dateStr);
+                 return e.name == name && 
+                        e.date.year == raceDate.year && 
+                        e.date.month == raceDate.month && 
+                        e.date.day == raceDate.day;
+               } catch (_) {
+                 return false;
+               }
+            });
+
+            if (!isDuplicate) {
+              validRaces.add(race);
+            }
+          }
+          data['target_races'] = validRaces;
+        }
+
         // 更新したデータを再エンコードして repo に渡す
-        // target_races があればそれも含まれている
         jsonString = json.encode(data);
       }
       

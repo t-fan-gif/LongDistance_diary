@@ -352,58 +352,42 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                   const SizedBox(height: 16),
                   const Divider(),
 
-                  // テンプレ入力（オートコンプリート）
+                  // メニュー名入力
                   _buildSectionTitle('メニュー名'),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final presetsAsync = ref.watch(menuPresetsProvider);
-                      return presetsAsync.when(
-                        data: (presets) {
-                          return Autocomplete<String>(
-                            initialValue: TextEditingValue(text: _templateController.text),
-                            optionsBuilder: (TextEditingValue textEditingValue) {
-                              if (textEditingValue.text == '') {
-                                return const Iterable<String>.empty();
-                              }
-                              return presets
-                                  .map((e) => e.name)
-                                  .where((String option) {
-                                return option.contains(textEditingValue.text);
-                              });
-                            },
-                            onSelected: (String selection) {
-                              _templateController.text = selection;
-                            },
-                            fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                              // 初期値が設定されている場合、Controllerに反映
-                              if (_templateController.text.isNotEmpty && textEditingController.text.isEmpty) {
-                                textEditingController.text = _templateController.text;
-                              }
-                              // 入力同期
-                              textEditingController.addListener(() {
-                                _templateController.text = textEditingController.text;
-                              });
-                              
-                              return TextFormField(
-                                controller: textEditingController,
-                                focusNode: focusNode,
-                                decoration: const InputDecoration(
-                                  hintText: '例: インターバル',
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'メニューを入力してください';
-                                  }
-                                  return null;
+                  TextFormField(
+                    controller: _templateController,
+                    decoration: InputDecoration(
+                      hintText: '例: インターバル',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: Consumer(
+                        builder: (context, ref, child) {
+                          final presetsAsync = ref.watch(menuPresetsProvider);
+                          return presetsAsync.maybeWhen(
+                            data: (presets) {
+                              if (presets.isEmpty) return const SizedBox.shrink();
+                              return PopupMenuButton<String>(
+                                icon: const Icon(Icons.arrow_drop_down),
+                                onSelected: (value) {
+                                  _templateController.text = value;
                                 },
+                                itemBuilder: (context) => presets
+                                    .map((p) => PopupMenuItem(
+                                          value: p.name,
+                                          child: Text(p.name),
+                                        ))
+                                    .toList(),
                               );
                             },
+                            orElse: () => const SizedBox.shrink(),
                           );
                         },
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (_, __) => TextFormField(controller: _templateController),
-                      );
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'メニューを入力してください';
+                      }
+                      return null;
                     },
                   ),
                   const SizedBox(height: 8),
