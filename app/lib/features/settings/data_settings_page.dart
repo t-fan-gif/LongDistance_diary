@@ -14,6 +14,8 @@ import '../../core/repos/plan_repository.dart';
 import '../../core/repos/target_race_repository.dart';
 import '../../core/services/service_providers.dart';
 import '../plan_editor/weekly_plan_screen.dart';
+import '../coach/plan_qr_display_dialog.dart';
+import '../coach/plan_qr_scan_screen.dart';
 
 class DataSettingsPage extends ConsumerStatefulWidget {
   const DataSettingsPage({super.key});
@@ -81,6 +83,18 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
                 title: const Text('練習予定をエクスポート'),
                 subtitle: const Text('指定期間の予定のみをファイルに出力します（ペースは除去されます）'),
                 onTap: _isProcessing ? null : () => _handlePlansOnlyExport(),
+              ),
+              ListTile(
+                leading: const Icon(Icons.qr_code, color: Colors.teal),
+                title: const Text('QRコードで計画を共有'),
+                subtitle: const Text('期間を選択してQRコードを表示します'),
+                onTap: _isProcessing ? null : () => _showQrExportDialog(),
+              ),
+              ListTile(
+                leading: const Icon(Icons.qr_code_scanner, color: Colors.teal),
+                title: const Text('QRコードから計画を読み込む'),
+                subtitle: const Text('コーチの端末のQRコードをスキャンして取り込みます'),
+                onTap: _isProcessing ? null : () => _openQrScanner(),
               ),
             ],
           ),
@@ -226,5 +240,18 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  void _showQrExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const PlanQrDisplayDialog(),
+    );
+  }
+
+  void _openQrScanner() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PlanQrScanScreen()),
+    );
   }
 }
