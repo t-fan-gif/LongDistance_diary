@@ -38,6 +38,15 @@ class SettingsScreen extends ConsumerWidget {
       ),
       body: ListView(
         children: [
+          _buildSectionHeader(context, 'サポート'),
+          ListTile(
+            leading: const Icon(Icons.help_outline),
+            title: const Text('使い方ガイド'),
+            subtitle: const Text('アプリの基本的な使い方'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/usage'),
+          ),
+          const Divider(),
           _buildSectionHeader(context, '入力補助'),
           ListTile(
             leading: const Icon(Icons.label_outline),
@@ -97,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start, // Align text to start
               children: [
                 Text(
-                  'Version 1.3.11 (Round 9.11)',
+                  'Version 1.3.12 (Round 10)',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey,
                       ),

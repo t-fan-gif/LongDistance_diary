@@ -18,6 +18,7 @@ import '../features/settings/goal_settings_page.dart';
 import '../features/settings/advanced_settings_screen.dart';
 import '../features/settings/training_support_screen.dart';
 import '../features/settings/target_race_settings_screen.dart';
+import '../features/settings/usage_guide_screen.dart'; // 追加 (Settingsフォルダ)
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -100,6 +101,10 @@ final GoRouter appRouter = GoRouter(
         return const SettingsScreen();
       },
       routes: [
+        GoRoute(
+          path: 'usage', // 追加: 使い方ガイド
+          builder: (context, state) => const UsageGuideScreen(),
+        ),
         GoRoute(
           path: 'pb',
           builder: (context, state) => const PersonalBestSettingsPage(),

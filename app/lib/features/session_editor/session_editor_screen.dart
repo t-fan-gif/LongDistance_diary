@@ -543,86 +543,120 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
                   // 実績入力：距離/時間 × セット
                   _buildSectionTitle('実績（距離/時間 × セット）'),
+                  // 実績入力：距離/時間 × セット
+                  _buildSectionTitle('実績（距離/時間 × セット）'),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 左側：距離/時間
                       Expanded(
                         flex: 3,
-                        child: TextFormField(
-                          controller: _distanceController,
-                          focusNode: _distanceFocusNode,
-                          decoration: const InputDecoration(
-                            labelText: '距離/時間',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _distanceController,
+                              focusNode: _distanceFocusNode,
+                              decoration: const InputDecoration(
+                                labelText: '距離/時間',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: () => _adjustDistance(-1.0),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () => _adjustDistance(1.0),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            switch (_unit) {
-                              case PlanUnit.km: _unit = PlanUnit.m; break;
-                              case PlanUnit.m: _unit = PlanUnit.min; break;
-                              case PlanUnit.min: _unit = PlanUnit.sec; break;
-                              case PlanUnit.sec: _unit = PlanUnit.km; break;
-                            }
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(4),
-                            color: Colors.grey.shade100,
-                          ),
-                          child: SizedBox(
-                            width: 32,
-                            child: Text(
-                              _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '分' : '秒')),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                      
+                      // 中央：単位切り替えと×記号
+                      Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                switch (_unit) {
+                                  case PlanUnit.km: _unit = PlanUnit.m; break;
+                                  case PlanUnit.m: _unit = PlanUnit.min; break;
+                                  case PlanUnit.min: _unit = PlanUnit.sec; break;
+                                  case PlanUnit.sec: _unit = PlanUnit.km; break;
+                                }
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(4),
+                                color: Colors.grey.shade100,
+                              ),
+                              child: Text(
+                                _unit == PlanUnit.km ? 'km' : (_unit == PlanUnit.m ? 'm' : (_unit == PlanUnit.min ? '分' : '秒')),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          const Text('×', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      const Text('×', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(width: 8),
+                      
+                      // 右側：セット数
                       Expanded(
                         flex: 2,
-                        child: TextFormField(
-                          controller: _repsController,
-                          decoration: const InputDecoration(
-                            labelText: 'セット',
-                            hintText: '1セット',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                          keyboardType: TextInputType.number,
-                          onChanged: (_) => _calculateDurationFromPace(),
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _repsController,
+                              decoration: const InputDecoration(
+                                labelText: 'セット',
+                                hintText: '1セット',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (_) => _calculateDurationFromPace(),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: () => _adjustReps(-1),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () => _adjustReps(1),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                       const Text('（1セットあたり）', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                       const Spacer(),
-                       IconButton(
-                         icon: const Icon(Icons.remove),
-                         onPressed: () => _adjustDistance(-1.0),
-                         visualDensity: VisualDensity.compact,
-                       ),
-                       IconButton(
-                         icon: const Icon(Icons.add),
-                         onPressed: () => _adjustDistance(1.0),
-                         visualDensity: VisualDensity.compact,
-                       ),
-                    ],
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('（1セットあたり）', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   ),
                   const SizedBox(height: 16),
                   
@@ -837,6 +871,13 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       // ペースを変えたら時間を更新する
       if (!_isRace) _calculateDurationFromPace();
     }
+  }
+
+  void _adjustReps(int delta) {
+    final current = int.tryParse(_repsController.text) ?? 1;
+    final newVal = (current + delta).clamp(1, 999);
+    _repsController.text = newVal.toString();
+    _calculateDurationFromPace();
   }
 
   void _adjustDistance(double deltaKm) {
@@ -1055,7 +1096,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   }
 
   String _formatDateTime(DateTime dt) {
-    return '${dt.year}年${dt.month}月${dt.day}日 ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    return '${dt.year}年${dt.month}月${dt.day}日';
   }
 
   String _formatPace(int secPerKm) {
