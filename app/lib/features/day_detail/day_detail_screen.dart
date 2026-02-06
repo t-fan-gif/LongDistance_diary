@@ -305,6 +305,7 @@ class _PlanTile extends ConsumerWidget {
       if (plan.duration != null) 'duration': plan.duration.toString(), // 追加
       'activityType': plan.activityType.name,
       'isRace': plan.isRace.toString(),
+      'planId': plan.id, // 追加
     };
     final uri = Uri(path: '/session/new', queryParameters: query);
     if (context.mounted) {

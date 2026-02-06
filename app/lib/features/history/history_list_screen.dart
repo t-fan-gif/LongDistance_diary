@@ -227,8 +227,15 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
                   final allPlans = ref.watch(allPlansProvider).valueOrNull ?? [];
                   try {
                     final plan = allPlans.firstWhere((p) => p.id == session.planId);
-                    if (plan.reps > 1 && plan.distance != null) {
-                      planDetail = '${plan.distance}m × ${plan.reps}';
+                    if (plan.distance != null) {
+                      final pDistM = plan.distance!;
+                      final pTotalDistM = pDistM * plan.reps;
+                      final distText = pDistM >= 1000 ? '${(pDistM / 1000).toStringAsFixed(1)}km' : '${pDistM}m';
+                      if (plan.reps > 1) {
+                        planDetail = '$distText × ${plan.reps} (計${(pTotalDistM / 1000).toStringAsFixed(1)}km)';
+                      } else {
+                        planDetail = distText;
+                      }
                     }
                   } catch (_) {}
                 }

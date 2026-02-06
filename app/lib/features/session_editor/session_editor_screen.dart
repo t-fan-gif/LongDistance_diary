@@ -27,6 +27,7 @@ class SessionEditorScreen extends ConsumerStatefulWidget {
     this.initialDailyMemo,
     this.initialIsRace, // 追加
     this.initialDuration, // 追加
+    this.initialPlanId, // 追加
   });
 
   final String? sessionId;
@@ -42,6 +43,7 @@ class SessionEditorScreen extends ConsumerStatefulWidget {
   final String? initialDailyMemo;
   final bool? initialIsRace; // 追加
   final String? initialDuration; // 追加
+  final String? initialPlanId; // 追加
 
   @override
   ConsumerState<SessionEditorScreen> createState() => _SessionEditorScreenState();
@@ -76,6 +78,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
   bool _isLoading = false;
   bool _isEditMode = false;
   bool _isRace = false;
+  String? _planId;
 
   @override
   void initState() {
@@ -138,11 +141,18 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       if (widget.initialPace != null) {
         final pace = int.tryParse(widget.initialPace!) ?? 0;
         _paceController.text = _formatPace(pace);
+      }
 
-        // 時間の予測 (DurationがなくてPaceとDistanceがある場合)
-        if (widget.initialDuration == null && widget.initialDistance != null && pace > 0) {
-          final dist = int.tryParse(widget.initialDistance!) ?? 0;
-          final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
+      if (widget.initialPlanId != null) {
+        _planId = widget.initialPlanId;
+      }
+
+      // 時間の予測 (DurationがなくてPaceとDistanceがある場合)
+      if (widget.initialDuration == null && widget.initialDistance != null && widget.initialPace != null) {
+        final dist = int.tryParse(widget.initialDistance!) ?? 0;
+        final reps = int.tryParse(widget.initialReps ?? '1') ?? 1;
+        final pace = int.tryParse(widget.initialPace!) ?? 0;
+        if (pace > 0) {
           final totalSec = (dist * reps / 1000.0) * pace;
           _durationController.text = (totalSec / 60).round().toString();
         }
@@ -737,9 +747,9 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     if (current != null) {
       final newPace = (current + deltaSec).clamp(1, 3600); // 緩和
       _paceController.text = _formatPaceForInput(newPace);
-      // 再計算が必要ならいれるが、Paceを変えただけではDistance/Durationは連動しない設計（どちらを変えるかわからないため）
-      // しかしDurationを変えるのが自然？
-      // ここではPaceだけ変える。
+      
+      // ペースを変えたら時間を更新する
+      if (!_isRace) _calculateDurationFromPace();
     }
   }
 
@@ -748,9 +758,8 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
     final newVal = (current + deltaKm).clamp(0.0, 999.0);
     _distanceController.text = newVal.toStringAsFixed(newVal.truncateToDouble() == newVal ? 0 : 1);
     
-    // 距離を変えたら？ -> Pace固定でDuration計算か、Duration固定でPace計算か。
-    // 通常はDurationは結果、Distanceは事実なので、Paceが変わる？
-    if (!_isRace) _calculatePaceFromDuration();
+    // 距離を変えたら「時間」を再計算する（ユーザーの要望：ペース固定で時間が変わるように）
+    if (!_isRace) _calculateDurationFromPace();
   }
 
   int? _parsePaceInput(String input) {
@@ -848,6 +857,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           load: calculatedLoad,
           activityType: _activityType,
           isRace: _isRace, // 追加
+          planId: _planId, // 追加
         );
       } else {
         await repo.createSession(
@@ -865,6 +875,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
           load: calculatedLoad,
           activityType: _activityType,
           isRace: _isRace, // 追加
+          planId: _planId, // 追加
         );
       }
 
