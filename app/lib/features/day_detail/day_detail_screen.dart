@@ -265,8 +265,10 @@ class _PlanTile extends ConsumerWidget {
         children: [
           Row(
             children: [
-              if (plan.distance != null)
+              if (plan.distance != null && plan.distance! > 0)
                 Text('${(plan.distance! / 1000).toStringAsFixed(1)}km '),
+              if (plan.distance == null && plan.duration != null && plan.duration! > 0)
+                Text(plan.duration! % 60 == 0 ? '${plan.duration! ~/ 60}分 ' : '${plan.duration!}秒 '),
               if (plan.reps > 1) Text('× ${plan.reps} '),
               if (plan.pace != null) Text('@${_formatPace(plan.pace!)} '),
               if (plan.zone != null) Text('(${plan.zone!.name}) '),
@@ -342,8 +344,10 @@ class _SessionTile extends ConsumerWidget {
       title: Text(session.templateText),
       subtitle: Row(
         children: [
-          if (session.distanceMainM != null)
+          if (session.distanceMainM != null && session.distanceMainM! > 0)
             Text('${(session.distanceMainM! / 1000).toStringAsFixed(1)}km '),
+          if ((session.distanceMainM == null || session.distanceMainM == 0) && session.durationMainSec != null && session.durationMainSec! > 0)
+            Text(session.durationMainSec! % 60 == 0 ? '${session.durationMainSec! ~/ 60}分 ' : '${session.durationMainSec!}秒 '),
           if (session.paceSecPerKm != null) Text('${_formatPace(session.paceSecPerKm!)} '),
           if (session.zone != null) Text('@${session.zone!.name} '),
           if ((load ?? session.load) != null) Text('負荷: ${(load ?? session.load)!.round()}'),
