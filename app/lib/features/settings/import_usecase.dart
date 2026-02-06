@@ -60,8 +60,8 @@ class ImportUseCase {
               final zone = Zone.values.firstWhere((z) => z.name == plan['zone']);
               
               // プランに設定されている種目を優先、なければデフォルトでランニング
-              // JSONの activity_type 値が "walking" (大小文字区別なし) か確認
-              final activityTypeName = plan['activity_type'] as String?;
+              // JSONキーは 'activityType' (Drift default) または 'activity_type' (Legacy/Manual) の可能性あり
+              final activityTypeName = (plan['activityType'] ?? plan['activity_type']) as String?;
               final activityType = (activityTypeName != null && activityTypeName.toLowerCase() == 'walking')
                    ? ActivityType.walking
                    : ActivityType.running;
@@ -77,7 +77,6 @@ class ImportUseCase {
         }
 
         // ターゲットレースの重複チェックと統合
-        // target_racesリスト内の重複、および既存DBとの重複をチェック
         if (data['target_races'] != null) {
           final importedRaces = data['target_races'] as List;
           final existingRaces = await _ref.read(allTargetRacesProvider.future);
@@ -113,15 +112,18 @@ class ImportUseCase {
       await _repo.importFromJson(jsonString);
 
       // 全データ無効化
+      // Providerの再取得を促すため、確実に関連プロバイダをInvalidateする
+      // NOTE: Family providerのinvalidateは全パラメータ分をinvalidateする仕様(Riverpod 2.x)
       _ref.invalidate(monthCalendarDataProvider);
       _ref.invalidate(runningThresholdPaceProvider);
       _ref.invalidate(walkingThresholdPaceProvider);
       _ref.invalidate(personalBestsProvider);
       _ref.invalidate(menuPresetsProvider);
-      _ref.invalidate(selectedMonthProvider); // カレンダー一式
-      _ref.invalidate(weeklyPlansProvider);   // 週間リストも更新
-      _ref.invalidate(allTargetRacesProvider);   // ターゲットレースも更新
-      _ref.invalidate(dayRaceProvider);       // 日別レース情報も更新
+      _ref.invalidate(selectedMonthProvider);
+      _ref.invalidate(weeklyPlansProvider);
+      _ref.invalidate(allTargetRacesProvider);
+      _ref.invalidate(upcomingRacesProvider); // 追加: ターゲットレースUIで使用
+      _ref.invalidate(dayRaceProvider);
     }
   }
 }
