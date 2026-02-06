@@ -85,6 +85,8 @@ class ExportRepository {
       await _db.delete(_db.sessions).go();
       await _db.delete(_db.personalBests).go();
       await _db.delete(_db.menuPresets).go();
+      await _db.delete(_db.dailyPlanMemos).go();
+      await _db.delete(_db.targetRaces).go();
     });
   }
 
@@ -98,6 +100,11 @@ class ExportRepository {
       .get();
     
     final memos = await (_db.select(_db.dailyPlanMemos)
+      ..where((t) => t.date.isBiggerOrEqualValue(start) & t.date.isSmallerThanValue(end)))
+      .get();
+      
+    // 期間内のターゲットレースも取得
+    final targetRaces = await (_db.select(_db.targetRaces)
       ..where((t) => t.date.isBiggerOrEqualValue(start) & t.date.isSmallerThanValue(end)))
       .get();
 
@@ -118,6 +125,7 @@ class ExportRepository {
       },
       'plans': strippedPlans,
       'daily_plan_memos': memos.map((e) => e.toJson()).toList(),
+      'target_races': targetRaces.map((e) => e.toJson()).toList(), // 追加
     };
 
     const encoder = JsonEncoder.withIndent('  ');

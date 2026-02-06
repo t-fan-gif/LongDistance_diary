@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/repos/menu_preset_repository.dart';
-import '../../core/repos/personal_best_repository.dart';
 import '../../core/services/service_providers.dart'; // personalBestRepositoryProvider はここから
 
 /// 全PBを取得

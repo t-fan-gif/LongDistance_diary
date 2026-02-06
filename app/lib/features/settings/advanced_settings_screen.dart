@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../calendar/calendar_providers.dart';
-import 'goal_providers.dart';
 
 enum LoadCalculationMode {
   priorityPace('ペース優先', 'Pace > sRPE > Zone'),

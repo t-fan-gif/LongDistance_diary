@@ -30,6 +30,7 @@ class Plans extends Table {
   
   TextColumn get note => text().nullable()();
   BoolColumn get isRace => boolean().withDefault(const Constant(false))();
+  IntColumn get duration => integer().nullable()(); // 秒単位
 
   @override
   Set<Column<Object>> get primaryKey => {id};

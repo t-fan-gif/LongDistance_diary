@@ -3,15 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/db/app_database.dart';
-import '../../core/db/db_providers.dart';
-import '../../core/domain/enums.dart'; // 追加
+import '../../core/domain/enums.dart';
 import '../../core/repos/target_race_repository.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart'; // 加筆: dayPlansProviderのため
 import '../plan_editor/weekly_plan_screen.dart'; // 加筆: weeklyPlansProviderのため
 import '../../core/services/service_providers.dart';
 import '../../core/repos/plan_repository.dart';
-import '../../core/services/vdot_calculator.dart';
 
 
 /// 全ターゲットレース プロバイダ

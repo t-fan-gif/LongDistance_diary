@@ -421,6 +421,12 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_race" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _durationMeta =
+      const VerificationMeta('duration');
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+      'duration', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -432,7 +438,8 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
         reps,
         activityType,
         note,
-        isRace
+        isRace,
+        duration
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -481,6 +488,10 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
       context.handle(_isRaceMeta,
           isRace.isAcceptableOrUnknown(data['is_race']!, _isRaceMeta));
     }
+    if (data.containsKey('duration')) {
+      context.handle(_durationMeta,
+          duration.isAcceptableOrUnknown(data['duration']!, _durationMeta));
+    }
     return context;
   }
 
@@ -511,6 +522,8 @@ class $PlansTable extends Plans with TableInfo<$PlansTable, Plan> {
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
       isRace: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_race'])!,
+      duration: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration']),
     );
   }
 
@@ -539,6 +552,7 @@ class Plan extends DataClass implements Insertable<Plan> {
   final ActivityType activityType;
   final String? note;
   final bool isRace;
+  final int? duration;
   const Plan(
       {required this.id,
       required this.date,
@@ -549,7 +563,8 @@ class Plan extends DataClass implements Insertable<Plan> {
       required this.reps,
       required this.activityType,
       this.note,
-      required this.isRace});
+      required this.isRace,
+      this.duration});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -574,6 +589,9 @@ class Plan extends DataClass implements Insertable<Plan> {
       map['note'] = Variable<String>(note);
     }
     map['is_race'] = Variable<bool>(isRace);
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
     return map;
   }
 
@@ -591,6 +609,9 @@ class Plan extends DataClass implements Insertable<Plan> {
       activityType: Value(activityType),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isRace: Value(isRace),
+      duration: duration == null && nullToAbsent
+          ? const Value.absent()
+          : Value(duration),
     );
   }
 
@@ -610,6 +631,7 @@ class Plan extends DataClass implements Insertable<Plan> {
           .fromJson(serializer.fromJson<String>(json['activityType'])),
       note: serializer.fromJson<String?>(json['note']),
       isRace: serializer.fromJson<bool>(json['isRace']),
+      duration: serializer.fromJson<int?>(json['duration']),
     );
   }
   @override
@@ -628,6 +650,7 @@ class Plan extends DataClass implements Insertable<Plan> {
           $PlansTable.$converteractivityType.toJson(activityType)),
       'note': serializer.toJson<String?>(note),
       'isRace': serializer.toJson<bool>(isRace),
+      'duration': serializer.toJson<int?>(duration),
     };
   }
 
@@ -641,7 +664,8 @@ class Plan extends DataClass implements Insertable<Plan> {
           int? reps,
           ActivityType? activityType,
           Value<String?> note = const Value.absent(),
-          bool? isRace}) =>
+          bool? isRace,
+          Value<int?> duration = const Value.absent()}) =>
       Plan(
         id: id ?? this.id,
         date: date ?? this.date,
@@ -653,6 +677,7 @@ class Plan extends DataClass implements Insertable<Plan> {
         activityType: activityType ?? this.activityType,
         note: note.present ? note.value : this.note,
         isRace: isRace ?? this.isRace,
+        duration: duration.present ? duration.value : this.duration,
       );
   Plan copyWithCompanion(PlansCompanion data) {
     return Plan(
@@ -668,6 +693,7 @@ class Plan extends DataClass implements Insertable<Plan> {
           : this.activityType,
       note: data.note.present ? data.note.value : this.note,
       isRace: data.isRace.present ? data.isRace.value : this.isRace,
+      duration: data.duration.present ? data.duration.value : this.duration,
     );
   }
 
@@ -683,14 +709,15 @@ class Plan extends DataClass implements Insertable<Plan> {
           ..write('reps: $reps, ')
           ..write('activityType: $activityType, ')
           ..write('note: $note, ')
-          ..write('isRace: $isRace')
+          ..write('isRace: $isRace, ')
+          ..write('duration: $duration')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, date, menuName, distance, pace, zone,
-      reps, activityType, note, isRace);
+      reps, activityType, note, isRace, duration);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -704,7 +731,8 @@ class Plan extends DataClass implements Insertable<Plan> {
           other.reps == this.reps &&
           other.activityType == this.activityType &&
           other.note == this.note &&
-          other.isRace == this.isRace);
+          other.isRace == this.isRace &&
+          other.duration == this.duration);
 }
 
 class PlansCompanion extends UpdateCompanion<Plan> {
@@ -718,6 +746,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
   final Value<ActivityType> activityType;
   final Value<String?> note;
   final Value<bool> isRace;
+  final Value<int?> duration;
   final Value<int> rowid;
   const PlansCompanion({
     this.id = const Value.absent(),
@@ -730,6 +759,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     this.activityType = const Value.absent(),
     this.note = const Value.absent(),
     this.isRace = const Value.absent(),
+    this.duration = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlansCompanion.insert({
@@ -743,6 +773,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     this.activityType = const Value.absent(),
     this.note = const Value.absent(),
     this.isRace = const Value.absent(),
+    this.duration = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         date = Value(date),
@@ -758,6 +789,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     Expression<String>? activityType,
     Expression<String>? note,
     Expression<bool>? isRace,
+    Expression<int>? duration,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -771,6 +803,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
       if (activityType != null) 'activity_type': activityType,
       if (note != null) 'note': note,
       if (isRace != null) 'is_race': isRace,
+      if (duration != null) 'duration': duration,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -786,6 +819,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
       Value<ActivityType>? activityType,
       Value<String?>? note,
       Value<bool>? isRace,
+      Value<int?>? duration,
       Value<int>? rowid}) {
     return PlansCompanion(
       id: id ?? this.id,
@@ -798,6 +832,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
       activityType: activityType ?? this.activityType,
       note: note ?? this.note,
       isRace: isRace ?? this.isRace,
+      duration: duration ?? this.duration,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -837,6 +872,9 @@ class PlansCompanion extends UpdateCompanion<Plan> {
     if (isRace.present) {
       map['is_race'] = Variable<bool>(isRace.value);
     }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -856,6 +894,7 @@ class PlansCompanion extends UpdateCompanion<Plan> {
           ..write('activityType: $activityType, ')
           ..write('note: $note, ')
           ..write('isRace: $isRace, ')
+          ..write('duration: $duration, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2911,6 +2950,7 @@ typedef $$PlansTableCreateCompanionBuilder = PlansCompanion Function({
   Value<ActivityType> activityType,
   Value<String?> note,
   Value<bool> isRace,
+  Value<int?> duration,
   Value<int> rowid,
 });
 typedef $$PlansTableUpdateCompanionBuilder = PlansCompanion Function({
@@ -2924,6 +2964,7 @@ typedef $$PlansTableUpdateCompanionBuilder = PlansCompanion Function({
   Value<ActivityType> activityType,
   Value<String?> note,
   Value<bool> isRace,
+  Value<int?> duration,
   Value<int> rowid,
 });
 
@@ -2988,6 +3029,9 @@ class $$PlansTableFilterComposer extends Composer<_$AppDatabase, $PlansTable> {
   ColumnFilters<bool> get isRace => $composableBuilder(
       column: $table.isRace, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get duration => $composableBuilder(
+      column: $table.duration, builder: (column) => ColumnFilters(column));
+
   Expression<bool> sessionsRefs(
       Expression<bool> Function($$SessionsTableFilterComposer f) f) {
     final $$SessionsTableFilterComposer composer = $composerBuilder(
@@ -3049,6 +3093,9 @@ class $$PlansTableOrderingComposer
 
   ColumnOrderings<bool> get isRace => $composableBuilder(
       column: $table.isRace, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get duration => $composableBuilder(
+      column: $table.duration, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlansTableAnnotationComposer
@@ -3090,6 +3137,9 @@ class $$PlansTableAnnotationComposer
 
   GeneratedColumn<bool> get isRace =>
       $composableBuilder(column: $table.isRace, builder: (column) => column);
+
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
 
   Expression<T> sessionsRefs<T extends Object>(
       Expression<T> Function($$SessionsTableAnnotationComposer a) f) {
@@ -3146,6 +3196,7 @@ class $$PlansTableTableManager extends RootTableManager<
             Value<ActivityType> activityType = const Value.absent(),
             Value<String?> note = const Value.absent(),
             Value<bool> isRace = const Value.absent(),
+            Value<int?> duration = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PlansCompanion(
@@ -3159,6 +3210,7 @@ class $$PlansTableTableManager extends RootTableManager<
             activityType: activityType,
             note: note,
             isRace: isRace,
+            duration: duration,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -3172,6 +3224,7 @@ class $$PlansTableTableManager extends RootTableManager<
             Value<ActivityType> activityType = const Value.absent(),
             Value<String?> note = const Value.absent(),
             Value<bool> isRace = const Value.absent(),
+            Value<int?> duration = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PlansCompanion.insert(
@@ -3185,6 +3238,7 @@ class $$PlansTableTableManager extends RootTableManager<
             activityType: activityType,
             note: note,
             isRace: isRace,
+            duration: duration,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

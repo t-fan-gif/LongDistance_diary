@@ -495,12 +495,12 @@ class _CalendarCell extends StatelessWidget {
                           if (dayData.dayLoad > 0)
                             Text(
                               'L:${dayData.dayLoad}',
-                              style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blueGrey),
                             ),
                           if (dayData.totalDistanceM > 0)
                             Text(
                               '${(dayData.totalDistanceM / 1000).toStringAsFixed(1)}k',
-                              style: const TextStyle(fontSize: 7, color: Colors.black54),
+                              style: const TextStyle(fontSize: 9, color: Colors.black54),
                             ),
                         ],
                       )

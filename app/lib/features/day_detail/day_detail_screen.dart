@@ -302,6 +302,7 @@ class _PlanTile extends ConsumerWidget {
       if (plan.reps > 1) 'reps': plan.reps.toString(),
       if (plan.note != null) 'note': plan.note!,
       if (dailyMemo != null && dailyMemo.note.isNotEmpty) 'dailyMemo': dailyMemo.note,
+      if (plan.duration != null) 'duration': plan.duration.toString(), // 追加
       'activityType': plan.activityType.name,
       'isRace': plan.isRace.toString(),
     };

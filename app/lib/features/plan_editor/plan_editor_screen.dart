@@ -123,9 +123,29 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
 
       if (plans.isNotEmpty) {
         for (final plan in plans) {
+          // 単位の判定
+          PlanUnit unit = PlanUnit.km;
+          if (plan.duration != null && plan.duration! > 0) {
+            // 時間指定
+            if (plan.duration! % 60 == 0) {
+              unit = PlanUnit.min;
+            } else {
+              unit = PlanUnit.sec;
+            }
+          } else if (plan.distance != null) {
+            // 距離指定
+            if (plan.distance! % 1000 == 0) {
+               unit = PlanUnit.km;
+            } else {
+               unit = PlanUnit.m;
+            }
+          }
+
           _addNewRow(
             menuName: plan.menuName,
             distance: plan.distance,
+            duration: plan.duration, // 追加
+            unit: unit, // 追加
             pace: plan.pace,
             zone: plan.zone,
             reps: plan.reps,
@@ -149,29 +169,23 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
             }
           }
           
-          // 種目からペースを推定（任意だが、あったほうが親切）
-          int? pace;
-          // if (distance != null) { ... }
-
           _addNewRow(
             menuName: target.name,
             distance: distance,
-            pace: pace,
+            // duration: Pace * Distance ? No, Plan logic usually inputs Distance for Race
             isRace: true,
             note: target.note,
           );
 
-          // 【新規追加】自動生成されたレース予定をその場で保存する
           final input = PlanInput(
             menuName: target.name,
             distance: distance,
-            pace: pace,
+            pace: null,
             isRace: true,
             note: target.note,
           );
           await repo.updatePlansForDate(widget.date, [input]);
           
-          // カレンダー等を更新
           final monthDate = DateTime(widget.date.year, widget.date.month);
           ref.invalidate(monthCalendarDataProvider(monthDate));
           ref.invalidate(dayPlansProvider(widget.date));
@@ -187,6 +201,8 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
   void _addNewRow({
     String? menuName,
     int? distance,
+    int? duration, // 追加
+    PlanUnit? unit, // 追加
     int? pace,
     Zone? zone,
     int? reps,
@@ -194,15 +210,32 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
     ActivityType activityType = ActivityType.running,
     bool isRace = false,
   }) {
-    bool isKm = true;
-    String distText = '';
-    if (distance != null && distance > 0) {
-      if (distance % 1000 == 0) {
-        isKm = true;
-        distText = (distance ~/ 1000).toString();
+    // 単位と表示値の初期化
+    PlanUnit initialUnit = unit ?? PlanUnit.km;
+    String valText = '';
+
+    if (duration != null && duration > 0) {
+      // 時間指定がある場合
+      if (unit == null) {
+         if (duration % 60 == 0) initialUnit = PlanUnit.min;
+         else initialUnit = PlanUnit.sec;
+      }
+      if (initialUnit == PlanUnit.min) {
+        valText = (duration ~/ 60).toString();
       } else {
-        isKm = false;
-        distText = distance.toString();
+        initialUnit = PlanUnit.sec;
+        valText = duration.toString();
+      }
+    } else if (distance != null && distance > 0) {
+      if (unit == null) {
+        if (distance % 1000 == 0) initialUnit = PlanUnit.km;
+        else initialUnit = PlanUnit.m;
+      }
+      if (initialUnit == PlanUnit.km) {
+        valText = (distance ~/ 1000).toString();
+      } else {
+        initialUnit = PlanUnit.m;
+        valText = distance.toString();
       }
     }
 
@@ -212,8 +245,10 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
       row.menuController.text = menuName;
       if (menuName == 'レスト') row.isRest = true;
     }
-    row.distanceController.text = distText;
-    row.isKm = isKm;
+    
+    row.distanceController.text = valText;
+    row.unit = initialUnit; // セット
+    
     if (reps != null) row.repsController.text = reps.toString();
     if (pace != null) row.paceController.text = _formatPace(pace);
     row.selectedZone = zone;
@@ -290,7 +325,32 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
 
   void _onRowChanged() => setState(() {});
 
-  void _handleUnitToggle(int index) => setState(() => _rows[index].isKm = !_rows[index].isKm);
+  void _handleUnitToggle(int index) {
+    setState(() {
+      final row = _rows[index];
+      switch (row.unit) {
+        case PlanUnit.km:
+          row.unit = PlanUnit.m;
+          // 値を変換するか、そのままにするか。ユーザー入力中は変換したほうが親切？
+          // ここでは単純に単位だけ変えて、値の変換はしない（ユーザーが入力を間違えた場合に単位だけ直すことを想定）
+          // しかし km -> m にするとき 10 -> 10000 になるべきか？
+          // ユーザー要望「単位切り替え」が「換算」なのか「ラベル変更」なのか。
+          // 多くのアプリでは、単位を変えると数値も換算されるのが一般的だが、
+          // 操作ミス修正の場合は換算したくないこともある。
+          // 今回は「入力ラベルの変更」として扱う（値は維持）。
+          break;
+        case PlanUnit.m:
+          row.unit = PlanUnit.min;
+          break;
+        case PlanUnit.min:
+          row.unit = PlanUnit.sec;
+          break;
+        case PlanUnit.sec:
+          row.unit = PlanUnit.km;
+          break;
+      }
+    });
+  }
 
   void _removeRow(int index) {
     setState(() {
@@ -372,14 +432,37 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
         }
         if (menuName.isEmpty) continue;
 
-        final distVal = double.tryParse(row.distanceController.text) ?? 0;
-        final distM = row.isKm ? (distVal * 1000).round() : distVal.round();
+        final val = double.tryParse(row.distanceController.text) ?? 0;
+        int? distM;
+        int? durationSec;
+
+        if (row.isRest) {
+           distM = null;
+           durationSec = null;
+        } else {
+           switch (row.unit) {
+             case PlanUnit.km:
+               distM = (val * 1000).round();
+               break;
+             case PlanUnit.m:
+               distM = val.round();
+               break;
+             case PlanUnit.min:
+               durationSec = (val * 60).round();
+               break;
+             case PlanUnit.sec:
+               durationSec = val.round();
+               break;
+           }
+        }
+        
         final paceSec = _parsePace(row.paceController.text);
         final reps = int.tryParse(row.repsController.text) ?? 1;
 
         inputs.add(PlanInput(
           menuName: menuName,
-          distance: row.isRest ? null : (distM > 0 ? distM : null),
+          distance: distM,
+          duration: durationSec,
           pace: row.isRest ? null : paceSec,
           zone: row.isRest ? null : row.selectedZone,
           reps: row.isRest ? 1 : reps,
@@ -530,19 +613,24 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
   }
 }
 
+// 単位列挙型
+enum PlanUnit { km, m, min, sec }
+
 class _PlanRowState {
   final menuController = TextEditingController();
-  final distanceController = TextEditingController();
+  final distanceController = TextEditingController(); // 数量（距離または時間）
   final repsController = TextEditingController(text: '1');
   final paceController = TextEditingController();
   final noteController = TextEditingController();
 
   late FocusNode paceFocusNode;
-  bool isKm = true;
+  PlanUnit unit = PlanUnit.km; // 単位
   Zone? selectedZone;
   ActivityType activityType = ActivityType.running;
   bool isRest = false;
   bool isRace = false;
+
+  bool get isKm => unit == PlanUnit.km;
 
   void init(VoidCallback onPaceFocusChange) {
     paceFocusNode = FocusNode();
@@ -577,13 +665,35 @@ class _PlanRowItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 単位表示テキスト
+    String unitLabel = 'km';
+    String fieldLabel = '距離';
+    switch (row.unit) {
+      case PlanUnit.km:
+        unitLabel = 'km';
+        fieldLabel = '距離';
+        break;
+      case PlanUnit.m:
+        unitLabel = 'm';
+        fieldLabel = '距離';
+        break;
+      case PlanUnit.min:
+        unitLabel = '分';
+        fieldLabel = '時間';
+        break;
+      case PlanUnit.sec:
+        unitLabel = '秒';
+        fieldLabel = '時間';
+        break;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Expanded(
-              flex: 6, // さらに増やす
+              flex: 6,
               child: TextFormField(
                 controller: row.menuController,
                 enabled: !row.isRest,
@@ -640,7 +750,6 @@ class _PlanRowItem extends StatelessWidget {
                   ),
                 ],
               ),
-            // レース項目
             if (row.isRace)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -678,10 +787,10 @@ class _PlanRowItem extends StatelessWidget {
                 child: TextFormField(
                   controller: row.distanceController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: '距離',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: InputDecoration(
+                    labelText: fieldLabel,
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   onChanged: (_) => onChanged(),
                 ),
@@ -694,10 +803,15 @@ class _PlanRowItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(4),
+                    color: Colors.grey.shade100,
                   ),
-                  child: Text(
-                    row.isKm ? 'km' : 'm',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  child: SizedBox(
+                    width: 32,
+                    child: Text(
+                      unitLabel,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ),
@@ -754,7 +868,7 @@ class _PlanRowItem extends StatelessWidget {
                     hintText: '4:00',
                     border: const OutlineInputBorder(),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    helperText: row.isRace ? '実績のタイムから自動計算されます' : '入力後、枠外をタップでZone推定',
+                    helperText: row.isRace ? '実績から自動計算' : '入力後、枠外タップでZone推定',
                   ),
                 ),
               ),

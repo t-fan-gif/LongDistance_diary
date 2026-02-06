@@ -33,9 +33,9 @@ class TrainingPaceService {
     if (paceSec <= zones[Zone.I]!.maxSec) return Zone.I;
     if (paceSec <= zones[Zone.T]!.maxSec) return Zone.T;
     if (paceSec <= zones[Zone.M]!.maxSec) return Zone.M;
-    if (paceSec <= zones[Zone.E]!.maxSec) return Zone.E;
     
-    return null;
+    // Eペースより遅くてもEとみなす（ユーザー要望による緩和）
+    return Zone.E;
   }
 
   /// ゾーンから推奨ペースを取得する

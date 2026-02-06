@@ -205,7 +205,8 @@ class _SummaryTab extends ConsumerWidget {
             const SizedBox(height: 12),
             Center(
               child: TextButton.icon(
-                onPressed: () => context.push('/settings/goals_history'), // 後のステップでルート追加
+                onPressed: () => context.push('/history'),
+
                 icon: const Icon(Icons.history),
                 label: const Text('サマリー履歴（月別・週別）を見る'),
               ),

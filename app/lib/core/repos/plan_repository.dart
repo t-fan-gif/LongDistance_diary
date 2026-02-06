@@ -46,6 +46,7 @@ class PlanRepository {
                   note: Value(input.note),
                   activityType: Value(input.activityType),
                   isRace: Value(input.isRace),
+                  duration: Value(input.duration), // 追加
                 ),
               );
         }
@@ -121,6 +122,7 @@ class PlanInput {
     this.note,
     this.activityType = ActivityType.running,
     this.isRace = false,
+    this.duration, // 追加
   });
 
   final String menuName;
@@ -131,4 +133,5 @@ class PlanInput {
   final String? note;
   final ActivityType activityType;
   final bool isRace;
+  final int? duration; // 追加
 }
