@@ -742,7 +742,12 @@ class _TodayView extends ConsumerWidget {
                     leading: Text(rpeEmoji, style: const TextStyle(fontSize: 24)),
                     title: Text(s.templateText),
                     subtitle: Text(
-                      '${(s.distanceMainM ?? 0) / 1000}km • ${_formatPace(s.paceSecPerKm)} • 負荷: ${(load ?? s.load ?? 0).round()}',
+                      '${s.distanceMainM != null && s.distanceMainM! > 0 
+                          ? '${(s.distanceMainM! / 1000).toStringAsFixed(1)}km' 
+                          : (s.durationMainSec != null 
+                              ? (s.durationMainSec! % 60 == 0 ? '${s.durationMainSec! ~/ 60}分' : '${s.durationMainSec}秒')
+                              : '-')
+                      } • ${_formatPace(s.paceSecPerKm)} • 負荷: ${(load ?? s.load ?? 0).round()}',
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/session/${s.id}'),
@@ -783,7 +788,15 @@ class _TodayView extends ConsumerWidget {
 
   String _formatPlanSubtitle(Plan p) {
     final segments = <String>[];
-    if (p.distance != null) segments.add('${(p.distance! / 1000).toStringAsFixed(1)}km');
+    if (p.distance != null && p.distance! > 0) {
+      segments.add('${(p.distance! / 1000).toStringAsFixed(1)}km');
+    } else if (p.duration != null && p.duration! > 0) {
+      if (p.duration! % 60 == 0) {
+        segments.add('${p.duration! ~/ 60}分');
+      } else {
+        segments.add('${p.duration!}秒');
+      }
+    }
     if (p.reps > 1) segments.add('× ${p.reps}');
     if (p.pace != null) segments.add('@${_formatPace(p.pace)}');
     if (p.zone != null) segments.add('(${p.zone!.name})');

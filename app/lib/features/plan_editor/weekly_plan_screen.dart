@@ -322,10 +322,14 @@ class _WeeklyDayTile extends StatelessWidget {
   String _formatPlanText(Plan p) {
     if (p.menuName == 'レスト') return 'レスト';
     final parts = <String>[p.menuName];
-    if (p.distance != null) {
+    if (p.distance != null && p.distance! > 0) {
       final km = (p.distance! / 1000).toStringAsFixed(1);
       final reps = p.reps > 1 ? 'x${p.reps}' : '';
       parts.add('$km$reps');
+    } else if (p.duration != null && p.duration! > 0) {
+      final val = p.duration! % 60 == 0 ? '${p.duration! ~/ 60}分' : '${p.duration!}秒';
+      final reps = p.reps > 1 ? 'x${p.reps}' : '';
+      parts.add('$val$reps');
     }
     if (p.pace != null) {
       final m = p.pace! ~/ 60;
@@ -341,6 +345,9 @@ class _WeeklyDayTile extends StatelessWidget {
     if (s.distanceMainM != null && s.distanceMainM! > 0) {
       final km = (s.distanceMainM! / 1000).toStringAsFixed(1);
       parts.add('${km}km');
+    } else if (s.durationMainSec != null && s.durationMainSec! > 0) {
+      final val = s.durationMainSec! % 60 == 0 ? '${s.durationMainSec! ~/ 60}分' : '${s.durationMainSec!}秒';
+      parts.add(val);
     }
     if (s.paceSecPerKm != null) {
       final m = s.paceSecPerKm! ~/ 60;
