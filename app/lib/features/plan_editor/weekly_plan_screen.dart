@@ -325,7 +325,7 @@ class _WeeklyDayTile extends StatelessWidget {
     if (p.distance != null && p.distance! > 0) {
       final km = (p.distance! / 1000).toStringAsFixed(1);
       final reps = p.reps > 1 ? 'x${p.reps}' : '';
-      parts.add('$km$reps');
+      parts.add('${km}km$reps');
     } else if (p.duration != null && p.duration! > 0) {
       final val = p.duration! % 60 == 0 ? '${p.duration! ~/ 60}分' : '${p.duration!}秒';
       final reps = p.reps > 1 ? 'x${p.reps}' : '';

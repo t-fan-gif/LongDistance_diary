@@ -498,14 +498,14 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                         try {
                           final plan = allPlans.firstWhere((p) => p.id == _planId);
                           String planDetailText = '';
-                          if (plan.distance != null) {
+                          if (plan.distance != null && plan.distance! > 0) {
                              final dist = plan.distance!;
                              final dText = dist >= 1000 ? '${(dist/1000).toStringAsFixed(1)}km' : '${dist}m';
                              planDetailText = '$dText × ${plan.reps}';
                              if (plan.pace != null) {
                                planDetailText += ' @${_formatPace(plan.pace!)}/km';
                              }
-                          } else if (plan.duration != null) {
+                          } else if (plan.duration != null && plan.duration! > 0) {
                              final dur = plan.duration!;
                              final dText = dur >= 60 ? '${dur~/60}分' : '${dur}秒';
                              planDetailText = '$dText × ${plan.reps}';
