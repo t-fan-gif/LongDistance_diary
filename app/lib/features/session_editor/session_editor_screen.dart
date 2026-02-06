@@ -138,6 +138,13 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       }
 
       _repsController.text = widget.initialReps ?? '';
+      
+      if (widget.initialPace != null) {
+        final pace = int.tryParse(widget.initialPace!);
+        if (pace != null) {
+          _paceController.text = _formatPaceForInput(pace);
+        }
+      }
 
       // 時間の初期化
       if (widget.initialDuration != null || (widget.initialDistance != null && widget.initialPace != null)) {
@@ -161,6 +168,11 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
         } else {
             _durationController.text = (totalSec / 60).round().toString();
         }
+      }
+
+      // ペースに基づいたゾーンの初期推定
+      if (_paceController.text.isNotEmpty) {
+        _estimateZoneAction();
       }
 
       if (widget.initialZone != null) {
@@ -558,7 +570,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                           controller: _repsController,
                           decoration: const InputDecoration(
                             labelText: 'セット',
-                            hintText: '1',
+                            hintText: '1セット',
                             border: OutlineInputBorder(),
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
