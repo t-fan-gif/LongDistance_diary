@@ -397,13 +397,13 @@ class _CalendarGrid extends StatelessWidget {
   }
 }
 
-class _CalendarCell extends StatelessWidget {
+class _CalendarCell extends ConsumerWidget {
   const _CalendarCell({required this.dayData});
 
   final DayCalendarData dayData;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isToday = _isToday(dayData.date);
     
     return InkWell(
@@ -413,7 +413,7 @@ class _CalendarCell extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: _getHeatmapColor(dayData.heatmapBucket),
+          color: _getHeatmapColor(ref, dayData.heatmapBucket),
           border: Border.all(
             color: isToday ? Colors.teal : Colors.grey.shade300,
             width: isToday ? 2 : 1,
@@ -531,16 +531,9 @@ class _CalendarCell extends StatelessWidget {
     );
   }
 
-  Color _getHeatmapColor(int bucket) {
-    switch (bucket) {
-      case 0: return Colors.transparent;
-      case 1: return Colors.teal.shade50;
-      case 2: return Colors.teal.shade100;
-      case 3: return Colors.teal.shade200;
-      case 4: return Colors.teal.shade300;
-      case 5: return Colors.teal.shade400;
-      default: return Colors.transparent;
-    }
+  Color _getHeatmapColor(WidgetRef ref, int bucket) {
+    if (bucket == 0) return Colors.transparent;
+    return ref.read(heatmapScalerProvider).getColorForBucket(bucket);
   }
 
   bool _isToday(DateTime date) {

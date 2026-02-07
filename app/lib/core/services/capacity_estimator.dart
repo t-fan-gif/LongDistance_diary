@@ -1,3 +1,5 @@
+import '../../features/settings/advanced_settings_screen.dart';
+
 /// 能力（キャパシティ）推定を行うサービス
 /// 
 /// 直近の負荷推移からEWMA（指数加重移動平均）で能力を推定する
@@ -32,12 +34,15 @@ class CapacityEstimator {
   /// 当日負荷と能力の相対値を計算
   /// 
   /// ゼロ除算を防ぐためepsilon（0.01）を使用
-  double computeLoadRatio(int dayLoad, double capacity) {
+  double computeLoadRatio(int dayLoad, double capacity, {LoadCalculationMode mode = LoadCalculationMode.priority}) {
     const epsilon = 0.01;
-    // ゼロ除算およびデータ不足時の異常値を防ぐ
-    // 基準値(60.0)未満の場合は、評価に十分な履歴がないとみなし比率0（評価なし/グレー）とする
-    // 1時間E走(180)を週数回行うレベルが定着するまでは評価を保留する
-    if (capacity < 60.0) {
+    // 基準値未満の場合は、評価に十分な履歴がないとみなし比率0（評価なし/グレー）とする
+    
+    // rTSS(3倍想定)なら基準値を小さくする(例: 1.0)
+    // それ以外なら 60.0
+    final threshold = (mode == LoadCalculationMode.onlyRtss) ? 1.0 : 60.0;
+
+    if (capacity < threshold) {
       return 0.0;
     }
     return dayLoad / capacity;

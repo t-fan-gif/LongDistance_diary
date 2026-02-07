@@ -4,19 +4,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../calendar/calendar_providers.dart';
 
 enum LoadCalculationMode {
-  priorityPace('ペース優先', 'Pace > sRPE > Zone'),
-  onlyPace('ペースのみ', 'Paceのみ計算に使用'),
-  onlySrpe('sRPEのみ', 'sRPEのみ計算に使用'),
-  onlyZone('ゾーンのみ', 'ゾーンのみ計算に使用');
+  priority('優先順位（推奨）', 'Original > rTSS > sRPE > Zone'),
+  onlyOriginal('オリジナルのみ', 'オリジナル負荷計算を使用'),
+  onlyRtss('rTSSのみ', 'rTSS風（ペース・強度）計算を使用'),
+  onlySrpe('sRPEのみ', 'sRPE（強度×時間）計算を使用'),
+  onlyZone('ゾーンのみ', 'ゾーン（強度）計算を使用'),
+  // 以前の名称を互換性のために残す（内部的にpriorityにマッピング）
+  priorityPace('ペース優先', 'Pace > sRPE > Zone');
 
   final String label;
   final String description;
   const LoadCalculationMode(this.label, this.description);
 
   static LoadCalculationMode fromName(String? name) {
+    if (name == 'priorityPace') return LoadCalculationMode.priority;
     return values.firstWhere(
       (e) => e.name == name,
-      orElse: () => LoadCalculationMode.priorityPace,
+      orElse: () => LoadCalculationMode.priority,
     );
   }
 }

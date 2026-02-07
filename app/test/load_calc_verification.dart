@@ -1,7 +1,6 @@
-
-import '../lib/core/services/load_calculator.dart';
-import '../lib/core/db/app_database.dart';
-import '../lib/core/domain/enums.dart';
+import 'package:long_distance_diary/core/services/load_calculator.dart';
+import 'package:long_distance_diary/core/db/app_database.dart';
+import 'package:long_distance_diary/core/domain/enums.dart';
 
 // 簡易モック
 class MockSession extends Session {
@@ -9,22 +8,27 @@ class MockSession extends Session {
   final int? _paceSecPerKm;
   final Zone? _zone;
   final int? _distanceMainM;
+  final int? _rpeValue;
 
   MockSession({
     int? durationMainSec,
     int? paceSecPerKm,
     Zone? zone,
     int? distanceMainM,
+    int? rpeValue,
   }) : 
     _durationMainSec = durationMainSec,
     _paceSecPerKm = paceSecPerKm,
     _zone = zone,
     _distanceMainM = distanceMainM,
+    _rpeValue = rpeValue,
     super(
       id: 'mock', 
       startedAt: DateTime.now(), 
       templateText: '', 
-      status: SessionStatus.done
+      status: SessionStatus.done,
+      activityType: ActivityType.running,
+      isRace: false,
     );
 
   @override
@@ -35,65 +39,56 @@ class MockSession extends Session {
   Zone? get zone => _zone;
   @override
   int? get distanceMainM => _distanceMainM;
+  @override
+  int? get rpeValue => _rpeValue;
 }
 
 void main() {
   final calculator = LoadCalculator();
   
-  // Test Case 1: Jog (Zone E)
-  // 60 min, Intensity 1.0 (Threshold Pace = Actual Pace for simplicity of math check)
-  // Expect: 60 * 1^3 * 1.0 = 60
+  // Test Case 1: Original Load (v1.3.20+9: RPE scaling 0.5)
+  // 60 min, Intensity 1.0, Zone E(1.0), RPE 2
+  // Expect: 60 * 1.0 * 1.0 * (2 * 0.5) = 60
   final jogSession = MockSession(
-    durationMainSec: 60 * 60, // 60 min
-    paceSecPerKm: 300,        // 5:00/km
+    durationMainSec: 60 * 60,
+    paceSecPerKm: 300,
     zone: Zone.E,
+    rpeValue: 2,
   );
-  // Threshold also 5:00/km -> Intensity 1.0
-  final jogLoad = calculator.computePaceLoad(jogSession, thresholdPaceSecPerKm: 300);
-  print('Case 1: Jog (Zone E, 60min, Int 1.0) -> Load: $jogLoad (Expected: 60)');
+  final jogLoad = calculator.computeOriginalLoad(jogSession, thresholdPaceSecPerKm: 300);
+  print('Case 1: Original (Zone E, 60min, Int 1.0, RPE 2) -> Load: $jogLoad (Expected: 60)');
 
-  // Test Case 2: Jog (Zone E) - Slower
-  // 60 min, Intensity 0.8 (T=4:00(240s), Actual=5:00(300s))
-  // Expect: 60 * 0.8^3 * 1.0 = 60 * 0.512 * 1.0 = 30.72 -> 31
-  final jogSlowSession = MockSession(
+  // Test Case 2: Original Load (No duration, calculated from distance)
+  // 10km, 5:00/km (300s/km) -> 50 min
+  // Intensity 1.0, Zone E(1.0), RPE 4
+  // Expect: 50 * 1.0 * 1.0 * (4 * 0.5) = 100
+  final distSession = MockSession(
+    distanceMainM: 10000,
+    paceSecPerKm: 300,
+    zone: Zone.E,
+    rpeValue: 4,
+  );
+  final distLoad = calculator.computeOriginalLoad(distSession, thresholdPaceSecPerKm: 300);
+  print('Case 2: Original (10km, 5:00/km, RPE 4) -> Load: $distLoad (Expected: 100)');
+
+  // Test Case 3: rTSS Load (3x multiplier)
+  // 60 min (1.0h), Intensity 1.0
+  // Expect: 1.0 * 3 * 1.0^2 = 3
+  final rtssSession = MockSession(
     durationMainSec: 60 * 60,
     paceSecPerKm: 300,
     zone: Zone.E,
   );
-  final jogSlowLoad = calculator.computePaceLoad(jogSlowSession, thresholdPaceSecPerKm: 240);
-  print('Case 2: Jog (Zone E, 60min, Int 0.8) -> Load: $jogSlowLoad (Expected: 31)');
+  final rtssLoad = calculator.computeRtssLoad(rtssSession, thresholdPaceSecPerKm: 300);
+  print('Case 3: rTSS (1.0h, Int 1.0) -> Load: $rtssLoad (Expected: 3)');
 
-
-  // Test Case 3: Threshold Run (Zone T)
-  // 20 min, Intensity 1.0
-  // Expect: 20 * 1^3 * 2.0 (Zone T coeff) = 40
-  final tSession = MockSession(
-    durationMainSec: 20 * 60,
-    paceSecPerKm: 240,
-    zone: Zone.T,
+  // Test Case 4: sRPE Load
+  // 30 min, RPE 5
+  // Expect: 30 * 5 = 150
+  final srpeSession = MockSession(
+    durationMainSec: 30 * 60,
+    rpeValue: 5,
   );
-  final tLoad = calculator.computePaceLoad(tSession, thresholdPaceSecPerKm: 240);
-  print('Case 3: Threshold (Zone T, 20min, Int 1.0) -> Load: $tLoad (Expected: 40)');
-
-  // Test Case 4: Interval (Zone I)
-  // 20 min, Intensity 1.0 (Avg Pace matches Threshold, though actually faster segments)
-  // Expect: 20 * 1^3 * 3.0 (Zone I coeff) = 60
-  final iSession = MockSession(
-    durationMainSec: 20 * 60,
-    paceSecPerKm: 240,
-    zone: Zone.I,
-  );
-  final iLoad = calculator.computePaceLoad(iSession, thresholdPaceSecPerKm: 240);
-  print('Case 4: Interval (Zone I, 20min, Int 1.0) -> Load: $iLoad (Expected: 60)');
-
-  // Test Case 5: Repetition (Zone R)
-  // 20 min, Intensity 0.8 (Avg pace slower due to rest)
-  // Expect: 20 * 0.8^3 * 4.0 = 20 * 0.512 * 4.0 = 40.96 -> 41
-  final rSession = MockSession(
-    durationMainSec: 20 * 60,
-    paceSecPerKm: 300, // slower avg
-    zone: Zone.R,
-  );
-  final rLoad = calculator.computePaceLoad(rSession, thresholdPaceSecPerKm: 240);
-  print('Case 5: Repetition (Zone R, 20min, Int 0.8) -> Load: $rLoad (Expected: 41)');
+  final srpeLoad = calculator.computeSrpeLoad(srpeSession);
+  print('Case 4: sRPE (30min, RPE 5) -> Load: $srpeLoad (Expected: 150)');
 }

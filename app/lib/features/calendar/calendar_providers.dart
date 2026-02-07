@@ -90,6 +90,7 @@ class DayCalendarData {
     required this.totalDistanceM,
     required this.loadRatio,
     required this.heatmapBucket,
+    this.maxLoadSession,
   });
 
   final DateTime date;
@@ -99,29 +100,8 @@ class DayCalendarData {
   final int totalDistanceM;
   final double loadRatio;
   final int heatmapBucket;
+  final Session? maxLoadSession;
 
-  /// セッション数
-  int get sessionCount => sessions.length;
-
-  /// 予定数
-  int get planCount => plans.length;
-
-  /// 最大負荷のセッション
-  Session? get maxLoadSession {
-    if (sessions.isEmpty) return null;
-    final loadCalc = LoadCalculator();
-    Session? maxSession;
-    int maxLoad = -1;
-    for (final session in sessions) {
-      // 本来は正しい閾値ペースを渡すべきだが、ここでは比較用なので簡易的に計算
-      final load = loadCalc.computeSessionRepresentativeLoad(session) ?? 0;
-      if (load > maxLoad) {
-        maxLoad = load;
-        maxSession = session;
-      }
-    }
-    return maxSession;
-  }
 }
 
 /// 月のカレンダーデータを取得するプロバイダ
@@ -180,16 +160,25 @@ final monthCalendarDataProvider =
 
     // 日負荷
     double dayLoad = 0;
+    Session? maxSession;
+    int maxLoad = -1;
+
     for (final s in daySessions) {
       if (s.status == SessionStatus.skipped) continue;
       final tPace = s.activityType == ActivityType.walking ? walkingTpace : runningTpace;
-      // 常に計算モードに応じて再計算（計算できない場合は保存値を使用）
-      final calculatedLoad = loadCalc.computeSessionRepresentativeLoad(
+      // 常に計算モードに応じて再計算
+      final loadValue = loadCalc.computeSessionRepresentativeLoad(
         s,
         thresholdPaceSecPerKm: tPace,
         mode: loadMode,
-      );
-      dayLoad += calculatedLoad?.toDouble() ?? s.load ?? 0;
+      ) ?? 0;
+      
+      dayLoad += loadValue.toDouble();
+      
+      if (loadValue > maxLoad) {
+        maxLoad = loadValue;
+        maxSession = s;
+      }
     }
 
     // 日合計距離
@@ -205,7 +194,7 @@ final monthCalendarDataProvider =
       dailyLoads.map((k, v) => MapEntry(k, v.round())), 
       date,
     );
-    final loadRatio = capacityEst.computeLoadRatio(dayLoad.round(), dayCapacity);
+    final loadRatio = capacityEst.computeLoadRatio(dayLoad.round(), dayCapacity, mode: loadMode);
     final bucket = heatmapScaler.bucketize(loadRatio);
 
     result.add(DayCalendarData(
@@ -216,6 +205,7 @@ final monthCalendarDataProvider =
       totalDistanceM: totalDistanceM,
       loadRatio: loadRatio,
       heatmapBucket: bucket,
+      maxLoadSession: maxSession,
     ));
   }
 
