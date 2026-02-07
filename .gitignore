@@ -1,0 +1,6 @@
+app/
+deploy_temp_v1.3.19/
+deploy_temp/
+.vscode/
+.idea/
+*.log
