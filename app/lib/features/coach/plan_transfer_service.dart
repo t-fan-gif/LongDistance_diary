@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 
-import 'package:drift/drift.dart' as drift;
+import 'package:drift/drift.dart';
 
 final planTransferServiceProvider = Provider((ref) => PlanTransferService());
 
@@ -70,18 +70,18 @@ class PlanTransferService {
           id: 'imported_${DateTime.now().millisecondsSinceEpoch}_${dateStr}', // 一時ID、保存時に再生成推奨だがDriftのinsertに任せるならid不要かも
           date: date,
           menuName: map['m'] as String,
-          distance: map['di'] != null ? drift.Value(map['di'] as int) : const drift.Value.absent(),
-          duration: map['du'] != null ? drift.Value(map['du'] as int) : const drift.Value.absent(),
-          pace: map['p'] != null ? drift.Value(map['p'] as int) : const drift.Value.absent(),
+          distance: map['di'] != null ? Value(map['di'] as int) : const Value.absent(),
+          duration: map['du'] != null ? Value(map['du'] as int) : const Value.absent(),
+          pace: map['p'] != null ? Value(map['p'] as int) : const Value.absent(),
           zone: map['z'] != null 
-              ? drift.Value(Zone.values.firstWhere((e) => e.name == map['z'], orElse: () => Zone.E))
-              : const drift.Value.absent(),
-          reps: map['r'] != null ? drift.Value(map['r'] as int) : const drift.Value(1),
-          note: map['n'] != null ? drift.Value(map['n'] as String) : const drift.Value.absent(),
+              ? Value(Zone.values.firstWhere((e) => e.name == map['z'], orElse: () => Zone.E))
+              : const Value.absent(),
+          reps: map['r'] != null ? Value(map['r'] as int) : const Value(1),
+          note: map['n'] != null ? Value(map['n'] as String) : const Value.absent(),
           activityType: map['at'] != null
-              ? drift.Value(ActivityType.values.firstWhere((e) => e.name == map['at'], orElse: () => ActivityType.running))
-              : const drift.Value(ActivityType.running),
-          isRace: map['ir'] == 1 ? const drift.Value(true) : const drift.Value(false),
+              ? Value(ActivityType.values.firstWhere((e) => e.name == map['at'], orElse: () => ActivityType.running))
+              : const Value(ActivityType.running),
+          isRace: map['ir'] == 1 ? const Value(true) : const Value(false),
         );
       }).toList();
     } catch (e) {
