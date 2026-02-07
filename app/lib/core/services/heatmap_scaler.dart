@@ -28,21 +28,21 @@ class HeatmapScaler {
   Color getColorForBucket(int bucket) {
     switch (bucket) {
       case 0:
-        return Colors.grey.shade100; // 負荷なし
+        return Colors.transparent; // 負荷なし（透明）
       case 1:
-        return Colors.blue.shade100; // 非常に軽い
+        return Colors.blue.shade50.withOpacity(0.7); // 非常に軽い
       case 2:
-        return Colors.green.shade200; // 軽い
+        return Colors.green.shade50.withOpacity(0.7); // 軽い
       case 3:
-        return Colors.green.shade400; // 普通
+        return Colors.green.shade100.withOpacity(0.7); // 普通
       case 4:
-        return Colors.yellow.shade600; // やや高い
+        return Colors.yellow.shade100.withOpacity(0.7); // やや高い
       case 5:
-        return Colors.orange.shade400; // 高い
+        return Colors.orange.shade100.withOpacity(0.7); // 高い
       case 6:
-        return Colors.red.shade400; // 非常に高い
+        return Colors.red.shade100.withOpacity(0.7); // 非常に高い
       default:
-        return Colors.grey.shade100;
+        return Colors.transparent;
     }
   }
 

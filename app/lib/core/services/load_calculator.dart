@@ -37,8 +37,11 @@ class LoadCalculator {
     final intensity = tPace / paceSecPerKm;
     final zoneCoefficient = _getZoneCoefficient(zone ?? Zone.E);
 
-    // ユーザー要望により RPE を 0-5 スケール相当（入力値 0-10 × 0.5）で計算
-    return (durationMin * intensity * zoneCoefficient * (rpe * 0.5)).round();
+    // RPEを調整係数として使用（RPE 6 を基準に ±40% の範囲で調整）
+    // 例: RPE 10 -> 1.4倍, RPE 6 -> 1.0倍, RPE 2 -> 0.6倍
+    final rpeAdjustment = 1.0 + (rpe - 6) * 0.1;
+    
+    return (durationMin * intensity * zoneCoefficient * rpeAdjustment).round();
   }
 
   /// 2. rTSS風（ペース・強度）負荷

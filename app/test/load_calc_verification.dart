@@ -46,41 +46,63 @@ class MockSession extends Session {
 void main() {
   final calculator = LoadCalculator();
   
-  // Test Case 1: Original Load (v1.3.20+9: RPE scaling 0.5)
-  // 60 min, Intensity 1.0, Zone E(1.0), RPE 2
-  // Expect: 60 * 1.0 * 1.0 * (2 * 0.5) = 60
-  final jogSession = MockSession(
+  // Test Case 1: Original Load (v1.4.1: RPE adjustment ±40%)
+  // 60 min, Intensity 1.0, Zone E(1.0), RPE 6 (Adjustment: 1.0 + (6-6)*0.1 = 1.0)
+  // Expect: 60 * 1.0 * 1.0 * 1.0 = 60
+  final jogSession6 = MockSession(
+    durationMainSec: 60 * 60,
+    paceSecPerKm: 300,
+    zone: Zone.E,
+    rpeValue: 6,
+  );
+  final jogLoad6 = calculator.computeOriginalLoad(jogSession6, thresholdPaceSecPerKm: 300);
+  print('Case 1a: Original (RPE 6) -> Load: $jogLoad6 (Expected: 60)');
+
+  // RPE 10 (Adjustment: 1.0 + (10-6)*0.1 = 1.4)
+  // Expect: 60 * 1.4 = 84
+  final jogSession10 = MockSession(
+    durationMainSec: 60 * 60,
+    paceSecPerKm: 300,
+    zone: Zone.E,
+    rpeValue: 10,
+  );
+  final jogLoad10 = calculator.computeOriginalLoad(jogSession10, thresholdPaceSecPerKm: 300);
+  print('Case 1b: Original (RPE 10) -> Load: $jogLoad10 (Expected: 84)');
+
+  // RPE 2 (Adjustment: 1.0 + (2-6)*0.1 = 0.6)
+  // Expect: 60 * 0.6 = 36
+  final jogSession2 = MockSession(
     durationMainSec: 60 * 60,
     paceSecPerKm: 300,
     zone: Zone.E,
     rpeValue: 2,
   );
-  final jogLoad = calculator.computeOriginalLoad(jogSession, thresholdPaceSecPerKm: 300);
-  print('Case 1: Original (Zone E, 60min, Int 1.0, RPE 2) -> Load: $jogLoad (Expected: 60)');
+  final jogLoad2 = calculator.computeOriginalLoad(jogSession2, thresholdPaceSecPerKm: 300);
+  print('Case 1c: Original (RPE 2) -> Load: $jogLoad2 (Expected: 36)');
 
   // Test Case 2: Original Load (No duration, calculated from distance)
   // 10km, 5:00/km (300s/km) -> 50 min
-  // Intensity 1.0, Zone E(1.0), RPE 4
-  // Expect: 50 * 1.0 * 1.0 * (4 * 0.5) = 100
+  // Intensity 1.0, Zone E(1.0), RPE 6
+  // Expect: 50 * 1.0 * 1.0 * 1.0 = 50
   final distSession = MockSession(
     distanceMainM: 10000,
     paceSecPerKm: 300,
     zone: Zone.E,
-    rpeValue: 4,
+    rpeValue: 6,
   );
   final distLoad = calculator.computeOriginalLoad(distSession, thresholdPaceSecPerKm: 300);
-  print('Case 2: Original (10km, 5:00/km, RPE 4) -> Load: $distLoad (Expected: 100)');
+  print('Case 2: Original (10km, 5:00/km, RPE 6) -> Load: $distLoad (Expected: 50)');
 
-  // Test Case 3: rTSS Load (3x multiplier)
+  // Test Case 3: rTSS Load (Static formula check)
   // 60 min (1.0h), Intensity 1.0
-  // Expect: 1.0 * 3 * 1.0^2 = 3
+  // Expect: (60 * 1^3 * 1.0) = 60
   final rtssSession = MockSession(
     durationMainSec: 60 * 60,
     paceSecPerKm: 300,
     zone: Zone.E,
   );
   final rtssLoad = calculator.computeRtssLoad(rtssSession, thresholdPaceSecPerKm: 300);
-  print('Case 3: rTSS (1.0h, Int 1.0) -> Load: $rtssLoad (Expected: 3)');
+  print('Case 3: rTSS (60min, Int 1.0) -> Load: $rtssLoad (Expected: 60)');
 
   // Test Case 4: sRPE Load
   // 30 min, RPE 5

@@ -425,7 +425,7 @@ class _TrendsTab extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('トレーニング負荷の推移', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const Text('CTL(青): 長期的な走力 / ATL(赤): 短期的な疲労', style: TextStyle(fontSize: 11, color: Colors.grey)),
+        const Text('CTL(青): 長期的な走力 / ATL(赤): 短期的な疲労 / TSB(緑): コンディション', style: TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 16),
         SizedBox(
           height: 250,
@@ -460,6 +460,12 @@ class _TrendsTab extends ConsumerWidget {
                   spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), double.parse(e.value.atl.toStringAsFixed(1)))).toList(),
                   color: Colors.red,
                   dotData: const FlDotData(show: false),
+                ),
+                LineChartBarData(
+                  spots: trends.asMap().entries.map((e) => FlSpot(e.key.toDouble(), double.parse(e.value.tsb.toStringAsFixed(1)))).toList(),
+                  color: Colors.green,
+                  dotData: const FlDotData(show: false),
+                  dashArray: [5, 5],
                 ),
               ],
             ),

@@ -190,6 +190,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.help_outline),
+                title: const Text('使い方ガイド'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await Future.delayed(const Duration(milliseconds: 250));
+                  if (context.mounted) {
+                    context.push('/settings/usage');
+                  }
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text('設定'),
                 onTap: () async {
