@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/repos/plan_repository.dart';
+import '../calendar/calendar_providers.dart';
+import '../day_detail/day_detail_screen.dart';
 import 'plan_transfer_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
@@ -81,7 +83,7 @@ class _PlanQrScanScreenState extends ConsumerState<PlanQrScanScreen> {
     }
   }
 
-  Future<bool?> _showConfirmationDialog(List<PlanCompanion> companions) {
+  Future<bool?> _showConfirmationDialog(List<PlansCompanion> companions) {
     // 日付範囲の特定
     DateTime? start;
     DateTime? end;
@@ -123,7 +125,7 @@ class _PlanQrScanScreenState extends ConsumerState<PlanQrScanScreen> {
     );
   }
 
-  Future<void> _importPlans(List<PlanCompanion> companions) async {
+  Future<void> _importPlans(List<PlansCompanion> companions) async {
      final db = ref.read(appDatabaseProvider);
      
      // バッチ処理で挿入/更新

@@ -48,7 +48,7 @@ class PlanTransferService {
   /// Base64 -> GZIP -> JSON -> List<PlanData>
   /// ※DBのPlanクラスはIDが必要なので、ここでは一時的なデータ構造(Map)または
   ///  Insertable<Plan> に変換しやすい形式で返す
-  List<PlanCompanion> decodePlans(String encodedData) {
+  List<PlansCompanion> decodePlans(String encodedData) {
     try {
       final bytes = base64Decode(encodedData);
       final decodedBytes = GZipDecoder().decodeBytes(bytes);
@@ -66,7 +66,7 @@ class PlanTransferService {
         final dateStr = map['dt'] as String;
         final date = DateTime.parse(dateStr);
         
-        return PlanCompanion.insert(
+        return PlansCompanion.insert(
           id: 'imported_${DateTime.now().millisecondsSinceEpoch}_${dateStr}', // 一時ID、保存時に再生成推奨だがDriftのinsertに任せるならid不要かも
           date: date,
           menuName: map['m'] as String,
@@ -74,7 +74,7 @@ class PlanTransferService {
           duration: map['du'] != null ? drift.Value(map['du'] as int) : const drift.Value.absent(),
           pace: map['p'] != null ? drift.Value(map['p'] as int) : const drift.Value.absent(),
           zone: map['z'] != null 
-              ? drift.Value(Zone.values.firstWhere((e) => e.name == map['z'], orElse: () => Zone.easy))
+              ? drift.Value(Zone.values.firstWhere((e) => e.name == map['z'], orElse: () => Zone.E))
               : const drift.Value.absent(),
           reps: map['r'] != null ? drift.Value(map['r'] as int) : const drift.Value(1),
           note: map['n'] != null ? drift.Value(map['n'] as String) : const drift.Value.absent(),

@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/repos/plan_repository.dart';
+import '../calendar/calendar_providers.dart';
 import 'plan_transfer_service.dart';
 
 class PlanQrDisplayDialog extends ConsumerStatefulWidget {
