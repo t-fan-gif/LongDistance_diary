@@ -679,7 +679,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                         child: TextFormField(
                           controller: _paceController,
                           focusNode: _paceFocusNode,
-                          keyboardType: TextInputType.datetime,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: false),
                           readOnly: _isRace, 
                           decoration: InputDecoration(
                             labelText: 'ペース',

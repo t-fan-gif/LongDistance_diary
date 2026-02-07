@@ -37,9 +37,9 @@ class LoadCalculator {
     final intensity = tPace / paceSecPerKm;
     final zoneCoefficient = _getZoneCoefficient(zone ?? Zone.E);
 
-    // RPEを調整係数として使用（RPE 6 を基準に ±20% の範囲で調整）
-    // 例: RPE 10 -> 1.2倍, RPE 6 -> 1.0倍, RPE 2 -> 0.8倍
-    final rpeAdjustment = 1.0 + (rpe - 6) * 0.05;
+    // RPEを調整係数として使用（RPE 6 を基準に ±20% -> ±40% の範囲で調整）
+    // 例: RPE 10 -> 1.4倍, RPE 6 -> 1.0倍, RPE 2 -> 0.6倍
+    final rpeAdjustment = 1.0 + (rpe - 6) * 0.1;
     
     return (durationMin * intensity * zoneCoefficient * rpeAdjustment).round();
   }
@@ -105,8 +105,8 @@ class LoadCalculator {
       case Zone.E: return 1.0;
       case Zone.M: return 1.5;
       case Zone.T: return 2.0;
-      case Zone.I: return 3.0;
-      case Zone.R: return 4.0;
+      case Zone.I: return 3.5;
+      case Zone.R: return 4.5;
     }
   }
 

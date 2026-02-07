@@ -56,7 +56,9 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
           _buildSectionHeader(context, '負荷計算方式の選択'),
           Card(
             child: Column(
-              children: LoadCalculationMode.values.map((mode) {
+              children: LoadCalculationMode.values
+                  .where((mode) => mode != LoadCalculationMode.priorityPace) // ペース優先（旧仕様）を除外
+                  .map((mode) {
                 return RadioListTile<LoadCalculationMode>(
                   title: Text(mode.label),
                   subtitle: Text(mode.description),
@@ -92,25 +94,25 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
           _buildSectionHeader(context, '計算式の確認'),
           _buildFormulaCard(
             context,
-            '0. オリジナル負荷 (ハイブリッド方式)',
+            '1. オリジナル負荷 (ハイブリッド方式)',
             '時間(分) × (閾値ペース / 実際のペース) × ゾーン係数 × RPE調整',
             '走速度と心拍ゾーン係数に加え、独自のRPE（主観的強度）調整係数を組み合わせた、本アプリ推奨の計算方式です。RPE 6 を基準に ±20% の微調整が行われます。',
           ),
           _buildFormulaCard(
             context,
-            '1. ペース由来負荷 (rTSS風)',
+            '2. ペース由来負荷 (rTSS風)',
             '時間(分) × (閾値ペース / 実際のペース)^3 × ゾーン係数',
             '走力（閾値ペース）と実際のペースの比率から算出される最も精密な負荷指標です。',
           ),
           _buildFormulaCard(
             context,
-            '2. 主観的負荷 (sRPE)',
+            '3. 主観的負荷 (sRPE)',
             'RPE(0-10) × 時間(分)',
             '主観的なキツさと実施時間の掛け合わせで算出される汎用的な負荷指標です。',
           ),
           _buildFormulaCard(
             context,
-            '3. ゾーン由来負荷',
+            '4. ゾーン由来負荷',
             'ゾーン係数 × 時間(分)',
             '設定された心拍/ペースゾーン（E, M, T, I, R）の強度係数から算出されます。',
           ),
