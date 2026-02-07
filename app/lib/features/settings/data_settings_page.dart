@@ -96,6 +96,8 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
                 subtitle: const Text('コーチの端末のQRコードをスキャンして取り込みます'),
                 onTap: _isProcessing ? null : () => _openQrScanner(),
               ),
+              /*
+              */
             ],
           ),
           if (_isProcessing)
@@ -254,4 +256,6 @@ class _DataSettingsPageState extends ConsumerState<DataSettingsPage> {
       MaterialPageRoute(builder: (context) => const PlanQrScanScreen()),
     );
   }
+  /*
+  */
 }
