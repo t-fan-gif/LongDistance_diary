@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 
+import 'package:drift/drift.dart' as drift;
+
 final planTransferServiceProvider = Provider((ref) => PlanTransferService());
 
 class PlanTransferService {
@@ -87,9 +89,3 @@ class PlanTransferService {
     }
   }
 }
-
-// PlanCompanionを使うためにdriftのエイリアスが必要かもしれないが
-// app_database.dart で import 'package:drift/drift.dart' しているので
-// ここでも drift.Value を使うために import 'package:drift/drift.dart' as drift; を追加するか
-// 単に import 'package:drift/drift.dart'; して Value を使う。
-import 'package:drift/drift.dart' as drift;
