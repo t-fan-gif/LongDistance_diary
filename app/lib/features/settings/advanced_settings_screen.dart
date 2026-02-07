@@ -2,28 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../calendar/calendar_providers.dart';
-
-enum LoadCalculationMode {
-  priority('優先順位（推奨）', 'Original > rTSS > sRPE > Zone'),
-  onlyOriginal('オリジナルのみ', 'オリジナル負荷計算を使用'),
-  onlyRtss('rTSSのみ', 'rTSS風（ペース・強度）計算を使用'),
-  onlySrpe('sRPEのみ', 'sRPE（強度×時間）計算を使用'),
-  onlyZone('ゾーンのみ', 'ゾーン（強度）計算を使用'),
-  // 以前の名称を互換性のために残す（内部的にpriorityにマッピング）
-  priorityPace('ペース優先', 'Pace > sRPE > Zone');
-
-  final String label;
-  final String description;
-  const LoadCalculationMode(this.label, this.description);
-
-  static LoadCalculationMode fromName(String? name) {
-    if (name == 'priorityPace') return LoadCalculationMode.priority;
-    return values.firstWhere(
-      (e) => e.name == name,
-      orElse: () => LoadCalculationMode.priority,
-    );
-  }
-}
+import '../../core/domain/enums.dart';
+import '../../core/db/db_providers.dart';
 
 /// SharedPreferencesからロードした負荷計算方式を管理するプロバイダ
 final loadCalculationModeProvider = StateNotifierProvider<LoadCalculationModeNotifier, LoadCalculationMode>(
@@ -112,6 +92,12 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
           _buildSectionHeader(context, '計算式の確認'),
           _buildFormulaCard(
             context,
+            '0. オリジナル負荷 (ハイブリッド方式)',
+            '時間(分) × (閾値ペース / 実際のペース) × ゾーン係数 × RPE調整',
+            '走速度と心拍ゾーン係数に加え、独自のRPE（主観的強度）調整係数を組み合わせた、本アプリ推奨の計算方式です。RPE 6 を基準に ±20% の微調整が行われます。',
+          ),
+          _buildFormulaCard(
+            context,
             '1. ペース由来負荷 (rTSS風)',
             '時間(分) × (閾値ペース / 実際のペース)^3 × ゾーン係数',
             '走力（閾値ペース）と実際のペースの比率から算出される最も精密な負荷指標です。',
@@ -149,7 +135,9 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
       // 方式を保存
       await ref.read(loadCalculationModeProvider.notifier).setMode(_pendingMode!);
 
-      // カレンダーデータをすべて無効化して再計算を促す
+      // すべてのデータを無効化して再計算を促す
+      ref.invalidate(allSessionsProvider); // 分析画面用
+      
       final currentMonth = ref.read(selectedMonthProvider);
       ref.invalidate(monthCalendarDataProvider(currentMonth));
       // 前後の月も無効化（閲覧済みの場合のため）
@@ -159,7 +147,7 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
       // 確認メッセージ
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('負荷計算方式を保存しました。カレンダーが再計算されます。')),
+          const SnackBar(content: Text('負荷計算方式を保存しました。カレンダーと分析データが更新されます。')),
         );
         setState(() => _pendingMode = null);
       }

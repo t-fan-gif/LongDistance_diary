@@ -46,8 +46,8 @@ class MockSession extends Session {
 void main() {
   final calculator = LoadCalculator();
   
-  // Test Case 1: Original Load (v1.4.1: RPE adjustment ±40%)
-  // 60 min, Intensity 1.0, Zone E(1.0), RPE 6 (Adjustment: 1.0 + (6-6)*0.1 = 1.0)
+  // Test Case 1: Original Load (v1.4.2: RPE adjustment ±20%)
+  // 60 min, Intensity 1.0, Zone E(1.0), RPE 6 (Adjustment: 1.0 + (6-6)*0.05 = 1.0)
   // Expect: 60 * 1.0 * 1.0 * 1.0 = 60
   final jogSession6 = MockSession(
     durationMainSec: 60 * 60,
@@ -58,8 +58,8 @@ void main() {
   final jogLoad6 = calculator.computeOriginalLoad(jogSession6, thresholdPaceSecPerKm: 300);
   print('Case 1a: Original (RPE 6) -> Load: $jogLoad6 (Expected: 60)');
 
-  // RPE 10 (Adjustment: 1.0 + (10-6)*0.1 = 1.4)
-  // Expect: 60 * 1.4 = 84
+  // RPE 10 (Adjustment: 1.0 + (10-6)*0.05 = 1.2)
+  // Expect: 60 * 1.2 = 72
   final jogSession10 = MockSession(
     durationMainSec: 60 * 60,
     paceSecPerKm: 300,
@@ -67,10 +67,10 @@ void main() {
     rpeValue: 10,
   );
   final jogLoad10 = calculator.computeOriginalLoad(jogSession10, thresholdPaceSecPerKm: 300);
-  print('Case 1b: Original (RPE 10) -> Load: $jogLoad10 (Expected: 84)');
+  print('Case 1b: Original (RPE 10) -> Load: $jogLoad10 (Expected: 72)');
 
-  // RPE 2 (Adjustment: 1.0 + (2-6)*0.1 = 0.6)
-  // Expect: 60 * 0.6 = 36
+  // RPE 2 (Adjustment: 1.0 + (2-6)*0.05 = 0.8)
+  // Expect: 60 * 0.8 = 48
   final jogSession2 = MockSession(
     durationMainSec: 60 * 60,
     paceSecPerKm: 300,
@@ -78,7 +78,7 @@ void main() {
     rpeValue: 2,
   );
   final jogLoad2 = calculator.computeOriginalLoad(jogSession2, thresholdPaceSecPerKm: 300);
-  print('Case 1c: Original (RPE 2) -> Load: $jogLoad2 (Expected: 36)');
+  print('Case 1c: Original (RPE 2) -> Load: $jogLoad2 (Expected: 48)');
 
   // Test Case 2: Original Load (No duration, calculated from distance)
   // 10km, 5:00/km (300s/km) -> 50 min

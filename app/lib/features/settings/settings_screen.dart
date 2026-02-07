@@ -97,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start, // Align text to start
               children: [
                 Text(
-                  'Version 1.4.1',
+                  'Version 1.4.2',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey,
                       ),

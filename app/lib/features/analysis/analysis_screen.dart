@@ -318,15 +318,31 @@ class _SummaryTab extends ConsumerWidget {
 class _TrendsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionsAsync = ref.watch(allSessionsProvider);
+    final sessionRepo = ref.watch(sessionRepositoryProvider);
     final analysisService = ref.watch(analysisServiceProvider);
     final vdotCalc = ref.watch(vdotCalculatorProvider);
+    
+    // パラメータの監視
+    final mode = ref.watch(loadCalculationModeProvider);
+    final rPaceAsync = ref.watch(runningThresholdPaceProvider);
+    final wPaceAsync = ref.watch(walkingThresholdPaceProvider);
 
-    return sessionsAsync.when(
+    return ref.watch(allSessionsProvider).when(
       data: (sessions) {
-        if (sessions.isEmpty) return const Center(child: Text('データが不足しています'));
+        if (sessions.isEmpty) {
+          return const Center(child: Text('データがありません'));
+        }
 
-        final trends = analysisService.calculateTrends(sessions);
+        // パラメータが揃うまで待つか、デフォルト値で計算
+        final rPace = rPaceAsync.valueOrNull;
+        final wPace = wPaceAsync.valueOrNull;
+
+        final trends = analysisService.calculateTrends(
+          sessions,
+          mode: mode,
+          runningThresholdPace: rPace,
+          walkingThresholdPace: wPace,
+        );
         if (trends.isEmpty) return const Center(child: Text('分析のためのデータが蓄積されていません（42日以上の記録が必要です）'));
 
         return ListView(

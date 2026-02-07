@@ -62,11 +62,11 @@ VDOTは、ジャック・ダニエルズ博士が開発したランニング能�
           content: '''
 運動強度を5つのゾーンに分けて管理する方法です。
 
-🟢 **E (Easy)**: 有酸素能力の基礎構築、回復
-🔵 **M (Marathon)**: マラソンペースの本番練習
-🟡 **T (Threshold)**: 乳酸閾値（LT）の向上
-🟠 **I (Interval)**: 最大酸素摂取量（VO2max）の向上
-🔴 **R (Repetition)**: スピードと無酸素運動能力
+🟢 **E (Easy)**: 最大酸素摂取量の59-74%。有酸素能力の基礎構築、毛細血管の発達、回復を目的としたジョギング。
+🔵 **M (Marathon)**: 75-84%。マラソンレースのペース。脚作りやペース感覚の養成。
+🟡 **T (Threshold)**: 88-92%。乳酸閾値（LT）。血中の乳酸が急増する手前の強度で、20-30分持続可能なペース。
+🟠 **I (Interval)**: 95-100%。最大酸素摂取量（VO2max）の向上。3-5分程度の反復走。
+🔴 **R (Repetition)**: 100%超。ランニングの効率（ランニングエコノミー）とスピード、無酸素運動能力の向上。
 ''',
         ),
         const SizedBox(height: 32),
@@ -126,19 +126,45 @@ class _LoadAnalysisTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSection(
-          context,
-          title: 'トレーニング負荷 (Load)',
-          icon: Icons.fitness_center,
-          content: '''
-トレーニング負荷は「運動時間 × 強度」で算出されます。
-
-**計算式 (ハイブリッド方式):**
-`負荷 = 時間(分) × (閾値ペース/実際のペース)⁴ × ゾーン係数`
-
-強度を4乗することで、ジョグとポイント練習の負荷の差を明確に評価します。
-(例: Zone Eで60分 ≒ 60ポイント)
-''',
+        Card(
+          color: Colors.teal.shade100.withOpacity(0.3),
+          child: ExpansionTile(
+            leading: const Icon(Icons.fitness_center, color: Colors.teal),
+            title: const Text('負荷計算 (Load) の仕組み', style: TextStyle(fontWeight: FontWeight.bold)),
+            initiallyExpanded: true,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('本アプリでは、以下の4つの方式から負荷計算を選択できます。', style: TextStyle(fontSize: 13)),
+                    const SizedBox(height: 12),
+                    _buildFormulaSubSection(
+                      '1. オリジナル (推奨)', 
+                      '時間(分) × (閾値P / 実際P) × ゾーン係数 × RPE調整',
+                      '速度・ゾーン・主観的強度のすべてを統合したバランスの良い指標です。RPEによる調整幅は ±20% です。'
+                    ),
+                    _buildFormulaSubSection(
+                      '2. rTSS風 (ペース由来)', 
+                      '時間(分) × (閾値P / 実際P)³ × ゾーン係数',
+                      '速度の比を3乗することで、強度の高い練習（スピード練習）を非常に高い負荷として評価します。'
+                    ),
+                    _buildFormulaSubSection(
+                      '3. sRPE (主観的強度)', 
+                      'RPE(0-10) × 時間(分)',
+                      'シンプルに「きつさ」と「時間」だけで評価します。心拍計がない場合や、自覚的な疲労を重視したい場合に適しています。'
+                    ),
+                    _buildFormulaSubSection(
+                      '4. ゾーン (定数強度)', 
+                      'ゾーン係数 × 時間(分)',
+                      '走行ペースに関わらず、ゾーン（強度設定）と時間だけで評価します。'
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         _buildSection(
@@ -180,6 +206,38 @@ Widget _buildSection(BuildContext context, {required String title, required Icon
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Text(content, style: const TextStyle(height: 1.6)),
         ),
+      ],
+    ),
+  );
+}
+
+Widget _buildFormulaSubSection(String title, String formula, String description) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            formula,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: Colors.teal,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(description, style: const TextStyle(fontSize: 12, color: Colors.black87)),
       ],
     ),
   );

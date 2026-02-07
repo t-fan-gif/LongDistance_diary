@@ -1,4 +1,4 @@
-import '../../features/settings/advanced_settings_screen.dart';
+import '../domain/enums.dart';
 
 /// 能力（キャパシティ）推定を行うサービス
 /// 
@@ -39,8 +39,8 @@ class CapacityEstimator {
     // 基準値未満の場合は、評価に十分な履歴がないとみなし比率0（評価なし/グレー）とする
     
     // rTSS(3倍想定)なら基準値を小さくする(例: 1.0)
-    // それ以外なら 60.0
-    final threshold = (mode == LoadCalculationMode.onlyRtss) ? 1.0 : 60.0;
+    // それ以外なら 10.0 (以前は60.0だったが、低負荷者にも色を出すため下方修正)
+    final threshold = (mode == LoadCalculationMode.onlyRtss) ? 1.0 : 10.0;
 
     if (capacity < threshold) {
       return 0.0;

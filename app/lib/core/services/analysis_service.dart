@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/app_database.dart';
 import '../domain/enums.dart';
 import 'vdot_calculator.dart';
@@ -13,7 +12,13 @@ class AnalysisService {
 
   /// CTL (Chronic Training Load: 42日間) と ATL (Acute Training Load: 7日間) を計算する
   /// sessions は日付順にソートされていることを期待
-  List<TrainingLoadData> calculateTrends(List<Session> sessions, {int days = 90}) {
+  List<TrainingLoadData> calculateTrends(
+    List<Session> sessions, {
+    int days = 90,
+    required LoadCalculationMode mode,
+    int? runningThresholdPace,
+    int? walkingThresholdPace,
+  }) {
     if (sessions.isEmpty) return [];
 
     final endDate = DateTime.now();
@@ -22,8 +27,16 @@ class AnalysisService {
     // 日ごとの負荷をマッピング
     final dailyLoad = <DateTime, double>{};
     for (final s in sessions) {
+      final tPace = s.activityType == ActivityType.walking ? walkingThresholdPace : runningThresholdPace;
+      // 常に計算モードに応じて再計算
+      final calculatedLoad = _loadCalc.computeSessionRepresentativeLoad(
+        s,
+        thresholdPaceSecPerKm: tPace,
+        mode: mode,
+      );
+      
       final date = DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day);
-      dailyLoad[date] = (dailyLoad[date] ?? 0) + (s.load ?? 0);
+      dailyLoad[date] = (dailyLoad[date] ?? 0) + (calculatedLoad?.toDouble() ?? 0);
     }
 
     final results = <TrainingLoadData>[];
