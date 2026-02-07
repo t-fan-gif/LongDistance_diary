@@ -39,11 +39,17 @@ class LoadCalculator {
     // 例: 閾値 4:00(240s) の人が 5:00(300s) で走る場合、強度は 240/300 = 0.8
     final intensity = tPace / paceSecPerKm;
 
-    // 負荷 = 時間(分) × 強度^3 × 修正係数
-    // 3乗にすることで、ジョグの負荷を抑え、インターバルの負荷を鋭く評価する
-    // 基準1.0の時、1時間で60ポイント程度になるよう調整（あるいは以前のスケールに合わせるなら 3.0倍など）
-    // 以前は 5:00(300s) 基準で 1時間180ポイントだったので、係数は 3.0 にする
-    return (durationMin * pow(intensity, 3) * 3.0).round();
+    // 修正: ユーザー要望により、固定係数3.0を削除し、Zone係数を乗算するハイブリッド方式に変更
+    // 負荷 = 時間(分) × 強度^3 × ゾーン係数
+    
+    // 1. ベースのペース由来負荷 (時間 x 強度^3)
+    final baseLoad = durationMin * pow(intensity, 3);
+
+    // 2. ゾーン係数を取得 (Zone未設定時は 1.0 とする)
+    final zoneCoefficient = _getZoneCoefficient(session.zone ?? Zone.E);
+
+    // 3. 最終負荷
+    return (baseLoad * zoneCoefficient).round();
   }
 
   /// sRPE（主観的運動強度 × 時間）を計算
@@ -73,9 +79,10 @@ class LoadCalculator {
 
     final zoneCoefficient = _getZoneCoefficient(zone);
     final durationMin = durationSec / 60.0;
-    // 負荷 = ゾーン係数 × 分 × 3
-    // 例: Zone E(1.0)で60分走った場合: 1.0 * 60 * 3 = 180
-    return (zoneCoefficient * durationMin * 3).round();
+    // 修正: スケール統一のため 3倍の固定係数を削除
+    // 負荷 = ゾーン係数 × 分
+    // 例: Zone E(1.0)で60分走った場合: 1.0 * 60 = 60
+    return (zoneCoefficient * durationMin).round();
   }
 
   /// ゾーンごとの係数

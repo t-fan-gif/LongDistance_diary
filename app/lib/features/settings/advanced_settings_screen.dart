@@ -109,7 +109,7 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
           _buildFormulaCard(
             context,
             '1. ペース由来負荷 (rTSS風)',
-            '時間(分) × (閾値ペース / 実際のペース)^3 × 3',
+            '時間(分) × (閾値ペース / 実際のペース)^3 × ゾーン係数',
             '走力（閾値ペース）と実際のペースの比率から算出される最も精密な負荷指標です。',
           ),
           _buildFormulaCard(
@@ -121,7 +121,7 @@ class _AdvancedSettingsScreenState extends ConsumerState<AdvancedSettingsScreen>
           _buildFormulaCard(
             context,
             '3. ゾーン由来負荷',
-            'ゾーン係数 × 時間(分) × 3',
+            'ゾーン係数 × 時間(分)',
             '設定された心拍/ペースゾーン（E, M, T, I, R）の強度係数から算出されます。',
           ),
           const SizedBox(height: 32),
