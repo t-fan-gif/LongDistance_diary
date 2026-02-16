@@ -6,6 +6,7 @@ import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
 import '../../core/repos/target_race_repository.dart';
+import '../../core/services/service_providers.dart';
 import '../calendar/calendar_providers.dart';
 
 final weeklyPlansProvider = FutureProvider.family<List<DailyPlanData>, DateTimeRange>((ref, range) async {
