@@ -12,55 +12,7 @@ class AnalysisService {
   final LoadCalculator _loadCalc;
   final SessionRepository _sessionRepo;
 
-  /// 予定プランの負荷を予測する
-  Future<int> predictPlanLoad(Plan plan) async {
-    // すでに距離も時間もなければ負荷は0
-    if ((plan.distance == null || plan.distance! <= 0) &&
-        (plan.duration == null || plan.duration! <= 0)) {
-        return 0;
-    }
 
-    final predictedRpe = await _predictRpe(plan);
-    
-    // 予測RPEを使って負荷計算
-    // LoadCalculatorはSessionを受け取るが、ここではPlanから仮のSessionを作るか、
-    // LoadCalculatorにPlan用のメソッドを追加するか、あるいは直接計算ロジックを呼ぶ。
-    // ここでは、LoadCalculatorの既存ロジックを再利用するために、便宜上Sessionオブジェクトを作成する。
-    // ただし、IDなどはダミー。
-    final dummySession = Session(
-      id: 'dummy',
-      startedAt: plan.date,
-      templateText: plan.menuName,
-      status: SessionStatus.done,
-      planId: plan.id,
-      distanceMainM: plan.distance,
-      durationMainSec: plan.duration, // plan.durationは秒単位
-      paceSecPerKm: plan.pace,
-      zone: plan.zone,
-      rpeValue: predictedRpe,
-      activityType: plan.activityType,
-      isRace: plan.isRace,
-      reps: plan.reps,
-    );
-
-    // 負荷計算
-    // 設定された閾値ペースが必要だが、Service内で保持していないため、
-    // 呼び出し元から渡すか、あるいはここではデフォルト値（またはPlanのPace）で計算する。
-    // AnalysisServiceのcalculateTrendsでは引数でもらっている。
-    // ここでは簡易的に、PlanのPaceがあればそれ、なければVDOTから...といきたいが、
-    // ユーザー設定値を取得するにはRefが必要。
-    // 一旦、LoadCalculatorのデフォルト挙動に任せるか、
-    // AnalysisServiceに閾値ペースを注入する必要があるかもしれない。
-    // 今回は、LoadCalculator内でデフォルト値（基準ペース）が使われることを許容する、
-    // または、Paceがある場合はそのPace自体を基準として相対強度1.0として計算される（Zone係数が効く）。
-    
-    // thresholdPaceがnullの場合、LoadCalculatorは_basePaceSecPerKmを使う。
-    // 正確には VDOT Tペースなどを渡すべきだが、非同期で取得するのが手間。
-    // UI側で計算して渡す設計に変えるか？
-    // -> AnalysisScreenでこれを呼ぶとき、あちらはProvider経由でTPaceを持っている。
-    // メソッドの引数に追加するのが良さそう。
-    return 0; // 呼び出し側で thresholdPace を渡せるようにメソッドシグネチャを変える必要があるため、修正時は注意
-  }
 
   Future<int> predictPlanLoadWithPace(Plan plan, {int? runningThresholdPace, int? walkingThresholdPace}) async {
      // すでに距離も時間もなければ負荷は0
