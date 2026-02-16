@@ -26,11 +26,7 @@ final planRepositoryProvider = Provider<PlanRepository>((ref) {
   return PlanRepository(db);
 });
 
-/// SessionRepositoryのプロバイダ
-final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return SessionRepository(db);
-});
+
 
 // LoadCalculatorのプロバイダは service_providers.dart で定義済み
 
