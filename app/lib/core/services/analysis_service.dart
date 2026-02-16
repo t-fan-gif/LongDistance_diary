@@ -179,8 +179,8 @@ class AnalysisService {
     }
   }
 
-  /// 直近のTペースまたはIペースの練習から、推定される最新のVDOTを計算する
-  Future<double?> estimateCurrentVdot(List<Session> sessions) async {
+  /// トレーニング負荷のトレンド（CTL, ATL, TSB）を計算する
+  Future<List<TrainingLoadData>> calculateTrends(List<Session> sessions, {int days = 90, int? runningThresholdPace, int? walkingThresholdPace, LoadCalculationMode mode = LoadCalculationMode.priority}) async {
     if (sessions.isEmpty) return [];
 
     final endDate = DateTime.now();
