@@ -41,6 +41,56 @@ final weeklyPlanDistanceProvider = FutureProvider<double>((ref) async {
   return plans.fold<double>(0.0, (sum, e) => sum + (e.distance ?? 0) / 1000.0);
 });
 
+final monthlyPlanPredictedLoadProvider = FutureProvider<int>((ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  final analysis = ref.watch(analysisServiceProvider);
+  final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
+  final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month, 1);
+  final end = DateTime(now.year, now.month + 1, 1);
+  final plans = await (db.select(db.plans)
+    ..where((t) => t.date.isBiggerOrEqualValue(start) & t.date.isSmallerThanValue(end)))
+    .get();
+    
+  int total = 0;
+  for (final plan in plans) {
+    total += await analysis.predictPlanLoadWithPace(
+      plan, 
+      runningThresholdPace: rTpace, 
+      walkingThresholdPace: wTpace
+    );
+  }
+  return total;
+});
+
+final weeklyPlanPredictedLoadProvider = FutureProvider<int>((ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  final analysis = ref.watch(analysisServiceProvider);
+  final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
+  final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
+
+  final now = DateTime.now();
+  final start = now.subtract(Duration(days: now.weekday - 1));
+  final startDay = DateTime(start.year, start.month, start.day);
+  final endDay = startDay.add(const Duration(days: 7));
+  
+  final plans = await (db.select(db.plans)
+    ..where((t) => t.date.isBiggerOrEqualValue(startDay) & t.date.isSmallerThanValue(endDay)))
+    .get();
+    
+  int total = 0;
+  for (final plan in plans) {
+    total += await analysis.predictPlanLoadWithPace(
+      plan, 
+      runningThresholdPace: rTpace, 
+      walkingThresholdPace: wTpace
+    );
+  }
+  return total;
+});
+
 class AnalysisScreen extends ConsumerWidget {
   const AnalysisScreen({super.key});
 
@@ -148,24 +198,28 @@ class _SummaryTab extends ConsumerWidget {
         // 目標進捗用の今月・今週分を別途集計
         double curMonthDist = 0;
         double curWeekDist = 0;
+        int curMonthLoad = 0; // 実績負荷
+        int curWeekLoad = 0;  // 実績負荷
+        
         for (final s in sessions) {
           if (s.status == SessionStatus.skipped) continue;
           final distKm = (s.distanceMainM ?? 0) / 1000.0;
+          final tPace = s.activityType == ActivityType.walking ? wTpace : rTpace;
+          final load = (loadCalc.computeSessionRepresentativeLoad(s, thresholdPaceSecPerKm: tPace, mode: loadMode) ?? 0);
+          
           if ('${s.startedAt.year}-${s.startedAt.month.toString().padLeft(2, '0')}' == currentMonthKey) {
             curMonthDist += distKm;
+            curMonthLoad += load;
           }
           if ('${s.startedAt.year}-W${_getWeekOfYear(s.startedAt)}' == currentWeekKey) {
             curWeekDist += distKm;
+            curWeekLoad += load;
           }
         }
         
         final monthlyGoal = ref.watch(monthlyDistanceGoalProvider);
         final weeklyGoal = ref.watch(weeklyDistanceGoalProvider);
 
-        // 予定データの集計（別プロバイダから取得することを想定しているが、ここでは一旦簡易的にListViewの外部で計算）
-        // ※実際には FutureProvider.family<List<Plan>, DateTimeRange> などを watch するべきだが、
-        // 現状の実装に合わせて構成します。
-        
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -186,6 +240,8 @@ class _SummaryTab extends ConsumerWidget {
               curMonthDist, 
               monthlyGoal > 0 ? monthlyGoal : ref.watch(monthlyPlanDistanceProvider).valueOrNull ?? 0,
               planTotal: ref.watch(monthlyPlanDistanceProvider).valueOrNull,
+              planLoad: ref.watch(monthlyPlanPredictedLoadProvider).valueOrNull,
+              currentLoad: curMonthLoad,
             ),
             _buildGoalCard(
               context, 
@@ -193,6 +249,8 @@ class _SummaryTab extends ConsumerWidget {
               curWeekDist, 
               weeklyGoal > 0 ? weeklyGoal : ref.watch(weeklyPlanDistanceProvider).valueOrNull ?? 0,
               planTotal: ref.watch(weeklyPlanDistanceProvider).valueOrNull,
+              planLoad: ref.watch(weeklyPlanPredictedLoadProvider).valueOrNull,
+              currentLoad: curWeekLoad,
             ),
             const SizedBox(height: 24),
             _buildSectionTitle(context, 'サマリー'),
@@ -206,7 +264,6 @@ class _SummaryTab extends ConsumerWidget {
             Center(
               child: TextButton.icon(
                 onPressed: () => context.push('/history'),
-
                 icon: const Icon(Icons.history),
                 label: const Text('サマリー履歴（月別・週別）を見る'),
               ),
@@ -219,7 +276,7 @@ class _SummaryTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildGoalCard(BuildContext context, String title, double current, double goal, {double? planTotal}) {
+  Widget _buildGoalCard(BuildContext context, String title, double current, double goal, {double? planTotal, int? planLoad, int? currentLoad}) {
     final progress = goal > 0 ? (current / goal).clamp(0.0, 1.0) : 0.0;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -255,9 +312,18 @@ class _SummaryTab extends ConsumerWidget {
                   style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
                 if (planTotal != null && planTotal > 0)
-                  Text(
-                    '予定合計: ${planTotal.toStringAsFixed(1)}km',
-                    style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                  Row(
+                    children: [
+                      Text(
+                        '予定合計: ${planTotal.toStringAsFixed(1)}km',
+                        style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                      ),
+                      if (planLoad != null)
+                         Text(
+                          ' (予測負荷: $planLoad)',
+                          style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                         ),
+                    ],
                   ),
               ],
             ),

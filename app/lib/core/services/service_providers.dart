@@ -28,5 +28,6 @@ final trainingPaceServiceProvider = Provider<TrainingPaceService>((ref) {
 final analysisServiceProvider = Provider<AnalysisService>((ref) {
   final vdotCalc = ref.watch(vdotCalculatorProvider);
   final loadCalc = ref.watch(loadCalculatorProvider);
-  return AnalysisService(vdotCalc, loadCalc);
+  final sessionRepo = ref.watch(sessionRepositoryProvider);
+  return AnalysisService(vdotCalc, loadCalc, sessionRepo);
 });
