@@ -1,2 +1,0 @@
-Received a --base-href value of " /LongDistance_diary/"
---base-href should start and end with /
