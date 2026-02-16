@@ -45,7 +45,30 @@ class LoadCalculator {
     return (durationMin * intensity * zoneCoefficient * rpeAdjustment).round();
   }
 
-  // ... (computeRtssLoad, computeSrpeLoad, computeZoneLoad unchanged or check if they use RPE)
+  /// 2. rTSS風（ペース・強度）負荷
+  /// 計算式: 時間(分) × (閾値ペース / 実際のペース)^3 × ゾーン係数
+  int? computeRtssLoad(Session session, {int? thresholdPaceSecPerKm}) {
+    final durationSec = session.durationMainSec;
+    final paceSecPerKm = session.paceSecPerKm;
+    final distanceM = session.distanceMainM;
+
+    if (paceSecPerKm == null || paceSecPerKm <= 0) return null;
+    
+    double durationMin;
+    if (durationSec != null && durationSec > 0) {
+      durationMin = durationSec / 60.0;
+    } else if (distanceM != null && distanceM > 0) {
+      durationMin = (distanceM / 1000.0) * paceSecPerKm / 60.0;
+    } else {
+      return null;
+    }
+
+    final tPace = thresholdPaceSecPerKm ?? _basePaceSecPerKm;
+    final intensity = tPace / paceSecPerKm;
+    final zoneCoefficient = _getZoneCoefficient(session.zone ?? Zone.E);
+
+    return (durationMin * pow(intensity, 3) * zoneCoefficient).round();
+  }
   
   /// 3. sRPE（主観的運動強度 × 時間）を計算
   /// RPEと時間（秒）が必要
@@ -62,7 +85,31 @@ class LoadCalculator {
     return (rpeValue * durationMin).round();
   }
 
-  // ...
+  /// 4. ゾーン係数 × 時間による負荷計算
+  /// ゾーンと時間が必要
+  int? computeZoneLoad(Session session) {
+    final zone = session.zone;
+    final durationSec = session.durationMainSec;
+
+    if (zone == null || durationSec == null || durationSec <= 0) {
+      return null;
+    }
+
+    final zoneCoefficient = _getZoneCoefficient(zone);
+    final durationMin = durationSec / 60.0;
+    return (zoneCoefficient * durationMin).round();
+  }
+
+  /// ゾーンごとの係数
+  double _getZoneCoefficient(Zone zone) {
+    switch (zone) {
+      case Zone.E: return 1.0;
+      case Zone.M: return 1.5;
+      case Zone.T: return 2.0;
+      case Zone.I: return 3.5;
+      case Zone.R: return 4.5;
+    }
+  }
 
   /// 代表負荷を計算（優先順位に従う）
   /// 
@@ -107,10 +154,6 @@ class LoadCalculator {
       case LoadCalculationMode.priorityPace:
         return computeSessionRepresentativeLoad(session, thresholdPaceSecPerKm: thresholdPaceSecPerKm, mode: LoadCalculationMode.priority, rpeOverride: rpeOverride);
     }
-
-    // いずれも計算できない、または該当なしの場合はnull
-    return null;
-  }
 
     // いずれも計算できない、または該当なしの場合はnull
     return null;
