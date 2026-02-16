@@ -180,7 +180,7 @@ class AnalysisService {
   }
 
   /// トレーニング負荷のトレンド（CTL, ATL, TSB）を計算する
-  Future<List<TrainingLoadData>> calculateTrends(List<Session> sessions, {int days = 90, int? runningThresholdPace, int? walkingThresholdPace, LoadCalculationMode mode = LoadCalculationMode.priority}) async {
+  List<TrainingLoadData> calculateTrends(List<Session> sessions, {int days = 90, int? runningThresholdPace, int? walkingThresholdPace, LoadCalculationMode mode = LoadCalculationMode.priority}) {
     if (sessions.isEmpty) return [];
 
     final endDate = DateTime.now();
