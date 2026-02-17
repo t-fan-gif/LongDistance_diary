@@ -8,13 +8,11 @@ import '../../core/domain/enums.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/db/app_database.dart';
 import '../../core/services/vdot_calculator.dart';
-import '../../core/services/load_calculator.dart';
 import '../../core/services/service_providers.dart';
 import '../../core/services/analysis_service.dart';
 import '../calendar/calendar_providers.dart';
 import '../settings/advanced_settings_screen.dart';
 import '../settings/goal_providers.dart';
-import '../settings/target_race_settings_screen.dart';
 
 final monthlyPlanDistanceProvider = FutureProvider<double>((ref) async {
   final db = ref.watch(appDatabaseProvider);
@@ -384,7 +382,7 @@ class _SummaryTab extends ConsumerWidget {
 class _TrendsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionRepo = ref.watch(sessionRepositoryProvider);
+
     final analysisService = ref.watch(analysisServiceProvider);
     final vdotCalc = ref.watch(vdotCalculatorProvider);
     

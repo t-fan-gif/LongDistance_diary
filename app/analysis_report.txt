@@ -1,0 +1,85 @@
+Analyzing app...                                                
+
+warning - Unused import: 'package:drift/drift.dart' - lib\core\repos\menu_preset_repository.dart:1:8 - unused_import
+warning - The value of the local variable 'epsilon' isn't used - lib\core\services\capacity_estimator.dart:38:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\heatmap_scaler.dart:33:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\heatmap_scaler.dart:35:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\heatmap_scaler.dart:37:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\heatmap_scaler.dart:39:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\heatmap_scaler.dart:41:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\heatmap_scaler.dart:43:36 - deprecated_member_use
+warning - Unused import: '../../features/settings/advanced_settings_screen.dart' - lib\core\services\load_calculator.dart:4:8 - unused_import
+warning - The value of the local variable 'v' isn't used - lib\core\services\vdot_calculator.dart:16:18 - unused_local_variable
+warning - The declaration 'vo2' isn't referenced - lib\core\services\vdot_calculator.dart:60:14 - unused_element
+warning - Unused import: '../../core/services/load_calculator.dart' - lib\features\analysis\analysis_screen.dart:11:8 - unused_import
+warning - Unused import: '../settings/target_race_settings_screen.dart' - lib\features\analysis\analysis_screen.dart:17:8 - unused_import
+warning - The value of the local variable 'sessionRepo' isn't used - lib\features\analysis\analysis_screen.dart:387:11 - unused_local_variable
+warning - Unused import: '../../core/repos/session_repository.dart' - lib\features\calendar\calendar_providers.dart:7:8 - unused_import
+warning - Unused import: '../../core/services/load_calculator.dart' - lib\features\calendar\calendar_providers.dart:10:8 - unused_import
+warning - Unused import: '../../core/services/vdot_calculator.dart' - lib\features\calendar\calendar_providers.dart:11:8 - unused_import
+warning - Unused import: '../../core/repos/personal_best_repository.dart' - lib\features\calendar\calendar_providers.dart:12:8 - unused_import
+warning - Unused import: '../settings/settings_screen.dart' - lib\features\calendar\calendar_providers.dart:13:8 - unused_import
+warning - The value of the field '_currentTabIndex' isn't used - lib\features\calendar\calendar_screen.dart:24:7 - unused_field
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\calendar\calendar_screen.dart:69:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\calendar\calendar_screen.dart:71:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\calendar\calendar_screen.dart:105:33 - deprecated_member_use
+warning - A value for optional parameter 'key' isn't ever given - lib\features\calendar\calendar_screen.dart:355:31 - unused_element_parameter
+warning - The value of the local variable 'plansAsync' isn't used - lib\features\calendar\calendar_screen.dart:569:11 - unused_local_variable
+warning - Unused import: '../../core/db/app_database.dart' - lib\features\coach\plan_qr_display_dialog.dart:4:8 - unused_import
+warning - Unused import: '../../core/repos/plan_repository.dart' - lib\features\coach\plan_qr_display_dialog.dart:6:8 - unused_import
+warning - The value of the local variable 'repo' isn't used - lib\features\coach\plan_qr_display_dialog.dart:48:13 - unused_local_variable
+warning - Unused import: '../../core/repos/plan_repository.dart' - lib\features\coach\plan_qr_scan_screen.dart:7:8 - unused_import
+warning - Unused import: 'package:file_picker/file_picker.dart' - lib\features\coach\plan_transfer_service.dart:3:8 - unused_import
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\coach\plan_transfer_service.dart:42:17 - unnecessary_null_comparison
+   info - Angle brackets will be interpreted as HTML - lib\features\coach\plan_transfer_service.dart:48:37 - unintended_html_in_doc_comment
+   info - Angle brackets will be interpreted as HTML - lib\features\coach\plan_transfer_service.dart:50:18 - unintended_html_in_doc_comment
+   info - Unnecessary braces in a string interpolation - lib\features\coach\plan_transfer_service.dart:70:66 - unnecessary_brace_in_string_interps
+warning - Unused import: '../../core/services/load_calculator.dart' - lib\features\day_detail\day_detail_screen.dart:7:8 - unused_import
+warning - Unused import: '../../core/db/db_providers.dart' - lib\features\day_detail\day_detail_screen.dart:12:8 - unused_import
+warning - Unused import: 'package:drift/drift.dart' - lib\features\history\history_list_screen.dart:2:8 - unused_import
+warning - Unused import: '../../core/repos/session_repository.dart' - lib\features\history\history_list_screen.dart:10:8 - unused_import
+   info - Unnecessary braces in a string interpolation - lib\features\history\history_list_screen.dart:244:84 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\features\history\history_list_screen.dart:248:73 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\features\history\history_list_screen.dart:266:76 - unnecessary_brace_in_string_interps
+warning - Unused import: 'package:go_router/go_router.dart' - lib\features\plan_editor\plan_editor_screen.dart:3:8 - unused_import
+   info - Statements in an if should be enclosed in a block - lib\features\plan_editor\plan_editor_screen.dart:220:34 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\plan_editor\plan_editor_screen.dart:221:15 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\plan_editor\plan_editor_screen.dart:231:35 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\plan_editor\plan_editor_screen.dart:232:14 - curly_braces_in_flow_control_structures
+warning - The declaration '_addRaceFromTarget' isn't referenced - lib\features\plan_editor\plan_editor_screen.dart:362:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\plan_editor\plan_editor_screen.dart:376:9 - use_build_context_synchronously
+warning - The value of the local variable 'hasValidRow' isn't used - lib\features\plan_editor\plan_editor_screen.dart:411:11 - unused_local_variable
+warning - The value of the local variable 'fieldLabel' isn't used - lib\features\plan_editor\plan_editor_screen.dart:663:12 - unused_local_variable
+warning - Unused import: 'package:intl/intl.dart' - lib\features\plan_editor\weekly_plan_screen.dart:3:50 - unused_import
+warning - Unused import: '../../core/repos/plan_repository.dart' - lib\features\plan_editor\weekly_plan_screen.dart:7:8 - unused_import
+warning - The value of the local variable 'calculatedDistKm' isn't used - lib\features\session_editor\session_editor_screen.dart:341:15 - unused_local_variable
+   info - Statements in an if should be enclosed in a block - lib\features\session_editor\session_editor_screen.dart:350:31 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\session_editor\session_editor_screen.dart:351:35 - curly_braces_in_flow_control_structures
+   info - Unnecessary braces in a string interpolation - lib\features\session_editor\session_editor_screen.dart:510:73 - unnecessary_brace_in_string_interps
+warning - Unused import: '../../core/domain/enums.dart' - lib\features\settings\data_settings_page.dart:11:8 - unused_import
+warning - Unused import: '../../core/repos/session_repository.dart' - lib\features\settings\data_settings_page.dart:12:8 - unused_import
+warning - Unused import: '../../core/repos/plan_repository.dart' - lib\features\settings\data_settings_page.dart:13:8 - unused_import
+warning - Unused import: '../../core/repos/target_race_repository.dart' - lib\features\settings\data_settings_page.dart:14:8 - unused_import
+warning - Unused import: '../../core/services/service_providers.dart' - lib\features\settings\data_settings_page.dart:15:8 - unused_import
+warning - Unused import: '../plan_editor/weekly_plan_screen.dart' - lib\features\settings\data_settings_page.dart:16:8 - unused_import
+   info - Unnecessary braces in a string interpolation - lib\features\settings\export_usecase.dart:38:44 - unnecessary_brace_in_string_interps
+warning - Unused import: '../../core/domain/enums.dart' - lib\features\settings\training_support_screen.dart:3:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\training_support_screen.dart:130:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\usage_guide_screen.dart:71:49 - deprecated_member_use
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:40:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:44:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:48:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:52:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:56:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:60:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:62:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:65:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_standalone_test.dart:69:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_verification.dart:59:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_verification.dart:70:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_verification.dart:81:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_verification.dart:94:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_verification.dart:105:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\load_calc_verification.dart:115:3 - avoid_print
+
+81 issues found. (ran in 6.7s)

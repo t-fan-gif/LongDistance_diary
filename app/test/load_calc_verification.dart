@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:long_distance_diary/core/services/load_calculator.dart';
 import 'package:long_distance_diary/core/db/app_database.dart';
 import 'package:long_distance_diary/core/domain/enums.dart';

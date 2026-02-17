@@ -21,7 +21,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _currentTabIndex = 0;
+
   final GlobalKey<WeeklyPlanScreenState> _weeklyPlanKey = GlobalKey<WeeklyPlanScreenState>();
 
   @override
@@ -30,7 +30,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
     _tabController.addListener(() {
       setState(() {
-        _currentTabIndex = _tabController.index;
+        // _currentTabIndex = _tabController.index;
       });
     });
   }
@@ -66,9 +66,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.3),
+                      Colors.black.withValues(alpha: 0.3),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.4),
+                      Colors.black.withValues(alpha: 0.4),
                     ],
                   ),
                 ),
@@ -102,7 +102,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> with SingleTick
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: Colors.black.withOpacity(0.2), // タブバーの背景を少し暗くして視認性向上
+            color: Colors.black.withValues(alpha: 0.2), // タブバーの背景を少し暗くして視認性向上
             child: TabBar(
               controller: _tabController,
               labelColor: Colors.white,
@@ -352,7 +352,7 @@ class _MonthHeader extends StatelessWidget {
 }
 
 class _WeekdayHeader extends StatelessWidget {
-  const _WeekdayHeader({super.key});
+  const _WeekdayHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -566,7 +566,7 @@ class _TodayView extends ConsumerWidget {
     final dateKey = DateTime(today.year, today.month, today.day);
     
     final sessionsAsync = ref.watch(daySessionsProvider(dateKey));
-    final plansAsync = ref.watch(dayPlansProvider(dateKey));
+
     final rTpace = ref.watch(runningThresholdPaceProvider).valueOrNull;
     final wTpace = ref.watch(walkingThresholdPaceProvider).valueOrNull;
     final loadCalc = ref.watch(loadCalculatorProvider);

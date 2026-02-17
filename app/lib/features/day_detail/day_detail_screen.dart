@@ -4,12 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
-import '../../core/services/load_calculator.dart';
 import '../../core/services/service_providers.dart'; // loadCalculatorProviderのため
 import '../calendar/calendar_providers.dart';
 import '../settings/advanced_settings_screen.dart';
 import '../../core/repos/target_race_repository.dart';
-import '../../core/db/db_providers.dart';
 import '../../core/services/vdot_calculator.dart';
 
 /// 選択された日付のプロバイダ

@@ -35,7 +35,7 @@ class ExportUseCase {
     final jsonString = await _repo.exportPlansOnly(startDate, endDate);
     final startStr = '${startDate.month}_${startDate.day}';
     final endStr = '${endDate.month}_${endDate.day}';
-    final fileName = 'plans_${startStr}_to_${endStr}.json';
+    final fileName = 'plans_${startStr}_to_$endStr.json';
     await FileHelper.saveAndShare(jsonString, fileName);
   }
 }

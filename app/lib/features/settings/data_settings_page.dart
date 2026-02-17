@@ -8,12 +8,6 @@ import 'target_race_settings_screen.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
 import '../../core/db/db_providers.dart';
-import '../../core/domain/enums.dart';
-import '../../core/repos/session_repository.dart';
-import '../../core/repos/plan_repository.dart';
-import '../../core/repos/target_race_repository.dart';
-import '../../core/services/service_providers.dart';
-import '../plan_editor/weekly_plan_screen.dart';
 import '../coach/plan_qr_display_dialog.dart';
 import '../coach/plan_qr_scan_screen.dart';
 

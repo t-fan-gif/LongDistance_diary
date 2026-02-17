@@ -68,7 +68,7 @@ class _UsageGuideScreenState extends State<UsageGuideScreen> {
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: item.color.withOpacity(0.1),
+                              color: item.color.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(

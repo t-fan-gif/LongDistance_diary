@@ -4,13 +4,8 @@ import '../../core/domain/enums.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/repos/plan_repository.dart';
-import '../../core/repos/session_repository.dart';
 import '../../core/services/capacity_estimator.dart';
 import '../../core/services/heatmap_scaler.dart';
-import '../../core/services/load_calculator.dart';
-import '../../core/services/vdot_calculator.dart';
-import '../../core/repos/personal_best_repository.dart';
-import '../settings/settings_screen.dart';
 import '../settings/advanced_settings_screen.dart';
 import '../../core/services/service_providers.dart'; // vdotCalculatorProvider, loadCalculatorProvider はここから取得
 

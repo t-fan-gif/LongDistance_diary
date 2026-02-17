@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/domain/enums.dart';
 
 class TrainingSupportScreen extends StatelessWidget {
   const TrainingSupportScreen({super.key});
@@ -127,7 +126,7 @@ class _LoadAnalysisTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Card(
-          color: Colors.teal.shade100.withOpacity(0.3),
+          color: Colors.teal.shade100.withValues(alpha: 0.3),
           child: ExpansionTile(
             leading: const Icon(Icons.fitness_center, color: Colors.teal),
             title: const Text('負荷計算 (Load) の仕組み', style: TextStyle(fontWeight: FontWeight.bold)),

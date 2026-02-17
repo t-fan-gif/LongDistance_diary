@@ -338,7 +338,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
       // ペースがあれば距離を逆算
       if (paceSec != null && paceSec > 0) {
         // 距離(km) = 時間(s) / ペース(s/km)
-        final calculatedDistKm = totalSec / paceSec;
+        // final calculatedDistKm = totalSec / paceSec;
         // 距離は直接UIに反映しないほうが混乱が少ないかもしれないが、
         // 内部的に距離が必要なため、ここでは時間の反映のみに留める（保存時に計算される）
       }
@@ -347,8 +347,11 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
 
     // 距離ベースの場合
     double distKm = 0;
-    if (_unit == PlanUnit.km) distKm = val * reps;
-    else if (_unit == PlanUnit.m) distKm = (val * reps) / 1000.0;
+    if (_unit == PlanUnit.km) {
+      distKm = val * reps;
+    } else if (_unit == PlanUnit.m) {
+      distKm = (val * reps) / 1000.0;
+    }
     
     if (distKm > 0 && paceSec != null && paceSec > 0) {
       final totalSec = distKm * paceSec;
@@ -507,7 +510,7 @@ class _SessionEditorScreenState extends ConsumerState<SessionEditorScreen> {
                              }
                           } else if (plan.duration != null && plan.duration! > 0) {
                              final dur = plan.duration!;
-                             final dText = dur >= 60 ? '${dur~/60}分' : '${dur}秒';
+                             final dText = dur >= 60 ? '${dur~/60}分' : '$dur秒';
                              planDetailText = '$dText × ${plan.reps}';
                              if (plan.pace != null) {
                                planDetailText += ' @${_formatPace(plan.pace!)}/km';

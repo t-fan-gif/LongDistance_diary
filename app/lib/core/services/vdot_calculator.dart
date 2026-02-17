@@ -56,10 +56,7 @@ class VdotCalculator {
           return 0.8 + 0.1894393 * exp(-0.012778 * t) + 0.2989558 * exp(-0.1932605 * t);
       }
       
-      // 速度 v (m/min) に対する VO2 の計算
-      double vo2(double v) {
-          return -4.60 + 0.182258 * v + 0.000104 * pow(v, 2);
-      }
+
 
       // 二分探索でタイムを求める
       double lowT = 1.0; // 1分

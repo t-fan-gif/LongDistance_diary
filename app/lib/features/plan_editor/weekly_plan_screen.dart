@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
-import '../../core/repos/plan_repository.dart';
 import '../../core/repos/target_race_repository.dart';
 import '../../core/services/service_providers.dart';
 import '../calendar/calendar_providers.dart';

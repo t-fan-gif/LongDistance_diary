@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
-import '../../core/repos/plan_repository.dart';
 import '../calendar/calendar_providers.dart';
 import 'plan_transfer_service.dart';
 
@@ -45,7 +43,7 @@ class _PlanQrDisplayDialogState extends ConsumerState<PlanQrDisplayDialog> {
     });
 
     try {
-      final repo = ref.read(planRepositoryProvider);
+
       // 期間指定でプランを取得（リポジトリにメソッドがない場合はフィルタリングする必要があるが、
       // ここでは簡易的に全取得してからフィルタリングするか、リポジトリに追加するか。
       // パフォーマンスを考慮して期間指定メソッドを利用したいが、既存にあるか確認。

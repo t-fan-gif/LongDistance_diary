@@ -4,7 +4,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
-import '../../core/repos/plan_repository.dart';
 import '../calendar/calendar_providers.dart';
 import '../day_detail/day_detail_screen.dart';
 import 'plan_transfer_service.dart';

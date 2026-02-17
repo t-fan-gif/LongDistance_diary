@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:archive/archive.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/db/app_database.dart';
 import '../../core/domain/enums.dart';
@@ -39,15 +38,13 @@ class PlanTransferService {
     final bytes = utf8.encode(jsonString);
     final gzipped = GZipEncoder().encode(bytes);
     
-    if (gzipped == null) throw Exception('Compression failed');
-    
     return base64Encode(gzipped);
   }
 
   /// QRコードの文字列を解析して計画データのリストを返す
   /// Base64 -> GZIP -> JSON -> List<PlanData>
   /// ※DBのPlanクラスはIDが必要なので、ここでは一時的なデータ構造(Map)または
-  ///  Insertable<Plan> に変換しやすい形式で返す
+  ///  Insertable[Plan] に変換しやすい形式で返す
   List<PlansCompanion> decodePlans(String encodedData) {
     try {
       final bytes = base64Decode(encodedData);
@@ -67,7 +64,7 @@ class PlanTransferService {
         final date = DateTime.parse(dateStr);
         
         return PlansCompanion.insert(
-          id: 'imported_${DateTime.now().millisecondsSinceEpoch}_${dateStr}', // 一時ID、保存時に再生成推奨だがDriftのinsertに任せるならid不要かも
+          id: 'imported_${DateTime.now().millisecondsSinceEpoch}_$dateStr', // 一時ID、保存時に再生成推奨だがDriftのinsertに任せるならid不要かも
           date: date,
           menuName: map['m'] as String,
           distance: map['di'] != null ? Value(map['di'] as int) : const Value.absent(),

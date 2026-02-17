@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../core/db/app_database.dart';
 import '../../core/db/db_providers.dart';
 import '../../core/domain/enums.dart';
-import '../../core/repos/session_repository.dart';
 import '../calendar/calendar_providers.dart';
 import '../../core/services/service_providers.dart'; // loadCalculatorProviderのため
 import '../settings/advanced_settings_screen.dart';
@@ -241,11 +239,11 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
                   } else if (session.durationMainSec != null && session.durationMainSec! > 0) {
                       if (reps > 1) {
                         final perDur = session.durationMainSec! ~/ reps; // 割り切れない場合は切り捨て
-                        final perDurStr = perDur % 60 == 0 ? '${perDur ~/ 60}分' : '${perDur}秒';
+                        final perDurStr = perDur % 60 == 0 ? '${perDur ~/ 60}分' : '$perDur秒';
                         detailOverride = '$perDurStr × $reps';
                       } else {
                         final d = session.durationMainSec!;
-                        detailOverride = d % 60 == 0 ? '${d ~/ 60}分' : '${d}秒';
+                        detailOverride = d % 60 == 0 ? '${d ~/ 60}分' : '$d秒';
                       }
                   }
                 } else if (session.planId != null) {
@@ -263,7 +261,7 @@ class _WeeklyHistoryScreen extends ConsumerWidget {
                       }
                     } else if (plan.duration != null && plan.duration! > 0) {
                       final pDur = plan.duration!;
-                      final durText = pDur % 60 == 0 ? '${pDur ~/ 60}分' : '${pDur}秒';
+                      final durText = pDur % 60 == 0 ? '${pDur ~/ 60}分' : '$pDur秒';
                       if (plan.reps > 1) {
                         detailOverride = '$durText × ${plan.reps}';
                       } else {

@@ -1,7 +1,6 @@
 import 'dart:math';
 import '../db/app_database.dart';
 import '../domain/enums.dart';
-import '../../features/settings/advanced_settings_screen.dart';
 
 /// セッションの負荷計算を行うサービス
 class LoadCalculator {

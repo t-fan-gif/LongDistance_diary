@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../core/db/app_database.dart';
+
 import '../../core/domain/enums.dart';
 import '../../core/repos/plan_repository.dart';
 import '../../core/repos/target_race_repository.dart';
@@ -217,8 +216,11 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
     if (duration != null && duration > 0) {
       // 時間指定がある場合
       if (unit == null) {
-         if (duration % 60 == 0) initialUnit = PlanUnit.min;
-         else initialUnit = PlanUnit.sec;
+         if (duration % 60 == 0) {
+           initialUnit = PlanUnit.min;
+         } else {
+           initialUnit = PlanUnit.sec;
+         }
       }
       if (initialUnit == PlanUnit.min) {
         valText = (duration ~/ 60).toString();
@@ -228,8 +230,11 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
       }
     } else if (distance != null && distance > 0) {
       if (unit == null) {
-        if (distance % 1000 == 0) initialUnit = PlanUnit.km;
-        else initialUnit = PlanUnit.m;
+        if (distance % 1000 == 0) {
+          initialUnit = PlanUnit.km;
+        } else {
+          initialUnit = PlanUnit.m;
+        }
       }
       if (initialUnit == PlanUnit.km) {
         valText = (distance ~/ 1000).toString();
@@ -359,58 +364,11 @@ class __SingleDayPlanEditorState extends ConsumerState<_SingleDayPlanEditor> {
     });
   }
 
-  Future<void> _addRaceFromTarget() async {
-    final races = await ref.read(targetRaceRepositoryProvider).getRacesByDate(widget.date);
-    if (races.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('この日のターゲットレースが設定されていません。設定から追加してください。')),
-        );
-      }
-      return;
-    }
 
-    TargetRace? target;
-    if (races.length > 1) {
-      target = await showDialog<TargetRace>(
-        context: context,
-        builder: (context) => SimpleDialog(
-          title: const Text('レースを選択'),
-          children: races.map((r) => SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, r),
-            child: Text(r.name),
-          )).toList(),
-        ),
-      );
-    } else {
-      target = races.first;
-    }
-
-    if (target != null) {
-      final vdotCalc = ref.read(vdotCalculatorProvider);
-      int? distance;
-      if (target.raceType != null) {
-        if (target.raceType == PbEvent.other) {
-          distance = target.distance;
-        } else {
-          distance = vdotCalc.getDistanceForEvent(target.raceType!);
-        }
-      }
-
-      _addNewRow(
-        menuName: target.name,
-        distance: distance,
-        isRace: true,
-        note: target.note,
-      );
-    }
-  }
 
   Future<void> _savePlans() async {
     // バリデーション緩和: 全て空の場合は「予定なし」として保存（削除）を許可
-    final hasValidRow = _rows.any((row) => 
-      row.isRest || row.menuController.text.trim().isNotEmpty
-    );
+
     
     // 空でも処理を続行し、下のループでinputsが空になれば updatePlansForDate で削除扱いになる
     
@@ -660,23 +618,18 @@ class _PlanRowItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // 単位表示テキスト
     String unitLabel = 'km';
-    String fieldLabel = '距離';
     switch (row.unit) {
       case PlanUnit.km:
         unitLabel = 'km';
-        fieldLabel = '距離';
         break;
       case PlanUnit.m:
         unitLabel = 'm';
-        fieldLabel = '距離';
         break;
       case PlanUnit.min:
         unitLabel = '分';
-        fieldLabel = '時間';
         break;
       case PlanUnit.sec:
         unitLabel = '秒';
-        fieldLabel = '時間';
         break;
     }
 
